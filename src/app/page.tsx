@@ -1,4 +1,5 @@
 import UploadForm from "./UploadForm";
+import ProductLibrary from "./ProductLibrary";
 import { loadAttempts, loadReviews, loadSheets } from "@/lib/store";
 import { signPhotoUrl } from "@/lib/sign";
 
@@ -19,6 +20,8 @@ export default async function Home() {
       </p>
 
       <UploadForm sheetIds={sheets.map((s) => s.id)} />
+
+      <ProductLibrary />
 
       <section className="card">
         <h2>Available sheets</h2>
