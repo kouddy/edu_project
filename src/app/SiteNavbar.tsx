@@ -23,6 +23,8 @@ function LogoMark() {
 export default function SiteNavbar({ dueCount }: { dueCount: number }) {
   const pathname = usePathname();
   const onReview = pathname === "/review";
+  const onDashboard = pathname === "/dashboard";
+  const onUpload = pathname === "/upload";
 
   return (
     <Navbar maxWidth="xl" isBordered>
@@ -33,6 +35,16 @@ export default function SiteNavbar({ dueCount }: { dueCount: number }) {
         </Link>
       </NavbarBrand>
       <NavbarContent justify="end">
+        <NavbarItem isActive={onDashboard}>
+          <Link href="/dashboard" color={onDashboard ? "primary" : "foreground"} className="text-[15px]">
+            Dashboard
+          </Link>
+        </NavbarItem>
+        <NavbarItem isActive={onUpload}>
+          <Link href="/upload" color={onUpload ? "primary" : "foreground"} className="text-[15px]">
+            Upload
+          </Link>
+        </NavbarItem>
         <NavbarItem isActive={onReview}>
           <Badge
             content={dueCount}
