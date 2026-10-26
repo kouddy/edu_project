@@ -15,10 +15,19 @@ import {
   Spinner,
 } from "@heroui/react";
 import { newId, store } from "@/lib/browser-store";
-import type { Child, Sheet, Submission } from "@/lib/product-types";
+import type { Child, GradedResult, Sheet, Submission } from "@/lib/product-types";
+import { gradeSubmission, type GradeAttempt } from "@/lib/grade-client";
 import PhotoThumb from "../PhotoThumb";
+import GradeResults from "../GradeResults";
 
 const MAX_BYTES = 10 * 1024 * 1024;
+
+const STATUS_COLOR = {
+  uploaded: "primary",
+  graded: "success",
+  rejected: "warning",
+  failed: "danger",
+} as const;
 
 function formatBytes(n: number) {
   if (n < 1024) return `${n} B`;
@@ -40,6 +49,9 @@ export default function UploadPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<Submission | null>(null);
+  const [grading, setGrading] = useState(false);
+  const [gradeOutcome, setGradeOutcome] = useState<GradeAttempt | null>(null);
+  const [gradeResult, setGradeResult] = useState<GradedResult | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -134,6 +146,27 @@ export default function UploadPage() {
     setDone(null);
     setSheetCode(sheets.length === 1 ? sheets[0].sheetCode : "");
     setError(null);
+    setGradeOutcome(null);
+    setGradeResult(null);
+  }
+
+  async function onGrade() {
+    if (!done || grading) return;
+    setGrading(true);
+    try {
+      const outcome = await gradeSubmission(done.id);
+      setGradeOutcome(outcome);
+      if (outcome.status === "graded") {
+        setGradeResult(await store.getGradedResult(done.id));
+      }
+    } catch {
+      setGradeOutcome({
+        status: "failed",
+        message: "Grading didn't work this time. Please try again.",
+      });
+    } finally {
+      setGrading(false);
+    }
   }
 
   if (children === null) {
@@ -150,6 +183,7 @@ export default function UploadPage() {
   // -- confirmation ---------------------------------------------------------
   if (done) {
     const child = children.find((c) => c.id === done.childId);
+    const status = gradeOutcome?.status ?? done.status;
     return (
       <div className="flex flex-col gap-6">
         <Alert
@@ -161,8 +195,8 @@ export default function UploadPage() {
           <CardHeader className="flex-col items-start gap-1 px-5 pb-1 pt-4">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-extrabold tracking-tight">Confirmation</h2>
-              <Chip size="sm" variant="flat" color="primary">
-                {done.status}
+              <Chip size="sm" variant="flat" color={STATUS_COLOR[status]}>
+                {status}
               </Chip>
             </div>
             <p className="text-[15px] text-default-600">
@@ -178,8 +212,39 @@ export default function UploadPage() {
             <p className="text-sm text-default-500">
               This photo was loaded back from storage on this device.
             </p>
+
+            {status === "uploaded" && !grading ? (
+              <div>
+                <Button color="primary" size="lg" onPress={onGrade}>
+                  Grade this worksheet
+                </Button>
+              </div>
+            ) : null}
+            {grading ? (
+              <p className="text-[15px] text-default-600">
+                Grading the worksheet… this takes a few seconds.
+              </p>
+            ) : null}
+            {gradeOutcome?.message ? (
+              <Alert
+                color={status === "rejected" ? "warning" : "danger"}
+                title={status === "rejected" ? "Couldn't grade this photo" : "Grading failed"}
+                description={gradeOutcome.message}
+              />
+            ) : null}
+            {status === "failed" && !grading ? (
+              <div>
+                <Button color="primary" variant="flat" onPress={onGrade}>
+                  Try grading again
+                </Button>
+              </div>
+            ) : null}
+            {status === "graded" && gradeResult ? (
+              <GradeResults result={gradeResult} />
+            ) : null}
+
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button color="primary" onPress={reset}>
+              <Button variant="flat" onPress={reset}>
                 Upload another
               </Button>
               <Button as={Link} href="/dashboard" variant="flat">

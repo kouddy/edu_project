@@ -38,7 +38,11 @@ export interface Submission {
   status: SubmissionStatus;
   /** ISO-8601 timestamp. */
   createdAt: string;
+  /** Parent-visible note, e.g. why a photo was rejected or grading failed. */
+  message?: string;
 }
+
+export type QuestionVerdict = "correct" | "incorrect" | "unsure";
 
 export interface GradedQuestionResult {
   questionNumber: number;
@@ -47,6 +51,10 @@ export interface GradedQuestionResult {
   modelReading: string | null;
   /** Kid-friendly explanation for wrong answers; omitted when correct. */
   explanation?: string;
+  /** Raw grader verdict; "unsure" means a parent must check (correct=false). */
+  verdict: QuestionVerdict;
+  /** Model confidence 0..1. Anything below 0.8 is forced to "unsure". */
+  confidence: number;
 }
 
 export interface GradedResult {

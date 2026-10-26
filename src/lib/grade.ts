@@ -46,17 +46,27 @@ export function resolveChatCompletionsUrl(apiUrl: string): string {
     : `${trimmed}/chat/completions`;
 }
 
-async function callVisionModel(
-  sheet: Sheet,
+/** True when a vision model endpoint + key are configured (else demo mode). */
+export function isVisionConfigured(): boolean {
+  return Boolean(process.env.MUSE_SPARK_API_URL && process.env.MUSE_SPARK_API_KEY);
+}
+
+/**
+ * Pure single model API call (no agent harness): one request, parsed JSON
+ * back. Shared by the legacy attempt grader and the /api/grade pipeline.
+ * Throws when unconfigured or when the request/response is unusable.
+ */
+export async function requestVisionJson(
+  prompt: string,
   imageBase64: string,
   mimeType: string
-): Promise<GradeResult> {
+): Promise<unknown> {
   const configuredUrl = process.env.MUSE_SPARK_API_URL;
   const apiKey = process.env.MUSE_SPARK_API_KEY;
   const model = process.env.MUSE_SPARK_MODEL ?? "muse-spark-1.3";
-
-  // Pure single model API call (no agent harness): one request, structured JSON back.
-  if (!configuredUrl || !apiKey) return demoUnsureGrade(sheet);
+  if (!configuredUrl || !apiKey) {
+    throw new Error("Vision model is not configured.");
+  }
   const apiUrl = resolveChatCompletionsUrl(configuredUrl);
 
   // Meta Model API exposes an OpenAI-compatible chat-completions endpoint:
@@ -73,7 +83,7 @@ async function callVisionModel(
         {
           role: "user",
           content: [
-            { type: "text", text: visionPrompt(sheet) },
+            { type: "text", text: prompt },
             {
               type: "image_url",
               image_url: { url: `data:${mimeType};base64,${imageBase64}` },
@@ -101,14 +111,26 @@ async function callVisionModel(
     }>;
   };
   const content = extractContent(raw);
-  let data: unknown;
   try {
-    data = JSON.parse(stripCodeFences(content));
+    return JSON.parse(stripCodeFences(content)) as unknown;
   } catch {
     throw new Error(
       `Vision model returned non-JSON content: ${content.slice(0, 200)}`
     );
   }
+}
+
+async function callVisionModel(
+  sheet: Sheet,
+  imageBase64: string,
+  mimeType: string
+): Promise<GradeResult> {
+  if (!isVisionConfigured()) return demoUnsureGrade(sheet);
+  const data = await requestVisionJson(
+    visionPrompt(sheet),
+    imageBase64,
+    mimeType
+  );
   return parseModelPayload(data, sheet);
 }
 

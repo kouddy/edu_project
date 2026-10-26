@@ -17,10 +17,19 @@ import {
   Spinner,
 } from "@heroui/react";
 import { newId, store } from "@/lib/browser-store";
-import type { Child, Submission } from "@/lib/product-types";
+import type { Child, Submission, SubmissionStatus } from "@/lib/product-types";
+import { gradeSubmission } from "@/lib/grade-client";
 import PhotoThumb from "../PhotoThumb";
+import SubmissionResults from "../SubmissionResults";
 
 const GRADES = [1, 2, 3, 4, 5, 6];
+
+const STATUS_COLOR: Record<SubmissionStatus, "primary" | "success" | "warning" | "danger"> = {
+  uploaded: "primary",
+  graded: "success",
+  rejected: "warning",
+  failed: "danger",
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
@@ -38,6 +47,7 @@ export default function DashboardPage() {
   const [grade, setGrade] = useState("3");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [gradingId, setGradingId] = useState<string | null>(null);
 
   useEffect(() => {
     let live = true;
@@ -60,6 +70,19 @@ export default function DashboardPage() {
       live = false;
     };
   }, []);
+
+  async function onGrade(id: string) {
+    if (gradingId) return;
+    setGradingId(id);
+    try {
+      await gradeSubmission(id);
+      setSubmissions(await store.listSubmissions());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Grading failed.");
+    } finally {
+      setGradingId(null);
+    }
+  }
 
   async function addChild(e: React.FormEvent) {
     e.preventDefault();
@@ -215,17 +238,35 @@ export default function DashboardPage() {
                       <span className="min-w-0 truncate text-[15px] font-semibold">
                         {child?.name ?? "Unknown child"} · {s.sheetCode}
                       </span>
-                      <Chip
-                        size="sm"
-                        variant="flat"
-                        color={s.status === "uploaded" ? "primary" : "default"}
-                      >
+                      <Chip size="sm" variant="flat" color={STATUS_COLOR[s.status]}>
                         {s.status}
                       </Chip>
                     </div>
                     <span className="text-sm text-default-500">
                       {formatDate(s.createdAt)}
                     </span>
+                    {s.message ? (
+                      <p className="text-sm leading-relaxed text-default-600">{s.message}</p>
+                    ) : null}
+                    {(s.status === "uploaded" || s.status === "failed") && (
+                      <div>
+                        <Button
+                          size="sm"
+                          variant="flat"
+                          color="primary"
+                          isLoading={gradingId === s.id}
+                          isDisabled={gradingId !== null}
+                          onPress={() => onGrade(s.id)}
+                        >
+                          {gradingId === s.id
+                            ? "Grading…"
+                            : s.status === "failed"
+                              ? "Try grading again"
+                              : "Grade now"}
+                        </Button>
+                      </div>
+                    )}
+                    {s.status === "graded" && <SubmissionResults submissionId={s.id} />}
                   </li>
                 );
               })}
