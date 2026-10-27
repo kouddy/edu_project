@@ -51,14 +51,24 @@ export interface Store {
   // -- spaced-review queue (identity = childId + topic + sourceSheetCode) --
   listReviewItems(childId?: string): Promise<ReviewItem[]>;
   upsertReviewItem(item: ReviewItem): Promise<void>;
+  deleteReviewItem(
+    childId: string,
+    topic: string,
+    sourceSheetCode: string
+  ): Promise<void>;
 
   // -- photos (IndexedDB) --
   savePhoto(photoId: string, blob: Blob): Promise<void>;
   getPhoto(photoId: string): Promise<Blob | null>;
   deletePhoto(photoId: string): Promise<void>;
 
-  /** Insert the bundled sample sheet when the library is empty. Idempotent. */
-  seedIfEmpty(): Promise<void>;
+  /**
+   * Sync the sheet library from the server catalog (GET /api/sheets).
+   * Server wins on conflicts; never deletes local sheets. When the server
+   * is unreachable and the library is empty, seeds the bundled sample
+   * sheet instead. Idempotent.
+   */
+  syncSheets(): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -115,6 +125,29 @@ const EMPTY_SHAPE: StoreShape = {
 
 function isBrowser(): boolean {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+/** Minimal shape guard so a bad /api/sheets response never poisons the library. */
+function isSheet(value: unknown): value is Sheet {
+  if (typeof value !== "object" || value === null) return false;
+  const s = value as Partial<Sheet>;
+  return (
+    typeof s.sheetCode === "string" &&
+    s.sheetCode.length > 0 &&
+    typeof s.grade === "number" &&
+    typeof s.subject === "string" &&
+    typeof s.week === "string" &&
+    Array.isArray(s.questions) &&
+    s.questions.every(
+      (q) =>
+        typeof q === "object" &&
+        q !== null &&
+        typeof (q as { questionNumber?: unknown }).questionNumber === "number" &&
+        typeof (q as { prompt?: unknown }).prompt === "string" &&
+        typeof (q as { correctAnswer?: unknown }).correctAnswer === "string" &&
+        typeof (q as { topic?: unknown }).topic === "string"
+    )
+  );
 }
 
 function readAll(): StoreShape {
@@ -235,7 +268,11 @@ export class BrowserStore implements Store {
   }
 
   async getSheet(sheetCode: string): Promise<Sheet | null> {
-    return readAll().sheets.find((s) => s.sheetCode === sheetCode) ?? null;
+    // Case-insensitive like the server: submissions keep the code as typed.
+    const want = sheetCode.trim().toLowerCase();
+    return (
+      readAll().sheets.find((s) => s.sheetCode.toLowerCase() === want) ?? null
+    );
   }
 
   async saveSheet(sheet: Sheet): Promise<void> {
@@ -301,6 +338,23 @@ export class BrowserStore implements Store {
     writeAll(all);
   }
 
+  async deleteReviewItem(
+    childId: string,
+    topic: string,
+    sourceSheetCode: string
+  ): Promise<void> {
+    const all = readAll();
+    all.reviews = all.reviews.filter(
+      (r) =>
+        !(
+          r.childId === childId &&
+          r.topic === topic &&
+          r.sourceSheetCode === sourceSheetCode
+        )
+    );
+    writeAll(all);
+  }
+
   async savePhoto(photoId: string, blob: Blob): Promise<void> {
     await idbPut(photoId, blob);
   }
@@ -313,10 +367,24 @@ export class BrowserStore implements Store {
     await idbDelete(photoId);
   }
 
-  async seedIfEmpty(): Promise<void> {
+  async syncSheets(): Promise<void> {
     if (!isBrowser()) return;
-    const existing = await this.getSheet(SAMPLE_SHEET_CODE);
-    if (!existing) await this.saveSheet(SAMPLE_SHEET);
+    try {
+      const res = await fetch("/api/sheets");
+      if (!res.ok) throw new Error(`Sheet sync failed: ${res.status}`);
+      const data = (await res.json()) as { sheets?: unknown };
+      const sheets = Array.isArray(data.sheets) ? data.sheets : [];
+      for (const sheet of sheets) {
+        if (isSheet(sheet)) await this.saveSheet(sheet);
+      }
+      if (sheets.length === 0 && (await this.listSheets()).length === 0) {
+        await this.saveSheet(SAMPLE_SHEET);
+      }
+    } catch {
+      if ((await this.listSheets()).length === 0) {
+        await this.saveSheet(SAMPLE_SHEET);
+      }
+    }
   }
 }
 

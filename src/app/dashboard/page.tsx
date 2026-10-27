@@ -53,7 +53,7 @@ export default function DashboardPage() {
     let live = true;
     (async () => {
       try {
-        await store.seedIfEmpty();
+        await store.syncSheets();
         const [c, s] = await Promise.all([
           store.listChildren(),
           store.listSubmissions(),

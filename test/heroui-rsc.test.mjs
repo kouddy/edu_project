@@ -7,7 +7,7 @@ import { join } from "node:path";
 // Client Components. A Server Component's JSX crosses the RSC boundary as
 // client references, which the React Aria collection builder cannot read —
 // the page crashes with "Unknown element <[object Object]> in collection."
-// See SheetsTable.tsx / PageBreadcrumbs.tsx for the extraction pattern.
+// Pattern: keep collection items in Client Components (e.g. ProductLibrary.tsx).
 const ITEM_ELEMENTS = [
   "TableColumn",
   "TableHeader",

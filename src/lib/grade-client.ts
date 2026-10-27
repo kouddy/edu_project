@@ -22,6 +22,38 @@ export interface GradeAttempt {
 const FALLBACK_MESSAGE =
   "Grading didn't work this time. Please check your connection and try again.";
 
+const DAY_MS = 24 * 3600 * 1000;
+
+/**
+ * Schedule spaced review for missed topics: one item per incorrect verdict
+ * (deduped by child + topic + sheet), due in 1 day at stage 0. A miss on a
+ * re-grade restarts that topic's cycle. Skipped when the sheet's topics
+ * aren't in the local library — grading still counts.
+ */
+async function scheduleReviews(
+  submission: Submission,
+  perQuestion: GradedQuestionResult[]
+): Promise<void> {
+  if (!perQuestion.some((q) => q.verdict === "incorrect")) return;
+  const sheet = await store.getSheet(submission.sheetCode);
+  if (!sheet) return;
+  const topics = new Map(
+    sheet.questions.map((q) => [q.questionNumber, q.topic])
+  );
+  for (const q of perQuestion) {
+    if (q.verdict !== "incorrect") continue;
+    const topic = topics.get(q.questionNumber);
+    if (!topic) continue;
+    await store.upsertReviewItem({
+      childId: submission.childId,
+      topic,
+      sourceSheetCode: sheet.sheetCode,
+      dueAt: new Date(Date.now() + DAY_MS).toISOString(),
+      intervalStage: 0,
+    });
+  }
+}
+
 async function failSubmission(
   submission: Submission,
   message: string
@@ -96,6 +128,7 @@ export async function gradeSubmission(submissionId: string): Promise<GradeAttemp
     });
     const { message: _dropped, ...rest } = submission;
     await store.saveSubmission({ ...rest, status: "graded" });
+    await scheduleReviews(submission, data.result.perQuestion);
     return { status: "graded", demo: data.demo };
   }
 

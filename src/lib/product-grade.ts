@@ -5,9 +5,12 @@
 // The client persists the returned outcome through the browser Store
 // (saveGradedResult + submission status), which the server cannot reach.
 
-import type { Sheet } from "./types";
-import type { GradedQuestionResult, QuestionVerdict } from "./product-types";
-import { isVisionConfigured, requestVisionJson } from "./grade";
+import type {
+  GradedQuestionResult,
+  QuestionVerdict,
+  Sheet,
+} from "./product-types";
+import { isVisionConfigured, requestVisionJson } from "./vision-client";
 
 /** Below this confidence a verdict is forced to "unsure". Never guess. */
 export const GRADE_CONFIDENCE_THRESHOLD = 0.8;
@@ -23,8 +26,11 @@ export const GRADING_FAILED_MESSAGE =
   "Grading didn't work this time. Please check your connection and try again.";
 
 export function productGradingPrompt(sheet: Sheet): string {
-  const key = sheet.answerKey
-    .map((q, i) => `${i + 1}. "${q.prompt}" (correct answer: "${q.answer}")`)
+  const key = sheet.questions
+    .map(
+      (q) =>
+        `${q.questionNumber}. "${q.prompt}" (correct answer: "${q.correctAnswer}")`
+    )
     .join("\n");
   return [
     "You are grading a child's worksheet photo. The answer key is provided.",
@@ -170,7 +176,7 @@ export async function gradeProductPhoto(
   mimeType: string
 ): Promise<ProductGradeCall> {
   if (!isVisionConfigured()) {
-    return { demo: true, outcome: demoOutcome(sheet.answerKey.length) };
+    return { demo: true, outcome: demoOutcome(sheet.questions.length) };
   }
   const prompt = productGradingPrompt(sheet);
   const imageBase64 = bytes.toString("base64");
@@ -182,6 +188,6 @@ export async function gradeProductPhoto(
   }
   return {
     demo: false,
-    outcome: parseProductPayload(data, sheet.answerKey.length),
+    outcome: parseProductPayload(data, sheet.questions.length),
   };
 }

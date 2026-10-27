@@ -1,19 +1,41 @@
 [
   {
-    "id": "grade4-math-oct2026",
+    "sheetCode": "G3-MATH-TEST-A",
+    "grade": 3,
+    "subject": "math",
+    "week": "week-1",
+    "questions": [
+      { "questionNumber": 1, "prompt": "24 + 35", "correctAnswer": "59", "topic": "addition" },
+      { "questionNumber": 2, "prompt": "87 − 29", "correctAnswer": "58", "topic": "subtraction" },
+      { "questionNumber": 3, "prompt": "6 × 4", "correctAnswer": "24", "topic": "multiplication" },
+      { "questionNumber": 4, "prompt": "36 ÷ 4", "correctAnswer": "9", "topic": "division" },
+      { "questionNumber": 5, "prompt": "1/2 + 1/4", "correctAnswer": "3/4", "topic": "fractions" },
+      { "questionNumber": 6, "prompt": "Round 264 to the nearest 10", "correctAnswer": "260", "topic": "rounding" },
+      { "questionNumber": 7, "prompt": "Perimeter of a 6 by 4 rectangle", "correctAnswer": "20", "topic": "geometry" },
+      { "questionNumber": 8, "prompt": "9 × 3", "correctAnswer": "27", "topic": "multiplication" },
+      { "questionNumber": 9, "prompt": "Quarter past 3 is what time?", "correctAnswer": "3:15", "topic": "telling time" },
+      {
+        "questionNumber": 10,
+        "prompt": "Maya has 5 bags with 6 apples in each bag. How many apples?",
+        "correctAnswer": "30",
+        "topic": "word problems"
+      }
+    ]
+  },
+  {
+    "sheetCode": "G4-MATH-2026-10",
     "grade": 4,
     "subject": "math",
-    "title": "Grade 4 Math — October 2026",
-    "sourcePdf": "grade_4_math_oct_2026.pdf",
-    "answerKey": [
-      { "qid": "q1", "prompt": "23 + 45", "answer": "68" },
-      { "qid": "q2", "prompt": "81 - 37", "answer": "44" },
-      { "qid": "q3", "prompt": "7 x 8", "answer": "56" },
-      { "qid": "q4", "prompt": "96 / 4", "answer": "24" },
-      { "qid": "q5", "prompt": "3/4 + 1/8", "answer": "7/8" },
-      { "qid": "q6", "prompt": "Round 347 to the nearest 10", "answer": "350" },
-      { "qid": "q7", "prompt": "Perimeter of a 5 by 3 rectangle", "answer": "16" },
-      { "qid": "q8", "prompt": "12 x 6", "answer": "72" }
+    "week": "2026-10",
+    "questions": [
+      { "questionNumber": 1, "prompt": "23 + 45", "correctAnswer": "68", "topic": "addition" },
+      { "questionNumber": 2, "prompt": "81 - 37", "correctAnswer": "44", "topic": "subtraction" },
+      { "questionNumber": 3, "prompt": "7 x 8", "correctAnswer": "56", "topic": "multiplication" },
+      { "questionNumber": 4, "prompt": "96 / 4", "correctAnswer": "24", "topic": "division" },
+      { "questionNumber": 5, "prompt": "3/4 + 1/8", "correctAnswer": "7/8", "topic": "fractions" },
+      { "questionNumber": 6, "prompt": "Round 347 to the nearest 10", "correctAnswer": "350", "topic": "rounding" },
+      { "questionNumber": 7, "prompt": "Perimeter of a 5 by 3 rectangle", "correctAnswer": "16", "topic": "geometry" },
+      { "questionNumber": 8, "prompt": "12 x 6", "correctAnswer": "72", "topic": "multiplication" }
     ]
   }
 ]

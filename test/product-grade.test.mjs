@@ -12,15 +12,14 @@ import { pathToFileURL } from "node:url";
 // the repo's own typescript into a temp dir, then imported as plain JS.
 
 const SHEET = {
-  id: "test-sheet",
+  sheetCode: "G9-TEST",
   grade: 4,
   subject: "math",
-  title: "Test sheet",
-  sourcePdf: "test.pdf",
-  answerKey: [
-    { qid: "q1", prompt: "1 + 1", answer: "2" },
-    { qid: "q2", prompt: "2 + 2", answer: "4" },
-    { qid: "q3", prompt: "3 + 3", answer: "6" },
+  week: "week-1",
+  questions: [
+    { questionNumber: 1, prompt: "1 + 1", correctAnswer: "2", topic: "addition" },
+    { questionNumber: 2, prompt: "2 + 2", correctAnswer: "4", topic: "addition" },
+    { questionNumber: 3, prompt: "3 + 3", correctAnswer: "6", topic: "addition" },
   ],
 };
 
@@ -80,9 +79,12 @@ describe("product grading contract", () => {
     assert.match(prompt, /80%/);
     assert.match(prompt, /never guess/i);
     assert.match(prompt, /unsure/i);
-    for (const q of SHEET.answerKey) {
+    for (const q of SHEET.questions) {
       assert.ok(prompt.includes(q.prompt), `prompt mentions ${q.prompt}`);
-      assert.ok(prompt.includes(q.answer), `prompt mentions ${q.answer}`);
+      assert.ok(
+        prompt.includes(q.correctAnswer),
+        `prompt mentions ${q.correctAnswer}`
+      );
     }
   });
 

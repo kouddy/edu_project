@@ -38,7 +38,6 @@ next-env.d.ts
 # python
 .venv/
 
-# local MVP storage: private uploads + runtime_attempt data (seed sheets.json stays tracked)
+# local MVP storage: private uploads + archived legacy attempt data (sheets.json stays tracked)
 /uploads/
-data/attempts.json
-data/reviews.json
+data/archive/

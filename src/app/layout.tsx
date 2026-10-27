@@ -3,7 +3,6 @@ import { Nunito } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import SiteNavbar from "./SiteNavbar";
-import { loadReviews } from "@/lib/store";
 
 const nunito = Nunito({
   subsets: ["latin"],
@@ -16,22 +15,17 @@ export const metadata: Metadata = {
   description: "Grade 1-6 practice sheet grading and review",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const reviews = await loadReviews();
-  const dueCount = reviews.filter(
-    (r) => !r.done && r.dueAt <= new Date().toISOString()
-  ).length;
-
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${nunito.variable} font-sans`}>
         <Providers>
           <div className="flex min-h-screen flex-col bg-default-50 text-foreground">
-            <SiteNavbar dueCount={dueCount} />
+            <SiteNavbar />
             <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-8 sm:px-6">
               {children}
             </main>

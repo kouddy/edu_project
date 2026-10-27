@@ -2,6 +2,8 @@
 
 import { Badge, Link, Navbar, NavbarBrand, NavbarContent, NavbarItem } from "@heroui/react";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { store } from "@/lib/browser-store";
 import ThemeSwitch from "./ThemeSwitch";
 
 function LogoMark() {
@@ -20,8 +22,26 @@ function LogoMark() {
   );
 }
 
-export default function SiteNavbar({ dueCount }: { dueCount: number }) {
+export default function SiteNavbar() {
   const pathname = usePathname();
+  // Reviews live in the browser store (server components can't read them),
+  // so the due badge counts client-side. Starts at 0 to avoid hydration
+  // mismatch, then updates once the store loads.
+  const [dueCount, setDueCount] = useState(0);
+  useEffect(() => {
+    let live = true;
+    store
+      .listReviewItems()
+      .then((items) => {
+        if (!live) return;
+        const now = new Date().toISOString();
+        setDueCount(items.filter((r) => r.dueAt <= now).length);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [pathname]);
   const onReview = pathname === "/review";
   const onDashboard = pathname === "/dashboard";
   const onUpload = pathname === "/upload";

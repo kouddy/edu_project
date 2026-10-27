@@ -1,9 +1,8 @@
 // Canonical product-model types (SPEC_2).
 //
-// These are the future-facing domain types. The legacy server-side MVP model
-// (Attempt / Sheet-with-answerKey in `src/lib/types.ts`) still backs the
-// /api/* routes and will be migrated onto the Store interface later.
-// New UI code should import these types, never the legacy ones.
+// These are the domain types for the whole app: UI, browser store, and the
+// server sheet catalog / grading pipeline all use them. There is no
+// second model.
 
 export interface Child {
   id: string;
