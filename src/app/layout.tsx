@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${nunito.variable} font-sans`}>
         <Providers>
-          <div className="flex min-h-screen flex-col bg-default-50 text-foreground">
+          <div className="flex min-h-screen flex-col bg-background text-foreground">
             <SiteNavbar />
             <main className="mx-auto w-full max-w-5xl flex-1 px-4 pb-16 pt-8 sm:px-6">
               {children}
