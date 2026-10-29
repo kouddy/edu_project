@@ -167,7 +167,7 @@ export function ScreenHeader({
   return (
     <div className="mb-4">
       <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-tang">{kicker}</p>
-      <h1 className="mt-0.5 text-[28px] font-extrabold leading-tight text-ink">{title}</h1>
+      <h1 className="mt-0.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">{title}</h1>
       {sub && <p className="mt-0.5 text-[14px] text-mid">{sub}</p>}
     </div>
   );
