@@ -92,6 +92,16 @@ export interface Submission {
 
 export type Verdict = "correct" | "wrong" | "unsure";
 
+/** Subject-specific extras a grader can attach to a question (Stage 3). */
+export interface QuestionGradeMeta {
+  /** The question's topic, from the answer key. */
+  topic?: string;
+  /** For wrong answers: the categorized cause (see server/pi taxonomy). */
+  errorCategory?: string;
+  /** For wrong answers: generated guidance for the student. */
+  guidance?: string;
+}
+
 export interface QuestionGrade {
   questionNumber: number;
   verdict: Verdict;
@@ -99,6 +109,8 @@ export interface QuestionGrade {
   confidence: number;
   /** What the child actually wrote, or null if nothing could be read. */
   readAnswer: string | null;
+  /** Optional subject metadata from the grading harness (Stage 3). */
+  meta?: QuestionGradeMeta;
 }
 
 export interface GradeResult {
