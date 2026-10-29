@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
-import { deletePhoto, resolveCheck, savePhoto } from "@/lib/store";
+import { deletePhoto, getAuthState, resolveCheck, savePhoto, signIn } from "@/lib/store";
 import { gradeStagedPhotos } from "@/lib/grading";
 import { loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
@@ -12,10 +12,12 @@ import ScanScreen, { type StagedPhoto } from "./ScanScreen";
 import ResultsScreen, { NotStartedScreen } from "./ResultsScreen";
 import CheckScreen from "./CheckScreen";
 import ProfileScreen from "./ProfileScreen";
+import SignInScreen from "./SignInScreen";
 import { IconHome, IconScan, IconUser } from "./ui";
 
 type Screen =
   | { name: "home" }
+  | { name: "signin" }
   | { name: "scan" }
   | { name: "marking" }
   | { name: "results"; sheetId: string; origin: "homework" | "history" }
@@ -42,6 +44,7 @@ export default function AppShell() {
   useEffect(() => {
     const next = refresh();
     setKidId((prev) => prev ?? next.kids[0]?.id ?? null);
+    if (!getAuthState().signedIn) setScreen({ name: "signin" });
   }, [refresh]);
 
   const showToast = useCallback((msg: string) => {
@@ -55,6 +58,11 @@ export default function AppShell() {
   const goHome = useCallback((section?: "homework" | "history") => {
     setScreen({ name: "home" });
     if (section) setScrollSection(section);
+  }, []);
+
+  const handleSignedIn = useCallback((email?: string) => {
+    signIn(email);
+    setScreen({ name: "home" });
   }, []);
 
   useEffect(() => {
@@ -145,7 +153,8 @@ export default function AppShell() {
   }
 
   const kid: Kid = snap.kids.find((k) => k.id === kidId) ?? snap.kids[0];
-  const tabVisible = screen.name !== "scan" && screen.name !== "marking";
+  const tabVisible =
+    screen.name !== "scan" && screen.name !== "marking" && screen.name !== "signin";
   const activeTab =
     screen.name === "profile" ? "profile" : screen.name === "scan" ? "scan" : "home";
 
@@ -154,6 +163,10 @@ export default function AppShell() {
       <div className="relative flex h-dvh w-full max-w-[430px] flex-col bg-cream shadow-[0_0_50px_rgba(122,74,20,0.25)]">
         {/* ------------------------------------------------------ screens */}
         <div ref={scrollRef} className="screen-scroll min-h-0 flex-1 overflow-y-auto">
+          {screen.name === "signin" && (
+            <SignInScreen onSignedIn={handleSignedIn} showToast={showToast} />
+          )}
+
           {screen.name === "home" && kid && (
             <HomeScreen
               snap={snap}
@@ -217,7 +230,9 @@ export default function AppShell() {
             />
           )}
 
-          {screen.name === "profile" && <ProfileScreen snap={snap} showToast={showToast} />}
+          {screen.name === "profile" && (
+            <ProfileScreen snap={snap} onSignOut={() => setScreen({ name: "signin" })} />
+          )}
 
           {screen.name === "marking" && (
             <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">

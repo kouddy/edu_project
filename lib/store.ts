@@ -212,6 +212,44 @@ export function getCurrentParent(): Parent | null {
   return readDb().parents[0] ?? null;
 }
 
+/* ------------------------------------------------------------ device session */
+
+/**
+ * Local-first phase: there are no real accounts yet, so "signed in" is a
+ * device-local flag kept next to (not inside) the data document. The
+ * Supabase migration (see SPEC.md, Prompt 7) replaces this with real auth.
+ */
+export interface AuthState {
+  signedIn: boolean;
+  /** The email the parent used for the sign-in link, when they gave one. */
+  email?: string;
+}
+
+const AUTH_KEY = "practice-sheets:auth:v1";
+
+export function getAuthState(): AuthState {
+  if (!isBrowser()) return { signedIn: false };
+  try {
+    const raw = window.localStorage.getItem(AUTH_KEY);
+    if (!raw) return { signedIn: false };
+    const parsed = JSON.parse(raw) as AuthState;
+    return { signedIn: parsed.signedIn === true, email: parsed.email };
+  } catch {
+    return { signedIn: false };
+  }
+}
+
+export function signIn(email?: string): void {
+  if (!isBrowser()) return;
+  const state: AuthState = email ? { signedIn: true, email } : { signedIn: true };
+  window.localStorage.setItem(AUTH_KEY, JSON.stringify(state));
+}
+
+export function signOut(): void {
+  if (!isBrowser()) return;
+  window.localStorage.removeItem(AUTH_KEY);
+}
+
 export function upsertParent(parent: Parent): Parent {
   const db = readDb();
   const i = db.parents.findIndex((p) => p.id === parent.id);

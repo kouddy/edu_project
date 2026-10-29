@@ -1,19 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Avatar, Button, Card } from "@heroui/react";
+import { Avatar, Card } from "@heroui/react";
 import QRCode from "qrcode";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
+import { getAuthState, signOut } from "@/lib/store";
 import { ScreenHeader } from "./ui";
 
 interface Props {
   snap: Snapshot;
-  showToast: (msg: string) => void;
+  onSignOut: () => void;
 }
 
-export default function ProfileScreen({ snap, showToast }: Props) {
+export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;
   const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [email] = useState<string | undefined>(() => getAuthState().email);
 
   useEffect(() => {
     if (!parent) return;
@@ -46,7 +48,7 @@ export default function ProfileScreen({ snap, showToast }: Props) {
           </Avatar>
           <div>
             <p className="text-[18px] font-extrabold text-ink">{parent.name}</p>
-            <p className="text-[13px] text-mid">Parent account</p>
+            <p className="text-[13px] text-mid">{email ?? "Signed in with an emailed link"}</p>
           </div>
         </Card.Content>
       </Card>
@@ -93,14 +95,16 @@ export default function ProfileScreen({ snap, showToast }: Props) {
         </Card.Content>
       </Card>
 
-      <Button
-        variant="ghost"
-        fullWidth
-        onPress={() => showToast("You're signed in on this device")}
-        className="font-bold text-rose"
+      <button
+        type="button"
+        onClick={() => {
+          signOut();
+          onSignOut();
+        }}
+        className="block w-full rounded-xl border-[1.5px] border-line bg-card py-3 text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12)]"
       >
         Sign out
-      </Button>
+      </button>
     </div>
   );
 }
