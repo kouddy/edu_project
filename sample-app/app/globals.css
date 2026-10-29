@@ -1,0 +1,83 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* ------------------------------------------------------------------ theme
+ * Warm paper / burnt-orange look, approximating the interactive prototype.
+ * Tailwind v4 tokens (bg-paper, text-ink, bg-tang, …) plus overrides of the
+ * HeroUI CSS variables so HeroUI components pick up the same palette.
+ */
+@theme {
+  --color-paper: #e7d3b4;
+  --color-cream: #fff9ef;
+  --color-card: #fffdf7;
+  --color-ink: #3d2b1f;
+  --color-mid: #6f5138;
+  --color-faint: #a3805f;
+  --color-line: #cfa878;
+  --color-linesoft: #ecd9ba;
+  --color-fill: #fdf0da;
+  --color-filldark: #f8d9a3;
+  --color-tang: #e8710a;
+  --color-tangdeep: #c75b00;
+  --color-leaf: #3f7d3a;
+  --color-leafsoft: #e4f0e0;
+  --color-rose: #d2492b;
+  --color-ambersoft: #fdf0d3;
+}
+
+:root {
+  --background: #fff9ef;
+  --foreground: #3d2b1f;
+  --surface: #fffdf7;
+  --surface-foreground: #3d2b1f;
+  --surface-secondary: #fdf0da;
+  --surface-secondary-foreground: #3d2b1f;
+  --surface-tertiary: #f8d9a3;
+  --surface-tertiary-foreground: #3d2b1f;
+  --overlay: #fffdf7;
+  --overlay-foreground: #3d2b1f;
+  --accent: #e8710a;
+  --accent-foreground: #fff8ec;
+  --accent-hover: #c75b00;
+  --success: #3f7d3a;
+  --success-foreground: #ffffff;
+  --warning: #f0a30c;
+  --warning-foreground: #3d2b1f;
+  --danger: #d2492b;
+  --danger-foreground: #ffffff;
+  --muted: #6f5138;
+  --border: #ecd9ba;
+  --separator: #ecd9ba;
+  --field-background: #fffdf7;
+  --field-foreground: #3d2b1f;
+  --radius: 0.85rem;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  min-height: 100%;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Thin, quiet scrollbar inside the phone frame. */
+.screen-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(163, 128, 95, 0.45) transparent;
+}
+.screen-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+.screen-scroll::-webkit-scrollbar-thumb {
+  background: rgba(163, 128, 95, 0.45);
+  border-radius: 99px;
+}
