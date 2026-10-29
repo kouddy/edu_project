@@ -163,9 +163,11 @@ a loading screen. (This removes the modal "Marking your sheets…" screen.)
 ## Acceptance checks
 
 1. Neat Gina sheet still grades 9/10 end-to-end, unchanged.
-2. Messy sheet: the blank Q10 comes back wrong/no-answer ("No answer
-   written") and does **not** appear in Parent check; Q9's ghost/cross-out
-   still lands `unsure` (a mark is not blank).
+2. Blank vs mark: on the blank-variant test sheet (Q10's answer box truly
+   empty), Q10 comes back wrong/no-answer ("No answer written") and does
+   **not** appear in Parent check. On the messy sheet, Q10's erased ghost
+   is a mark, not a blank — it must come back read or `unsure`, never
+   no-answer; Q9's cross-out still lands `unsure`.
 3. One batch, same sheet photographed twice → one stored result, summary
    notes the duplicate.
 4. Rescan of a sheet whose checks are outstanding → result replaced.

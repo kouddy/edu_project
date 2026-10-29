@@ -1,18 +1,18 @@
 /**
- * lib/server/providers.ts — grading providers behind one interface.
+ * lib/server/providers.ts — grading providers behind one per-photo
+ * interface (Stage 3.5: the job runner in lib/server/run-grade.ts owns
+ * attempts, dedupe, and aggregation; a provider grades ONE photo per call).
  *
- * A provider takes staged photos + kid context and produces the result
- * contract (lib/grade-contract.ts). Phase 1 ships the scripted demo
- * provider: it reproduces the prototype's demo verdict patterns from the
- * server registry, with no model call — the same end-to-end shape the real
- * providers return. It is a development tool only, selected explicitly
- * with GRADING_PROVIDER=demo; it is never a fallback. Real providers are
- * defined in
- * lib/server/pi/models.json (Pi's native provider/model format) and all
- * run through the one Pi harness — adding a provider is a file edit.
+ * The scripted demo provider reproduces the prototype's demo verdict
+ * patterns from the server registry, with no model call — the same
+ * per-photo shape the real providers return. It is a development tool
+ * only, selected explicitly with GRADING_PROVIDER=demo; it is never a
+ * fallback. Real providers are defined in lib/server/pi/models.json
+ * (Pi's native provider/model format) and all run through the one Pi
+ * harness — adding a provider is a file edit.
  */
 
-import type { ApiSheetResult, GradeJobResult, GradeRequestPayload } from "../grade-contract";
+import type { ApiSheetResult, GradeRequestPayload, PhotoOutcomeKind } from "../grade-contract";
 import { GINA_MATH_SETC, GINA_MATH_W12, SETC_DEMO_GRADES, W12_DEMO_GRADES } from "../seed";
 import {
   effectiveModel,
@@ -21,16 +21,34 @@ import {
   providerKeyAvailable,
   resolveProviderApiKey,
 } from "./pi-config";
-import { findBySheetId } from "./registry";
+import type { IdentifiedSheet } from "./pi-harness";
+import { findBySheetId, type RegistryEntry } from "./registry";
 
-interface ProviderRunInput extends GradeRequestPayload {
+/** One photo's grading attempt, as reported to the job runner. */
+export interface PhotoAttempt {
+  kind: PhotoOutcomeKind;
+  sheet?: ApiSheetResult;
+  identified?: IdentifiedSheet;
+  reason?: string;
+  steps: string[];
+  /** Trace note fragments (confidence coercions, error analyses). */
+  notes: string[];
+}
+
+interface PhotoRunInput {
+  photo: string;
+  photoIndex: number;
+  kidContext: GradeRequestPayload["kidContext"];
   onStep: (step: string) => void;
+  onIdentified?: (info: IdentifiedSheet) => void;
+  /** Stage 3.5 §4: return true when this sheet is already graded in this job. */
+  shouldStopAfterIdentify?: (sheetId: string) => boolean;
 }
 
 export interface GradingProvider {
   id: string;
   model: string;
-  run: (input: ProviderRunInput) => Promise<GradeJobResult>;
+  runPhoto: (input: PhotoRunInput) => Promise<PhotoAttempt>;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -39,6 +57,15 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const DEMO_ERROR_CATEGORIES: Record<string, string> = {
   [`${GINA_MATH_W12}:4`]: "borrowing-slip",
 };
+
+function identifiedFor(entry: RegistryEntry): IdentifiedSheet {
+  return {
+    sheetId: entry.sheetId,
+    printedCode: entry.printedCode,
+    kidName: entry.kidName,
+    sheetLabel: `${entry.kidName} · ${entry.subject} · Week ${entry.week}`,
+  };
+}
 
 function demoSheetResult(
   sheetId: string,
@@ -54,6 +81,23 @@ function demoSheetResult(
     keyVersion: entry.keyVersion,
     perQuestion: pattern.map((g) => {
       const keyQ = keyByNumber.get(g.questionNumber);
+      // Stage 3.5: the demo pattern's Q10 on Week 12 is a BLANK answer, so
+      // the no-answer flow is exercisable without a model call. (The seed's
+      // shared W12_DEMO_GRADES is untouched — the pre-graded seed record
+      // keeps its original pattern.)
+      if (sheetId === GINA_MATH_W12 && g.questionNumber === 10) {
+        return {
+          questionNumber: 10,
+          verdict: "wrong" as const,
+          confidence: 1,
+          readAnswer: null,
+          meta: {
+            ...(keyQ ? { topic: keyQ.topic } : {}),
+            noAnswer: true,
+            ...(keyQ ? { guidance: keyQ.explanation } : {}),
+          },
+        };
+      }
       return {
         questionNumber: g.questionNumber,
         verdict: g.verdict,
@@ -78,7 +122,7 @@ function demoSheetResult(
 const demoProvider: GradingProvider = {
   id: "demo",
   model: "demo-scripted",
-  async run({ photos, onStep }) {
+  async runPhoto({ photoIndex, onStep, onIdentified, shouldStopAfterIdentify }) {
     const steps: string[] = [];
     const step = async (label: string, ms: number) => {
       steps.push(label);
@@ -87,33 +131,28 @@ const demoProvider: GradingProvider = {
     };
 
     await step("Reading the sheet", 350);
-    // Demo identification: one staged photo is Gina's Math · Week 12; a
-    // second photo is additionally Math · Set C — the prototype's pattern.
-    const sheetIds = photos.length >= 2 ? [GINA_MATH_W12, GINA_MATH_SETC] : [GINA_MATH_W12];
+    // Demo identification: the first staged photo is Gina's Math · Week 12;
+    // any further photo is Math · Set C — the prototype's pattern.
+    const sheetId = photoIndex === 0 ? GINA_MATH_W12 : GINA_MATH_SETC;
+    const entry = findBySheetId(sheetId);
+    if (!entry) throw new Error(`Demo provider: no registry entry for ${sheetId}`);
+    const identified = identifiedFor(entry);
+    onIdentified?.(identified);
+    if (shouldStopAfterIdentify?.(sheetId)) {
+      return { kind: "duplicate", identified, steps, notes: [] };
+    }
 
     await step("Marking answers", 350);
-    const sheets = sheetIds.map((id) =>
-      demoSheetResult(id, id === GINA_MATH_SETC ? SETC_DEMO_GRADES : W12_DEMO_GRADES),
+    const sheet = demoSheetResult(
+      sheetId,
+      sheetId === GINA_MATH_SETC ? SETC_DEMO_GRADES : W12_DEMO_GRADES,
     );
 
-    const wrongCount = sheets.reduce(
-      (n, s) => n + s.perQuestion.filter((q) => q.verdict === "wrong").length,
-      0,
-    );
-    if (wrongCount > 0) {
+    if (sheet.perQuestion.some((q) => q.verdict === "wrong")) {
       await step("Writing guidance for the tricky ones", 250);
     }
 
-    return {
-      outcome: "graded",
-      sheets,
-      trace: {
-        provider: "demo",
-        model: "demo-scripted",
-        steps,
-        note: "Scripted demo provider — no model was called.",
-      },
-    };
+    return { kind: "graded", sheet, identified, steps, notes: [] };
   },
 };
 
@@ -130,17 +169,20 @@ function piProvider(id: string): GradingProvider {
   return {
     id,
     model: def?.models[0]?.id ?? "",
-    async run({ photos, kidContext, onStep }) {
+    async runPhoto({ photo, kidContext, onStep, onIdentified, shouldStopAfterIdentify }) {
       const apiKey = resolveProviderApiKey(config, id);
-      const { gradeWithPiHarness } = await import("./pi-harness");
-      return gradeWithPiHarness({
-        photos,
+      const { gradePhotoWithPiHarness } = await import("./pi-harness");
+      const attempt = await gradePhotoWithPiHarness({
+        photo,
         kidContext,
         providerId: id,
         modelId: effectiveModel(config, "math", id),
         apiKey,
         onStep,
+        onIdentified,
+        shouldStopAfterIdentify,
       });
+      return attempt;
     },
   };
 }

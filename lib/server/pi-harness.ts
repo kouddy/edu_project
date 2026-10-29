@@ -51,7 +51,6 @@ import { Type } from "typebox";
 import type {
   ApiQuestionGrade,
   ApiSheetResult,
-  GradeJobResult,
   KidContext,
 } from "../grade-contract";
 import { loadPiConfig, loadPrompt, subjectManifest, type PiConfig } from "./pi-config";
@@ -69,12 +68,30 @@ const STEP_BY_TOOL: Record<string, string> = {
 interface Captured {
   entry: RegistryEntry | null;
   rejection: string | null;
+  /** Stage 3.5 §2: whether a rejection can never change on a retry. */
+  rejectionKind: "read" | "deterministic" | null;
+  /** Stage 3.5 §4: the runner said this sheet is already graded in this job. */
+  duplicate: boolean;
+  /** How many printed-code lookups have failed in this session. */
+  codeAttempts: number;
   perQuestion: ApiQuestionGrade[] | null;
   coercedUnsure: number[];
   /** Phase 3: questionNumber → taxonomy category + what the student likely did. */
   analyses: Map<number, { category: string; observation: string }>;
   /** Phase 3: questionNumber → generated guidance text. */
   guidances: Map<number, string>;
+}
+
+export interface IdentifiedSheet {
+  sheetId: string;
+  printedCode: string;
+  kidName: string;
+  /** "Gina · Math · Week 12" — for progress displays. */
+  sheetLabel: string;
+}
+
+function sheetLabelFor(entry: RegistryEntry): string {
+  return `${entry.kidName} · ${entry.subject} · Week ${entry.week}`;
 }
 
 /** Taxonomy category ids are the bold slugs in the taxonomy context file. */
@@ -93,7 +110,15 @@ function wrongNumbers(captured: Captured): number[] {
   return (captured.perQuestion ?? []).filter((g) => g.verdict === "wrong").map((g) => g.questionNumber);
 }
 
-function buildTools(captured: Captured, threshold: number, categoryIds: string[]) {
+function buildTools(
+  captured: Captured,
+  threshold: number,
+  categoryIds: string[],
+  hooks: {
+    onIdentified?: (info: IdentifiedSheet) => void;
+    shouldStopAfterIdentify?: (sheetId: string) => boolean;
+  } = {},
+) {
   const submitIdentification = defineTool({
     name: "submit_identification",
     label: "Submit identification",
@@ -110,10 +135,19 @@ function buildTools(captured: Captured, threshold: number, categoryIds: string[]
     execute: async (_id, params) => {
       if (!params.photoUsable) {
         captured.rejection = params.rejectReason ?? "We couldn't read that photo.";
+        captured.rejectionKind = "read";
         return { content: [{ type: "text" as const, text: "Recorded: the photo is unusable. Stop here." }], details: {} };
       }
       const entry = findByPrintedCode(params.printedCode.trim().toUpperCase());
       if (!entry) {
+        captured.codeAttempts += 1;
+        if (captured.codeAttempts >= 2) {
+          // The code has been re-read carefully and still matches nothing
+          // we know — retrying this photo cannot change that (Stage 3.5 §2).
+          captured.rejection = "We couldn't find that sheet — the photo needs to show the code printed in the corner.";
+          captured.rejectionKind = "deterministic";
+          return { content: [{ type: "text" as const, text: "Recorded: not one of our sheets. Stop here." }], details: {} };
+        }
         return {
           content: [
             {
@@ -126,9 +160,23 @@ function buildTools(captured: Captured, threshold: number, categoryIds: string[]
       }
       if (entry.questions.length === 0) {
         captured.rejection = "We don't have the answer key for that sheet yet.";
+        captured.rejectionKind = "deterministic";
         return { content: [{ type: "text" as const, text: "Recorded: no key for this sheet. Stop here." }], details: {} };
       }
       captured.entry = entry;
+      hooks.onIdentified?.({
+        sheetId: entry.sheetId,
+        printedCode: entry.printedCode,
+        kidName: entry.kidName,
+        sheetLabel: sheetLabelFor(entry),
+      });
+      if (hooks.shouldStopAfterIdentify?.(entry.sheetId)) {
+        captured.duplicate = true;
+        return {
+          content: [{ type: "text" as const, text: "Recorded: this sheet was already marked in this batch. Stop here — do not grade it again." }],
+          details: {},
+        };
+      }
       const key = entry.questions.map((q) => ({
         number: q.number,
         prompt: q.prompt,
@@ -162,6 +210,12 @@ function buildTools(captured: Captured, threshold: number, categoryIds: string[]
           verdict: Type.Union([Type.Literal("correct"), Type.Literal("wrong"), Type.Literal("unsure")]),
           confidence: Type.Number({ minimum: 0, maximum: 1 }),
           readAnswer: Type.Union([Type.String(), Type.Null()]),
+          noAnswer: Type.Optional(
+            Type.Boolean({
+              description:
+                "True only when the answer space is completely empty — nothing written at all. Any visible mark (faint writing, a smudge, an erased ghost) is NOT blank: read it or mark it unsure instead.",
+            }),
+          ),
         }),
       ),
     }),
@@ -201,6 +255,28 @@ function buildTools(captured: Captured, threshold: number, categoryIds: string[]
         .slice()
         .sort((a, b) => a.questionNumber - b.questionNumber)
         .map((g) => {
+          // Stage 3.5 §1: an explicitly asserted blank is its own signal —
+          // wrong, no read answer, never a Parent check item. If the agent
+          // is not confident the space is truly empty, it stays unsure:
+          // the never-guess rule covers blankness too.
+          if (g.noAnswer) {
+            if (g.confidence < threshold) {
+              return {
+                questionNumber: g.questionNumber,
+                verdict: "unsure" as const,
+                confidence: g.confidence,
+                readAnswer: null,
+                meta: { topic: topicByNumber.get(g.questionNumber) },
+              };
+            }
+            return {
+              questionNumber: g.questionNumber,
+              verdict: "wrong" as const,
+              confidence: g.confidence,
+              readAnswer: null,
+              meta: { topic: topicByNumber.get(g.questionNumber), noAnswer: true },
+            };
+          }
           let verdict = g.verdict;
           if (verdict !== "unsure" && g.confidence < threshold) {
             verdict = "unsure";
@@ -222,7 +298,8 @@ function buildTools(captured: Captured, threshold: number, categoryIds: string[]
         .filter((g) => g.verdict === "wrong")
         .map((g) => {
           const keyQ = entry.questions.find((q) => q.number === g.questionNumber);
-          return `Q${g.questionNumber}: ${keyQ?.prompt ?? ""} — correct answer ${keyQ?.correctAnswer ?? ""}, student wrote ${g.readAnswer ?? "(unreadable)"}`;
+          const wrote = g.meta?.noAnswer ? "(no answer written)" : (g.readAnswer ?? "(unreadable)");
+          return `Q${g.questionNumber}: ${keyQ?.prompt ?? ""} — correct answer ${keyQ?.correctAnswer ?? ""}, student wrote ${wrote}`;
         })
         .join("\n");
       return {
@@ -365,6 +442,9 @@ async function createModelRuntime(config: PiConfig, providerId: string, apiKey: 
 interface PhotoOutcome {
   sheet?: ApiSheetResult;
   rejection?: string;
+  rejectionKind?: "read" | "deterministic";
+  duplicate?: boolean;
+  identified?: IdentifiedSheet;
   steps: string[];
   coercedUnsure: number[];
   /** Phase 3 trace summary, e.g. "Q4: borrowing-slip". */
@@ -379,6 +459,8 @@ async function gradeOnePhoto(args: {
   photoDataUrl: string;
   kidContext: KidContext[];
   onStep: (step: string) => void;
+  onIdentified?: (info: IdentifiedSheet) => void;
+  shouldStopAfterIdentify?: (sheetId: string) => boolean;
 }): Promise<PhotoOutcome> {
   const { config, runtime, providerId, modelId } = args;
   const manifest = subjectManifest(config, "math");
@@ -416,6 +498,9 @@ async function gradeOnePhoto(args: {
   const captured: Captured = {
     entry: null,
     rejection: null,
+    rejectionKind: null,
+    duplicate: false,
+    codeAttempts: 0,
     perQuestion: null,
     coercedUnsure: [],
     analyses: new Map(),
@@ -434,7 +519,10 @@ async function gradeOnePhoto(args: {
       retry: { enabled: true, maxRetries: config.settings.maxRetries },
     }),
     noTools: "builtin",
-    customTools: buildTools(captured, threshold, taxonomyCategoryIds(taxonomy)),
+    customTools: buildTools(captured, threshold, taxonomyCategoryIds(taxonomy), {
+      onIdentified: args.onIdentified,
+      shouldStopAfterIdentify: args.shouldStopAfterIdentify,
+    }),
   });
 
   const unsubscribe = session.subscribe((event) => {
@@ -477,7 +565,27 @@ async function gradeOnePhoto(args: {
     session.dispose();
   }
 
-  if (captured.rejection) return { rejection: captured.rejection, steps, coercedUnsure: captured.coercedUnsure, analysisSummary: [] };
+  const identified: IdentifiedSheet | undefined = captured.entry
+    ? {
+        sheetId: captured.entry.sheetId,
+        printedCode: captured.entry.printedCode,
+        kidName: captured.entry.kidName,
+        sheetLabel: sheetLabelFor(captured.entry),
+      }
+    : undefined;
+  if (captured.duplicate) {
+    return { duplicate: true, identified, steps, coercedUnsure: [], analysisSummary: [] };
+  }
+  if (captured.rejection) {
+    return {
+      rejection: captured.rejection,
+      rejectionKind: captured.rejectionKind ?? "read",
+      identified,
+      steps,
+      coercedUnsure: captured.coercedUnsure,
+      analysisSummary: [],
+    };
+  }
   if (captured.entry && captured.perQuestion) {
     const analysisSummary: string[] = [];
     const perQuestion = captured.perQuestion.map((g) => {
@@ -503,6 +611,7 @@ async function gradeOnePhoto(args: {
         keyVersion: captured.entry.keyVersion,
         perQuestion,
       },
+      identified,
       steps,
       coercedUnsure: captured.coercedUnsure,
       analysisSummary,
@@ -511,60 +620,74 @@ async function gradeOnePhoto(args: {
   throw new Error("The grading agent finished without identifying or grading the sheet.");
 }
 
-/** Grade all staged photos with the Pi harness on a models.json provider. */
-export async function gradeWithPiHarness(args: {
-  photos: string[];
+/** The runner's per-photo result from the Pi harness (Stage 3.5 §2). */
+export interface PiPhotoAttempt {
+  kind: "graded" | "duplicate" | "rejected-deterministic" | "rejected-read" | "failed";
+  sheet?: ApiSheetResult;
+  identified?: IdentifiedSheet;
+  reason?: string;
+  steps: string[];
+  /** Trace note fragments (confidence coercions, error analyses). */
+  notes: string[];
+}
+
+/** Grade ONE photo with the Pi harness on a models.json provider. */
+export async function gradePhotoWithPiHarness(args: {
+  photo: string;
   kidContext: KidContext[];
   providerId: string;
   modelId: string;
   apiKey: string | null;
   onStep: (step: string) => void;
-}): Promise<GradeJobResult> {
+  onIdentified?: (info: IdentifiedSheet) => void;
+  shouldStopAfterIdentify?: (sheetId: string) => boolean;
+}): Promise<PiPhotoAttempt> {
   const config = loadPiConfig();
   const runtime = await createModelRuntime(config, args.providerId, args.apiKey);
-  const sheets: ApiSheetResult[] = [];
-  const allSteps: string[] = [];
-  const coerced: number[] = [];
-  const analyses: string[] = [];
-
-  for (const photo of args.photos) {
-    const outcome = await gradeOnePhoto({
+  let outcome: PhotoOutcome;
+  try {
+    outcome = await gradeOnePhoto({
       config,
       runtime,
       providerId: args.providerId,
       modelId: args.modelId,
-      photoDataUrl: photo,
+      photoDataUrl: args.photo,
       kidContext: args.kidContext,
       onStep: args.onStep,
+      onIdentified: args.onIdentified,
+      shouldStopAfterIdentify: args.shouldStopAfterIdentify,
     });
-    for (const s of outcome.steps) if (!allSteps.includes(s)) allSteps.push(s);
-    coerced.push(...outcome.coercedUnsure);
-    analyses.push(...outcome.analysisSummary);
-    if (outcome.rejection) {
-      return {
-        outcome: "rejected",
-        reason: outcome.rejection,
-        trace: { provider: args.providerId, model: args.modelId, steps: allSteps },
-      };
-    }
-    if (outcome.sheet) sheets.push(outcome.sheet);
+  } catch (err) {
+    // Timeouts, provider errors, and a session that ends without a result
+    // are transient failures — the runner may retry them (Stage 3.5 §3).
+    return {
+      kind: "failed",
+      reason: err instanceof Error ? err.message : "Grading failed.",
+      steps: [],
+      notes: [],
+    };
   }
 
   const notes: string[] = [];
-  if (coerced.length > 0) {
-    notes.push(`Confidence rule enforced server-side: Q${coerced.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).`);
+  if (outcome.coercedUnsure.length > 0) {
+    notes.push(
+      `Confidence rule enforced server-side: Q${outcome.coercedUnsure.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).`,
+    );
   }
-  if (analyses.length > 0) {
-    notes.push(`Error analysis: ${analyses.join("; ")}.`);
+  if (outcome.analysisSummary.length > 0) {
+    notes.push(`Error analysis: ${outcome.analysisSummary.join("; ")}.`);
   }
-  return {
-    outcome: "graded",
-    sheets,
-    trace: {
-      provider: args.providerId,
-      model: args.modelId,
-      steps: allSteps,
-      ...(notes.length > 0 ? { note: notes.join(" ") } : {}),
-    },
-  };
+  if (outcome.duplicate) {
+    return { kind: "duplicate", identified: outcome.identified, steps: outcome.steps, notes };
+  }
+  if (outcome.rejection) {
+    return {
+      kind: outcome.rejectionKind === "deterministic" ? "rejected-deterministic" : "rejected-read",
+      reason: outcome.rejection,
+      identified: outcome.identified,
+      steps: outcome.steps,
+      notes,
+    };
+  }
+  return { kind: "graded", sheet: outcome.sheet, identified: outcome.identified, steps: outcome.steps, notes };
 }

@@ -72,13 +72,22 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
 
 ### Grading (server)
 
-- `POST /api/grade` accepts the staged photos and returns `202 { jobId }`;
-  the client (`lib/grading.ts`) polls `GET /api/grade/:jobId` — with
-  parent-language progress steps — until the job completes. Outcomes:
-  **graded**; **rejected** with a plain-language reason (unreadable photo,
-  unknown sheet, missing answer key); **failed** (nothing is ever
-  fabricated). `GET /api/config` reports provider/model status without
-  exposing keys.
+- `POST /api/grade` accepts the staged photos and returns `202 { jobId }`.
+  Marking runs **in the background** (Stage 3.5): Grade returns the parent
+  to Home, a Marking card shows per-sheet progress, and the app shell
+  polls `GET /api/grade/:jobId` and applies results as they land. Pending
+  jobs persist on the device, so an app restart collects — or, if the
+  server lost the job, resubmits — the batch. The job result is a list of
+  **per-photo outcomes**: **graded**; **duplicate** (same sheet twice in
+  one batch, marked once); **rejected** with a plain-language reason
+  (unreadable photo, unknown sheet, missing answer key); **failed**.
+  Batches succeed partially: failed photos are retried inside the job (up
+  to 3 attempts) and then returned to the tray. A question whose answer
+  box is completely empty is graded wrong as **no answer** (never a
+  Parent check item); any visible mark is read or marked unsure. A
+  finished sheet's result is never overwritten by a rescan. Nothing is
+  ever fabricated. `GET /api/config` reports provider/model status
+  without exposing keys. The full policy is `docs/stage-3.5-design.md`.
 - The grader is an agent harness on the Pi SDK
   (`lib/server/pi-harness.ts`): one short-lived in-memory session per
   photo, built-in tools disabled, only schema-typed submit tools —
@@ -108,7 +117,7 @@ lib/            store.ts (data layer), derive.ts, seed.ts, grading.ts (client),
 lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
                 pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
                 prompts/, context/ error taxonomy)
-docs/           stage-3-design.md (grading design), wireframe/ (design reference)
+docs/           stage-3-design.md (grading design), stage-3.5-design.md (result lifecycle), wireframe/ (design reference)
 ```
 
 ## Status
@@ -116,7 +125,10 @@ docs/           stage-3-design.md (grading design), wireframe/ (design reference
 - **Done:** scaffold + data layer; the full parent UI; Stage 3 real grading
   (API, Pi harness, error analysis + generated guidance), verified
   end-to-end against the live Meta provider, including messy-handwriting
-  cases that genuinely exercise the `unsure` path.
+  cases that genuinely exercise the `unsure` path; Stage 3.5 result
+  lifecycle (background marking, per-photo outcomes with retries and
+  partial success, blank-answer verdicts, rescan protection —
+  `docs/stage-3.5-design.md`).
 - **Not built yet:** English grading agent (launch is math-first),
   spaced-review queue (deferred to v2), Supabase migration
   (only when real accounts / multi-device access are needed).

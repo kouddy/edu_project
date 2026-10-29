@@ -8,12 +8,14 @@
  * fails in-flight jobs, and the client reports the failure to the parent.
  */
 
-import type { GradeJobResult, GradeJobStatusValue } from "../grade-contract";
+import type { GradeJobResult, GradeJobStatusValue, PhotoProgress } from "../grade-contract";
 
 export interface GradeJob {
   id: string;
   status: GradeJobStatusValue;
   step: string;
+  /** Stage 3.5 §6: live per-photo progress for the Home Marking card. */
+  photoProgress: PhotoProgress[];
   result?: GradeJobResult;
   error?: string;
   createdAt: number;
@@ -24,16 +26,29 @@ type GlobalWithJobs = typeof globalThis & { __gradeJobs?: Map<string, GradeJob> 
 const globalRef = globalThis as GlobalWithJobs;
 const jobs: Map<string, GradeJob> = (globalRef.__gradeJobs ??= new Map());
 
-export function createJob(): GradeJob {
+export function createJob(photoCount = 1): GradeJob {
   const job: GradeJob = {
     id: `job-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`,
     status: "running",
     step: "Reading the sheet",
+    photoProgress: Array.from({ length: photoCount }, (_, index) => ({
+      index,
+      state: "marking" as const,
+    })),
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
   jobs.set(job.id, job);
   return job;
+}
+
+export function updatePhotoProgress(id: string, index: number, patch: Partial<PhotoProgress>): void {
+  const job = jobs.get(id);
+  if (!job) return;
+  const entry = job.photoProgress[index];
+  if (!entry) return;
+  Object.assign(entry, patch);
+  job.updatedAt = Date.now();
 }
 
 export function getJob(id: string): GradeJob | null {

@@ -20,6 +20,7 @@ export async function GET(
   const body: GradeJobStatus = {
     status: job.status,
     step: job.step,
+    photoProgress: job.photoProgress,
     ...(job.result ? { result: job.result } : {}),
     ...(job.error ? { error: job.error } : {}),
   };

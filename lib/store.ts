@@ -100,6 +100,12 @@ export interface QuestionGradeMeta {
   errorCategory?: string;
   /** For wrong answers: generated guidance for the student. */
   guidance?: string;
+  /**
+   * Stage 3.5: the grader asserted this answer box was completely empty.
+   * The verdict is `wrong` with readAnswer null, Results shows "No answer
+   * written", and the question never enters Parent check.
+   */
+  noAnswer?: boolean;
 }
 
 export interface QuestionGrade {
@@ -260,6 +266,54 @@ export function signIn(email?: string): void {
 export function signOut(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(AUTH_KEY);
+}
+
+/* -------------------------------------------------- pending grade jobs */
+
+/**
+ * Stage 3.5 §6: grading runs in the background. A pending-job record is
+ * kept device-locally (next to the auth record, not inside the data
+ * document) from dispatch until its result has been applied, so an app
+ * restart can collect — or, if the server lost the job, resubmit — the
+ * batch. The referenced photos stay in IndexedDB until then.
+ */
+export interface PendingGradeJob {
+  jobId: string;
+  photoKeys: string[];
+  submittedAt: number;
+}
+
+const JOBS_KEY = "practice-sheets:jobs:v1";
+
+export function listPendingJobs(): PendingGradeJob[] {
+  if (!isBrowser()) return [];
+  try {
+    const raw = window.localStorage.getItem(JOBS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as PendingGradeJob[];
+    return Array.isArray(parsed)
+      ? parsed.filter((j) => j && typeof j.jobId === "string" && Array.isArray(j.photoKeys))
+      : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePendingJobs(jobs: PendingGradeJob[]): void {
+  if (!isBrowser()) return;
+  window.localStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
+}
+
+export function addPendingJob(job: PendingGradeJob): void {
+  savePendingJobs([...listPendingJobs().filter((j) => j.jobId !== job.jobId), job]);
+}
+
+export function updatePendingJob(jobId: string, patch: Partial<PendingGradeJob>): void {
+  savePendingJobs(listPendingJobs().map((j) => (j.jobId === jobId ? { ...j, ...patch } : j)));
+}
+
+export function removePendingJob(jobId: string): void {
+  savePendingJobs(listPendingJobs().filter((j) => j.jobId !== jobId));
 }
 
 export function upsertParent(parent: Parent): Parent {

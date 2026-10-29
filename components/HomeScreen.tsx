@@ -15,7 +15,17 @@ import {
   type Snapshot,
 } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
+import { Spinner } from "@heroui/react";
 import { IconDownload } from "./ui";
+
+/** Stage 3.5 §6: the Home Marking card's data, built by the app shell. */
+interface MarkingCardData {
+  /** Live per-photo lines while marking is in flight. */
+  lines: { label: string; state: string; done: boolean }[];
+  /** Settled summary lines, shown until dismissed. */
+  summary: string[] | null;
+  onDismissSummary: () => void;
+}
 
 interface Props {
   snap: Snapshot;
@@ -25,6 +35,7 @@ interface Props {
   onOpenCheck: () => void;
   showToast: (msg: string) => void;
   scrollSection: "homework" | "history" | null;
+  marking: MarkingCardData | null;
 }
 
 /* Styled directly from the wireframe's CSS (.card, .btn, .pill, .chip) so
@@ -44,6 +55,7 @@ export default function HomeScreen({
   onOpenSheet,
   onOpenCheck,
   showToast,
+  marking,
 }: Props) {
   const status = statusSlot(snap, kid);
   const homework = homeworkStates(snap, kid);
@@ -71,6 +83,45 @@ export default function HomeScreen({
       <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
         Home
       </h1>
+
+      {/* ---- marking card (Stage 3.5 §6) ---- */}
+      {marking && (
+        <div className={`${CARD} px-[15px] py-[14px]`}>
+          {marking.lines.length > 0 && (
+            <>
+              <div className="flex items-center gap-2">
+                <Spinner size="sm" color="accent" />
+                <h3 className={H3}>Marking your sheets…</h3>
+              </div>
+              <div className="mt-2 space-y-1">
+                {marking.lines.map((line, i) => (
+                  <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
+                    <span className="font-semibold text-ink">{line.label}</span> — {line.state}
+                  </p>
+                ))}
+              </div>
+            </>
+          )}
+          {marking.summary && marking.summary.length > 0 && (
+            <div className={marking.lines.length > 0 ? "mt-3 border-t border-dashed border-linesoft pt-3" : ""}>
+              <div className="space-y-1">
+                {marking.summary.map((line, i) => (
+                  <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
+                    {line}
+                  </p>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={marking.onDismissSummary}
+                className="mt-2.5 text-[13.5px] font-bold text-tangdeep"
+              >
+                Got it
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ---- status slot ---- */}
       {status?.type === "check" && (

@@ -158,7 +158,9 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                 <div className="mt-[1px] text-[13px] text-mid">
                   {kind === "unsure"
                     ? "We couldn't read this one for sure — needs your check."
-                    : `${kid.name} wrote ${g.readAnswer}`}
+                    : g.meta?.noAnswer
+                      ? "No answer written."
+                      : `${kid.name} wrote ${g.readAnswer}`}
                 </div>
                 {g.verdict === "wrong" && (
                   <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
