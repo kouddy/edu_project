@@ -96,9 +96,7 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
   provider is defined but its multimodal tool-calling path currently
   hangs, so it is not usable for grading.
 - Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
-  versioned key, seeded from `lib/seed.ts`. 6 of 7 sheets have keys; Leo's
-  Week 12 key is not registered yet, so his sheet returns the "no answer
-  key yet" rejection.
+  versioned key, seeded from `lib/seed.ts`. All 7 sheets have keys.
 
 ## Repo map
 
@@ -119,6 +117,6 @@ docs/           stage-3-design.md (grading design), wireframe/ (design reference
   (API, Pi harness, error analysis + generated guidance), verified
   end-to-end against the live Meta provider, including messy-handwriting
   cases that genuinely exercise the `unsure` path.
-- **Not built yet:** English grading agent (launch is math-first), Leo's
-  answer key, spaced-review queue (deferred to v2), Supabase migration
+- **Not built yet:** English grading agent (launch is math-first),
+  spaced-review queue (deferred to v2), Supabase migration
   (only when real accounts / multi-device access are needed).

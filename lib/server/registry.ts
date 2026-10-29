@@ -23,7 +23,7 @@ const AGENT_BY_SUBJECT: Record<string, AgentId> = {
 };
 
 /** Registry key version for every seeded sheet. Bump when a key changes. */
-const SEEDED_KEY_VERSION = 1;
+const SEEDED_KEY_VERSION = 2;
 
 export interface RegistryEntry {
   printedCode: string;
