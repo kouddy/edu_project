@@ -152,9 +152,9 @@ export function BackButton({ onPress }: { onPress: () => void }) {
     <button
       type="button"
       onClick={onPress}
-      className="-ml-1 inline-flex items-center gap-0.5 py-1 pr-3 text-[15px] font-bold text-tangdeep"
+      className="inline-flex items-center gap-[3px] py-1.5 pr-2 text-[14.5px] font-bold leading-none text-tangdeep"
     >
-      <IconChevronLeft size={19} />
+      <span className="text-[17px] leading-none">‹</span>
       Back
     </button>
   );
@@ -170,10 +170,14 @@ export function ScreenHeader({
   sub?: string;
 }) {
   return (
-    <div className="mb-4">
-      <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-tang">{kicker}</p>
-      <h1 className="mt-0.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">{title}</h1>
-      {sub && <p className="mt-0.5 text-[14px] text-mid">{sub}</p>}
+    <div>
+      <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
+        {kicker}
+      </p>
+      <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
+        {title}
+      </h1>
+      {sub && <p className="mb-3.5 text-[13.5px] leading-[1.45] text-mid">{sub}</p>}
     </div>
   );
 }

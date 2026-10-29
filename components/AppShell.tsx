@@ -270,7 +270,7 @@ export default function AppShell() {
                 tabVisible ? "bottom-24" : "bottom-8"
               }`}
             >
-              <p className="max-w-full truncate rounded-full bg-ink px-4 py-2.5 text-[13.5px] font-bold text-cream shadow-lg">
+              <p className="max-w-full truncate rounded-full bg-ink px-4 py-2.5 text-[13.5px] font-semibold text-cream shadow-[0_6px_18px_rgba(61,43,31,0.35)]">
                 {toast.msg}
               </p>
             </motion.div>
@@ -279,29 +279,29 @@ export default function AppShell() {
 
         {/* ------------------------------------------------------ tab bar */}
         {tabVisible && (
-          <nav className="relative z-10 flex flex-none items-end border-t border-linesoft bg-cream px-6 pb-4 pt-2">
+          <nav className="relative z-10 grid flex-none grid-cols-[1fr_76px_1fr] items-end gap-0.5 border-t-[1.5px] border-line bg-fill px-2.5 pb-[calc(10px+env(safe-area-inset-bottom))] pt-2">
             <TabButton
               label="Home"
               active={activeTab === "home"}
               onClick={() => goHome()}
-              icon={<IconHome size={24} />}
+              icon={<IconHome size={22} />}
             />
-            <div className="flex flex-1 justify-center">
+            <div className="flex justify-center">
               <button
                 type="button"
                 onClick={() => setScreen({ name: "scan" })}
                 aria-label="Scan a sheet"
-                className="-mt-9 flex h-[62px] w-[62px] flex-col items-center justify-center rounded-full bg-tang text-white shadow-[0_8px_20px_rgba(199,91,0,0.45)] ring-4 ring-cream"
+                className="-mt-[26px] flex h-[62px] w-[62px] flex-col items-center justify-center gap-px rounded-full border-2 border-card bg-[linear-gradient(165deg,#f07d12,#e8710a)] font-display text-[#fff8ec] shadow-[0_6px_16px_rgba(199,91,0,0.4)]"
               >
-                <IconScan size={26} />
-                <span className="text-[9.5px] font-extrabold leading-none">Scan</span>
+                <IconScan size={24} />
+                <span className="text-[10.5px] font-extrabold leading-none">Scan</span>
               </button>
             </div>
             <TabButton
               label="Profile"
               active={activeTab === "profile"}
               onClick={() => setScreen({ name: "profile" })}
-              icon={<IconUser size={24} />}
+              icon={<IconUser size={22} />}
             />
           </nav>
         )}
@@ -325,12 +325,12 @@ function TabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-16 flex-col items-center gap-0.5 py-1 ${
-        active ? "text-tang" : "text-faint"
+      className={`flex flex-col items-center gap-[3px] pb-0.5 pt-1 ${
+        active ? "text-tangdeep" : "text-faint"
       }`}
     >
       {icon}
-      <span className="text-[11px] font-bold">{label}</span>
+      <span className="text-[11.5px] font-semibold">{label}</span>
     </button>
   );
 }

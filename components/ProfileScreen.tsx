@@ -47,7 +47,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
         <p className="mb-[3px] text-[11.5px] font-bold uppercase tracking-[0.12em] text-faint">
           Parent account
         </p>
-        <p className="font-display text-[24px] font-extrabold leading-tight text-ink">
+        <p className="font-display text-[24px] font-extrabold text-ink">
           {parent.name}
         </p>
         <p className="mt-[3px] text-[13px] text-mid">
@@ -56,7 +56,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
       </div>
 
       <div className={`${CARD} px-4 pb-4 pt-5 text-center`}>
-        <h3 className="font-display text-[16px] font-extrabold text-ink">Your member code</h3>
+        <h3 className="mb-1 font-display text-[16px] font-extrabold text-ink">Your member code</h3>
         <div className="mx-auto my-3 flex h-[196px] w-[196px] items-center justify-center rounded-[14px] border-[1.5px] border-linesoft bg-white p-[14px] shadow-[0_2px_8px_rgba(146,90,32,0.14)]">
           {qrUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

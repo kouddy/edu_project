@@ -83,10 +83,10 @@ export default function HomeScreen({
               {status.count}
             </span>
           </div>
-          <p className="mt-0.5 text-[15px] font-semibold text-ink">
+          <p className="mt-0.5 text-[13.5px] font-semibold text-ink">
             {checkKid} · {checkSheet}
           </p>
-          <p className="mt-0.5 text-[15px] leading-[1.45] text-ink">
+          <p className="text-[13.5px] leading-[1.45] text-mid">
             We marked {checkSheet}, but we couldn’t read {status.count}{" "}
             {status.count === 1 ? "answer" : "answers"} for sure. A quick look settles the score.
           </p>
@@ -96,7 +96,7 @@ export default function HomeScreen({
         </div>
       )}
       {status?.type === "caughtup" && (
-        <div className="mb-3 rounded-[16px] border-[1.5px] border-[#bcd8b2] bg-[#eaf4e4] px-[15px] py-[14px] text-center font-display text-[15.5px] font-extrabold text-[#2f5d2a]">
+        <div className="mb-3 rounded-[16px] border-[1.5px] border-[#bcd8b2] bg-[#eaf4e4] px-[15px] py-[14px] text-center font-display text-[15.5px] font-extrabold leading-[1.35] text-[#2f5d2a] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]">
           All caught up for this week 🎉
         </div>
       )}
@@ -147,7 +147,7 @@ export default function HomeScreen({
             />
           ))}
           {homeworkRows.length === 0 && (
-            <p className="px-[15px] pb-[14px] text-[15px] text-ink">No homework assigned yet.</p>
+            <p className="px-[15px] pb-[14px] text-[13.5px] text-mid">No homework assigned yet.</p>
           )}
         </div>
       </section>
@@ -156,17 +156,17 @@ export default function HomeScreen({
       {showProgress && (
         <div className={CARD}>
           <h3 className={`${H3} px-[15px] pb-0.5 pt-[14px]`}>Progress</h3>
-          <div className="px-[15px] py-[11px]">
+          <div className="px-[17px] py-[11px]">
             <p className="text-[14.5px] font-semibold text-ink">
               ★ {streakFor(snap, kid)}-week streak
             </p>
-            <p className="text-[12.5px] text-faint">Every pack finished, week after week</p>
+            <p className="text-[12.5px] text-mid">Every pack finished, week after week</p>
           </div>
           {retention && (
-            <div className="flex items-center justify-between gap-2 border-t border-dashed border-linesoft px-[15px] py-[11px]">
+            <div className="flex items-center justify-between gap-2 border-t border-dashed border-linesoft px-[17px] py-[11px]">
               <div>
                 <p className="text-[14.5px] font-semibold text-ink">Review from last month</p>
-                <p className="text-[12.5px] text-faint">Last month’s questions, asked again</p>
+                <p className="text-[12.5px] text-mid">Last month’s questions, asked again</p>
               </div>
               <span className={`${PILL} border-linesoft bg-fill text-mid`}>{retention}</span>
             </div>
@@ -184,7 +184,7 @@ export default function HomeScreen({
                 key={st.sheet.id}
                 type="button"
                 onClick={() => onOpenSheet(st.sheet.id, "history")}
-                className={`flex w-full items-center justify-between gap-2 px-[15px] py-[11px] text-left ${
+                className={`flex w-full items-center justify-between gap-2 px-[17px] py-[11px] text-left ${
                   i < history.length - 1 ? "border-b border-dashed border-linesoft" : ""
                 }`}
               >
@@ -192,7 +192,7 @@ export default function HomeScreen({
                   <span className="block truncate text-[14.5px] font-semibold text-ink">
                     {sheetLabel(st.sheet)}
                   </span>
-                  <span className="block text-[12.5px] text-faint">
+                  <span className="block text-[12.5px] text-mid">
                     {st.sheet.setName
                       ? capitalize(scannedText(st.result?.gradedAt))
                       : `Graded ${st.result ? shortDate(st.result.gradedAt) : ""}`}
@@ -211,7 +211,7 @@ export default function HomeScreen({
         <div className="mb-3 rounded-[16px] border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]">
           <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
           <h3 className={`${H3} mb-1`}>No sheets scanned yet</h3>
-          <p className="text-[14.5px] leading-[1.45] text-mid">
+          <p className="text-[13.5px] leading-[1.45] text-mid">
             When {kid.name} finishes their first sheet, tap Scan below to add it — grading takes
             a few seconds.
           </p>
@@ -239,7 +239,7 @@ function HomeworkRow({
   const done = isDone(st);
   return (
     <div
-      className={`flex w-full items-center gap-1.5 px-[15px] py-[11px] ${
+      className={`flex w-full items-center gap-1.5 px-[17px] py-[11px] ${
         last ? "" : "border-b border-dashed border-linesoft"
       }`}
     >

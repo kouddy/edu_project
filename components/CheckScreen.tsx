@@ -49,9 +49,9 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
 
       {!item && resolved.length === 0 && (
         <div className={`${CARD} text-center`}>
-          <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
+          <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
           <h3 className={`${H3} mb-1`}>All checked — nice work</h3>
-          <p className="text-[15px] leading-[1.45] text-ink">Nothing needs your check right now.</p>
+          <p className="text-[13.5px] leading-[1.45] text-mid">Nothing needs your check right now.</p>
         </div>
       )}
 
@@ -68,7 +68,7 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
             <h3 className={`${H3} mb-1`}>
               {item.kid.name} · {shortLabel(item.sheet)} · Q{item.questionNumber}
             </h3>
-            <p className="mb-2.5 text-[15px] leading-[1.45] text-ink">
+            <p className="mb-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
               <strong>{item.prompt}</strong> &nbsp;·&nbsp; Correct answer:{" "}
               <strong>{item.correctAnswer}</strong>
             </p>
@@ -80,7 +80,7 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
                 {(item.readAnswer ?? "?").split("").join(" ")}
               </span>
             </div>
-            <p className="mt-2.5 text-[15px] leading-[1.45] text-ink">
+            <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
               {item.readAnswer ? (
                 <>
                   We think this looks like &ldquo;{item.readAnswer}&rdquo;. Was {item.kid.name}
@@ -142,14 +142,14 @@ function CompletionCard({
 
   return (
     <div className={`${CARD} text-center`}>
-      <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
+      <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
       <h3 className={`${H3} mb-1`}>All checked — nice work</h3>
       {sheetIds.map((sheetId) => {
         const st = snap.states.get(sheetId);
         if (!st?.score) return null;
         return (
           <div key={sheetId}>
-            <p className="text-[15px] leading-[1.45] text-ink">
+            <p className="text-[13.5px] leading-[1.45] text-mid">
               Final score for {shortLabel(st.sheet)}:
             </p>
             <p className="my-2 text-[26px] font-bold leading-none text-ink">
@@ -158,7 +158,7 @@ function CompletionCard({
           </div>
         );
       })}
-      <p className="text-[15px] leading-[1.45] text-ink">
+      <p className="text-[13.5px] leading-[1.45] text-mid">
         {q9Wrong
           ? `Q9 marked wrong — recorded in ${kidName}’s progress.`
           : `All results are recorded in ${kidName}’s progress.`}

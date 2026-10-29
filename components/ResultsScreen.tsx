@@ -129,7 +129,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
         <div className="mb-2">
           <ScoreBadges score={score} align="end" />
         </div>
-        <p className="text-[15px] leading-[1.45] text-ink">{summaryText(st)}</p>
+        <p className="text-[13.5px] leading-[1.45] text-mid">{summaryText(st)}</p>
       </div>
 
       <div className={CARD}>
@@ -320,9 +320,9 @@ export function NotStartedScreen({
       <BackButton onPress={onBack} />
       <ScreenHeader kicker="Practice Sheets" title={`${kid.name} · ${sheetLabel(sheet)}`} />
       <div className="rounded-[16px] border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center">
-        <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
+        <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
         <h3 className={`${H3} mb-1`}>Not started yet</h3>
-        <p className="text-[15px] leading-[1.45] text-ink">
+        <p className="text-[13.5px] leading-[1.45] text-mid">
           {kid.name} hasn&rsquo;t done this sheet yet. When they finish it, scan it to get it
           marked.
         </p>
