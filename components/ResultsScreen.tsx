@@ -161,8 +161,8 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                     : `${kid.name} wrote ${g.readAnswer}`}
                 </div>
                 {g.verdict === "wrong" && (
-                  <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                    {q.explanation}
+                  <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
+                    {g.meta?.guidance ?? q.explanation}
                   </div>
                 )}
                 {resolution?.resolution === "wrong" && (

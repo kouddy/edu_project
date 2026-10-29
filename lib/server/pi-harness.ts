@@ -1,5 +1,5 @@
 /**
- * lib/server/pi-harness.ts — the Pi SDK grading harness (Phase 2).
+ * lib/server/pi-harness.ts — the Pi SDK grading harness (Phases 2–3).
  *
  * One ephemeral, in-memory Pi session per photo. The session is built with
  * full explicit control — no ambient discovery:
@@ -16,7 +16,14 @@
  * printed code up in the server registry and hands back the answer key),
  * then submit_grade (validated here: every key question exactly once, and
  * the confidence rule is enforced — a verdict under the configured
- * threshold is coerced to "unsure"; the agent cannot argue past it).
+ * threshold is coerced to "unsure"; the agent cannot argue past it). When
+ * the grade has wrong answers, the agent continues in the same session:
+ * submit_error_analysis categorizes each wrong answer against the subject
+ * taxonomy, then submit_guidance writes per-question guidance (what
+ * happened / worked steps / try one like it). Analysis and guidance are
+ * best-effort extras: whatever the agent submits is merged into each wrong
+ * question's meta; a sheet still grades fine if it submits neither, and
+ * the client falls back to the key's static explanation.
  *
  * Providers and models come from lib/server/pi/models.json — Pi's own
  * native format (providers → baseUrl / api / apiKey with "$ENV_VAR"
@@ -55,6 +62,8 @@ const PER_PHOTO_TIMEOUT_MS = 150_000;
 const STEP_BY_TOOL: Record<string, string> = {
   submit_identification: "Reading the sheet",
   submit_grade: "Marking answers",
+  submit_error_analysis: "Understanding the mistakes",
+  submit_guidance: "Writing guidance",
 };
 
 interface Captured {
@@ -62,6 +71,16 @@ interface Captured {
   rejection: string | null;
   perQuestion: ApiQuestionGrade[] | null;
   coercedUnsure: number[];
+  /** Phase 3: questionNumber → taxonomy category + what the student likely did. */
+  analyses: Map<number, { category: string; observation: string }>;
+  /** Phase 3: questionNumber → generated guidance text. */
+  guidances: Map<number, string>;
+}
+
+/** Taxonomy category ids are the bold slugs in the taxonomy context file. */
+function taxonomyCategoryIds(taxonomy: string): string[] {
+  const ids = [...taxonomy.matchAll(/\*\*([a-z][a-z0-9-]*)\*\*/g)].map((m) => m[1]);
+  return ids.length > 0 ? [...new Set(ids)] : ["unexplained"];
 }
 
 function parseDataUrl(dataUrl: string): { data: string; mimeType: string } {
@@ -70,7 +89,11 @@ function parseDataUrl(dataUrl: string): { data: string; mimeType: string } {
   return { mimeType: match[1], data: match[2] };
 }
 
-function buildTools(captured: Captured, threshold: number) {
+function wrongNumbers(captured: Captured): number[] {
+  return (captured.perQuestion ?? []).filter((g) => g.verdict === "wrong").map((g) => g.questionNumber);
+}
+
+function buildTools(captured: Captured, threshold: number, categoryIds: string[]) {
   const submitIdentification = defineTool({
     name: "submit_identification",
     label: "Submit identification",
@@ -191,11 +214,140 @@ function buildTools(captured: Captured, threshold: number) {
             meta: { topic: topicByNumber.get(g.questionNumber) },
           };
         });
-      return { content: [{ type: "text" as const, text: "Grade recorded. You are done — stop here." }], details: {} };
+      const wrong = wrongNumbers(captured);
+      if (wrong.length === 0) {
+        return { content: [{ type: "text" as const, text: "Grade recorded. No wrong answers to analyze. You are done — stop here." }], details: {} };
+      }
+      const detail = captured.perQuestion!
+        .filter((g) => g.verdict === "wrong")
+        .map((g) => {
+          const keyQ = entry.questions.find((q) => q.number === g.questionNumber);
+          return `Q${g.questionNumber}: ${keyQ?.prompt ?? ""} — correct answer ${keyQ?.correctAnswer ?? ""}, student wrote ${g.readAnswer ?? "(unreadable)"}`;
+        })
+        .join("\n");
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: [
+              `Grade recorded. ${wrong.length} wrong answer(s) need error analysis and guidance:`,
+              detail,
+              "Next: call submit_error_analysis once, covering every wrong question, choosing one category per question from the taxonomy. Then call submit_guidance once, with guidance for every wrong question.",
+            ].join("\n"),
+          },
+        ],
+        details: {},
+      };
     },
   });
 
-  return [submitIdentification, submitGrade];
+  const submitErrorAnalysis = defineTool({
+    name: "submit_error_analysis",
+    label: "Submit error analysis",
+    description:
+      "For each wrong answer, submit the single best-fitting error category from the taxonomy and one short sentence on what the student most likely did.",
+    parameters: Type.Object({
+      analyses: Type.Array(
+        Type.Object({
+          questionNumber: Type.Number(),
+          category: Type.String({ description: "One taxonomy category id, exactly as written in the taxonomy." }),
+          observation: Type.String({ description: "One short sentence: what the student most likely did." }),
+        }),
+      ),
+    }),
+    execute: async (_id, params) => {
+      if (!captured.perQuestion) {
+        return { content: [{ type: "text" as const, text: "Grade the sheet first (submit_grade), then analyze." }], details: {} };
+      }
+      const wrong = wrongNumbers(captured);
+      const problems: string[] = [];
+      for (const a of params.analyses) {
+        if (!wrong.includes(a.questionNumber)) {
+          problems.push(`Q${a.questionNumber} is not a wrong answer on this sheet (wrong: ${wrong.join(", ") || "none"}).`);
+          continue;
+        }
+        if (!categoryIds.includes(a.category)) {
+          problems.push(`"${a.category}" for Q${a.questionNumber} is not a taxonomy category. Use one of: ${categoryIds.join(", ")}.`);
+          continue;
+        }
+        captured.analyses.set(a.questionNumber, { category: a.category, observation: a.observation });
+      }
+      const missing = wrong.filter((n) => !captured.analyses.has(n));
+      if (problems.length > 0) {
+        return {
+          content: [{ type: "text" as const, text: `Some analyses were not recorded:\n${problems.join("\n")}\nFix those and call submit_error_analysis again for them.` }],
+          details: {},
+        };
+      }
+      if (missing.length > 0) {
+        return {
+          content: [{ type: "text" as const, text: `Analysis recorded for some questions. Still missing: Q${missing.join(", Q")}. Call submit_error_analysis again for those.` }],
+          details: {},
+        };
+      }
+      return {
+        content: [{ type: "text" as const, text: "Error analysis recorded for every wrong answer. Now call submit_guidance once, with guidance for every wrong question, using its category to aim the teaching at the step that broke." }],
+        details: {},
+      };
+    },
+  });
+
+  const submitGuidance = defineTool({
+    name: "submit_guidance",
+    label: "Submit guidance",
+    description:
+      "For each wrong answer, submit the guidance text for the student: what happened (one kind sentence), the worked steps (one per line), and a 'Try one like it:' question with its answer left out.",
+    parameters: Type.Object({
+      guidances: Type.Array(
+        Type.Object({
+          questionNumber: Type.Number(),
+          guidance: Type.String({ description: "The full guidance text for this question, parts separated by line breaks." }),
+        }),
+      ),
+    }),
+    execute: async (_id, params) => {
+      if (!captured.perQuestion) {
+        return { content: [{ type: "text" as const, text: "Grade the sheet first (submit_grade), then write guidance." }], details: {} };
+      }
+      const wrong = wrongNumbers(captured);
+      const problems: string[] = [];
+      for (const g of params.guidances) {
+        if (!wrong.includes(g.questionNumber)) {
+          problems.push(`Q${g.questionNumber} is not a wrong answer on this sheet (wrong: ${wrong.join(", ") || "none"}).`);
+          continue;
+        }
+        const text = g.guidance.trim();
+        if (text.length < 20) {
+          problems.push(`Guidance for Q${g.questionNumber} is too short to teach anything — include what happened, the worked steps, and a try-one-like-it question.`);
+          continue;
+        }
+        captured.guidances.set(g.questionNumber, text);
+      }
+      const missingGuidance = wrong.filter((n) => !captured.guidances.has(n));
+      const missingAnalysis = wrong.filter((n) => !captured.analyses.has(n));
+      if (problems.length > 0) {
+        return {
+          content: [{ type: "text" as const, text: `Some guidance was not recorded:\n${problems.join("\n")}\nFix those and call submit_guidance again for them.` }],
+          details: {},
+        };
+      }
+      if (missingGuidance.length > 0) {
+        return {
+          content: [{ type: "text" as const, text: `Guidance recorded for some questions. Still missing: Q${missingGuidance.join(", Q")}. Call submit_guidance again for those.` }],
+          details: {},
+        };
+      }
+      if (missingAnalysis.length > 0) {
+        return {
+          content: [{ type: "text" as const, text: "Guidance recorded. Error analysis is still missing for Q" + missingAnalysis.join(", Q") + " — call submit_error_analysis for those, then you are done." }],
+          details: {},
+        };
+      }
+      return { content: [{ type: "text" as const, text: "Guidance recorded. You are done — stop here." }], details: {} };
+    },
+  });
+
+  return [submitIdentification, submitGrade, submitErrorAnalysis, submitGuidance];
 }
 
 async function createModelRuntime(config: PiConfig, providerId: string, apiKey: string | null): Promise<ModelRuntime> {
@@ -215,6 +367,8 @@ interface PhotoOutcome {
   rejection?: string;
   steps: string[];
   coercedUnsure: number[];
+  /** Phase 3 trace summary, e.g. "Q4: borrowing-slip". */
+  analysisSummary: string[];
 }
 
 async function gradeOnePhoto(args: {
@@ -233,9 +387,11 @@ async function gradeOnePhoto(args: {
   const taxonomy = taxonomyRel ? readFileSync(path.join(config.configDir, taxonomyRel), "utf8") : "";
 
   const systemPrompt = [
-    "You are the grading agent of a children's practice-sheet service. You work in exactly two steps: identify the sheet with submit_identification, then grade it with submit_grade. Do not write explanations to the parent; only tool calls matter.",
+    "You are the grading agent of a children's practice-sheet service. You work in order: identify the sheet with submit_identification, grade it with submit_grade, and — only when the grade has wrong answers — categorize the errors with submit_error_analysis and write guidance with submit_guidance. Do not write explanations to the parent; only tool calls matter.",
     loadPrompt(config, "math", "identify"),
     loadPrompt(config, "math", "grade"),
+    ...(manifest.promptFiles.errorAnalysis ? [loadPrompt(config, "math", "errorAnalysis")] : []),
+    ...(manifest.promptFiles.guidance ? [loadPrompt(config, "math", "guidance")] : []),
   ].join("\n\n");
 
   const resourceLoader: ResourceLoader = {
@@ -257,7 +413,14 @@ async function gradeOnePhoto(args: {
   const model = runtime.getModel(providerId, modelId);
   if (!model) throw new Error(`Model ${providerId}/${modelId} is not defined in lib/server/pi/models.json.`);
 
-  const captured: Captured = { entry: null, rejection: null, perQuestion: null, coercedUnsure: [] };
+  const captured: Captured = {
+    entry: null,
+    rejection: null,
+    perQuestion: null,
+    coercedUnsure: [],
+    analyses: new Map(),
+    guidances: new Map(),
+  };
   const steps: string[] = [];
   const { session } = await createAgentSession({
     cwd: process.cwd(),
@@ -271,7 +434,7 @@ async function gradeOnePhoto(args: {
       retry: { enabled: true, maxRetries: config.settings.maxRetries },
     }),
     noTools: "builtin",
-    customTools: buildTools(captured, threshold),
+    customTools: buildTools(captured, threshold, taxonomyCategoryIds(taxonomy)),
   });
 
   const unsubscribe = session.subscribe((event) => {
@@ -290,7 +453,7 @@ async function gradeOnePhoto(args: {
     const promptText = [
       "Grade the worksheet in this photo.",
       kids ? `The account's children: ${kids}.` : "",
-      "First call submit_identification with the printed code and the name on the sheet. The tool will give you the answer key. Then call submit_grade with a verdict for every question. If the photo cannot be graded, submit_identification with photoUsable=false and a plain reason.",
+      "First call submit_identification with the printed code and the name on the sheet. The tool will give you the answer key. Then call submit_grade with a verdict for every question. If any answers are wrong, the grading tool will ask you to analyze the errors and write guidance for them. If the photo cannot be graded, submit_identification with photoUsable=false and a plain reason.",
     ]
       .filter(Boolean)
       .join("\n");
@@ -314,18 +477,35 @@ async function gradeOnePhoto(args: {
     session.dispose();
   }
 
-  if (captured.rejection) return { rejection: captured.rejection, steps, coercedUnsure: captured.coercedUnsure };
+  if (captured.rejection) return { rejection: captured.rejection, steps, coercedUnsure: captured.coercedUnsure, analysisSummary: [] };
   if (captured.entry && captured.perQuestion) {
+    const analysisSummary: string[] = [];
+    const perQuestion = captured.perQuestion.map((g) => {
+      if (g.verdict !== "wrong") return g;
+      const analysis = captured.analyses.get(g.questionNumber);
+      const guidance = captured.guidances.get(g.questionNumber);
+      if (analysis) analysisSummary.push(`Q${g.questionNumber}: ${analysis.category}`);
+      if (!analysis && !guidance) return g;
+      return {
+        ...g,
+        meta: {
+          ...g.meta,
+          ...(analysis ? { errorCategory: analysis.category } : {}),
+          ...(guidance ? { guidance } : {}),
+        },
+      };
+    });
     return {
       sheet: {
         sheetId: captured.entry.sheetId,
         kidId: captured.entry.kidId,
         printedCode: captured.entry.printedCode,
         keyVersion: captured.entry.keyVersion,
-        perQuestion: captured.perQuestion,
+        perQuestion,
       },
       steps,
       coercedUnsure: captured.coercedUnsure,
+      analysisSummary,
     };
   }
   throw new Error("The grading agent finished without identifying or grading the sheet.");
@@ -345,6 +525,7 @@ export async function gradeWithPiHarness(args: {
   const sheets: ApiSheetResult[] = [];
   const allSteps: string[] = [];
   const coerced: number[] = [];
+  const analyses: string[] = [];
 
   for (const photo of args.photos) {
     const outcome = await gradeOnePhoto({
@@ -358,6 +539,7 @@ export async function gradeWithPiHarness(args: {
     });
     for (const s of outcome.steps) if (!allSteps.includes(s)) allSteps.push(s);
     coerced.push(...outcome.coercedUnsure);
+    analyses.push(...outcome.analysisSummary);
     if (outcome.rejection) {
       return {
         outcome: "rejected",
@@ -368,6 +550,13 @@ export async function gradeWithPiHarness(args: {
     if (outcome.sheet) sheets.push(outcome.sheet);
   }
 
+  const notes: string[] = [];
+  if (coerced.length > 0) {
+    notes.push(`Confidence rule enforced server-side: Q${coerced.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).`);
+  }
+  if (analyses.length > 0) {
+    notes.push(`Error analysis: ${analyses.join("; ")}.`);
+  }
   return {
     outcome: "graded",
     sheets,
@@ -375,9 +564,7 @@ export async function gradeWithPiHarness(args: {
       provider: args.providerId,
       model: args.modelId,
       steps: allSteps,
-      ...(coerced.length > 0
-        ? { note: `Confidence rule enforced server-side: Q${coerced.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).` }
-        : {}),
+      ...(notes.length > 0 ? { note: notes.join(" ") } : {}),
     },
   };
 }

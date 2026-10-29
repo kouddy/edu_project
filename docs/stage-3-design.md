@@ -114,9 +114,19 @@ no in-app review queue (v2).
   identification + grading via the `submit_identification` / `submit_grade`
   tools, server-side validation and confidence-rule enforcement in the tool
   executors, API `rejected` outcomes wired into the client (staged photos
-  kept, back to Scan with the reason as a toast). Live end-to-end
-  verification against the real API is pending a server-side `META_API_KEY`.
-- **Phase 3** — error categorization + guidance generation steps.
+  kept, back to Scan with the reason as a toast). Live end-to-end verified
+  2026-10-29 against the real Meta API, both via the API and through the
+  full parent UI flow (test sheet graded 9/10 in ~21s).
+- **Phase 3** — implemented (branch `stage3`, 2026-10-29): after grading,
+  wrong answers continue in the same session — `submit_error_analysis`
+  categorizes each against the taxonomy (ids validated server-side against
+  the taxonomy file) and `submit_guidance` writes per-question guidance
+  (what happened / worked steps / try one like it, answer withheld). Both
+  are best-effort: results merge into each wrong question's `meta`
+  (`errorCategory`, `guidance`), the trace notes the categories found, and
+  Results shows generated guidance when present, falling back to the key's
+  static explanation. Live-verified on Meta: Q4 → `borrowing-slip` with
+  generated guidance, ~37s end to end.
 - **Phase 4** — the English agent, shape B.
 
 ## Environment variables
