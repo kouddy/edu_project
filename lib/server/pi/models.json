@@ -17,14 +17,14 @@
                     "name": "Muse Spark Open (via Baseten)"
                 },
                 {
-                    "contextWindow": 200000,
-                    "id": "zai-org/GLM-5.2",
+                    "contextWindow": 1000000,
+                    "id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
                     "input": [
                         "text",
                         "image"
                     ],
                     "maxTokens": 8192,
-                    "name": "GLM 5.2 (via Baseten)"
+                    "name": "DeepSeek V4.1 Flash 1017 (via Baseten)"
                 }
             ],
             "name": "Baseten"
