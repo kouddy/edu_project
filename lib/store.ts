@@ -3,7 +3,7 @@
  *
  * ALL data access goes through this module. UI code must never touch
  * localStorage or IndexedDB directly, so this implementation can be swapped
- * for Supabase later (see SPEC.md, Prompt 7) without changing any page code.
+ * for Supabase later without changing any page code.
  *
  * Storage (local-first phase):
  * - Records (parents, kids, sheets, answer keys, submissions, grade results,
@@ -11,7 +11,7 @@
  * - Photos live in IndexedDB — they are too big for localStorage. Submissions
  *   reference photos by opaque `photoKeys`.
  *
- * Hard rules honoured here (see SPEC.md):
+ * Hard rules honoured here (see README.md, Product rules):
  * - Grading never guesses: a GradeResult question is `correct`, `wrong`, or
  *   `unsure`. Anything the grader could not read confidently is `unsure` and
  *   waits for a parent CheckResolution; the score helpers below never count an
@@ -229,7 +229,7 @@ export function getCurrentParent(): Parent | null {
 /**
  * Local-first phase: there are no real accounts yet, so "signed in" is a
  * device-local flag kept next to (not inside) the data document. The
- * Supabase migration (see SPEC.md, Prompt 7) replaces this with real auth.
+ * Supabase migration replaces this with real auth.
  */
 export interface AuthState {
   signedIn: boolean;

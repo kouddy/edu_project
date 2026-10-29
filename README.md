@@ -1,72 +1,124 @@
-# Practice Sheets — App
+# Practice Sheets
 
-Printed practice sheets for kids in grades 1–6: a parent photographs a
-finished sheet, and the sheet is marked against its stored answer key, with
-per-question results and kid-friendly explanations for wrong answers.
+Printed practice sheets for kids in grades 1–6. A parent photographs a
+finished sheet; the app marks it against the sheet's stored answer key and
+returns per-question results, with a plain-language explanation for each
+wrong answer. Built with Next.js (App Router) + TypeScript; the parent UI
+uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
+`docs/wireframe/`.
 
-See **SPEC.md** for the product brief and hard rules (grading never guesses —
-unreadable answers are marked "unsure" for the parent to check; nothing
-parent-facing ever mentions AI).
+## Product rules
+
+- **Grading never guesses.** If an answer can't be read confidently (below
+  the confidence threshold), that question comes back `unsure` and the
+  parent settles it in Parent check — it is never graded on a guess.
+- **Copy rule:** nothing a parent sees ever mentions AI (or "model",
+  "vision", "scan detection"). Parent-facing copy is plain first-person
+  service language: "We marked the sheet", "We couldn't read this answer".
+- **Answer keys stay server-side.** The client sends photos only; the
+  printed code on the sheet is read from the photo and looked up in the
+  server registry. Parents never type a sheet code or pick which child a
+  sheet belongs to.
+- **Children's photos are private.** In this local-first phase they stay on
+  the parent's device (IndexedDB); the grading server keeps no photos. A
+  later cloud phase must use private storage with signed URLs only.
+- **Enrollment is admin-only.** Hub staff add kids; the parent app has no
+  add-child flow. The parent's Profile QR doubles as their member/pickup ID.
+- **MVP scope:** no payments, no delivery/logistics features yet.
 
 ## Run it
 
 ```bash
-npm install     # already done if node_modules/ is present
+npm install
 npm run dev     # http://localhost:3000
 npm run build   # production build
 npm start       # serve the production build
 ```
 
-## What's implemented — Stage 1 (scaffold + data layer)
+Grading needs a model API key. Create `.env.local` in the repo root (see
+`.env.example`):
 
-- **Next.js (App Router) + TypeScript** scaffold.
-- **`lib/store.ts`** — the single data layer. All data access goes through
-  this module; UI code never touches localStorage/IndexedDB directly, so the
-  backend can be swapped for Supabase later without changing pages.
-  - Records (localStorage, one versioned JSON document): `Parent`, `Kid`,
-    `Sheet`, `AnswerKey`, `Submission`, `GradeResult`, `CheckResolution`.
-  - Photos (IndexedDB): `savePhoto` / `getPhoto` / `deletePhoto` /
-    `listPhotoKeys`; submissions reference photos by key.
-  - CRUD helpers for every entity, plus `scoreFor()` — a pure helper that
-    derives a score without ever counting an unresolved "unsure" as
-    correct or wrong.
-- **`lib/seed.ts`** — seed data loaded through the store on first run
-  (`ensureSeeded()`): parent "David G."; kids Gina (Grade 4 · Math) and Leo
-  (Grade 1 · Math); Gina's Math · Week 12 sheet (printed code
-  `G4-MATH-W12-A`) with a 10-question answer key — the interactive
-  prototype's demo sheet (52 − 27 with the borrowing explanation, 34 × 2,
-  74 − 38, …), each question with prompt, correct answer, explanation,
-  topic, and an `isReview` flag for spaced-review questions.
-- **Home page** (`app/page.tsx`) — renders the full parent app (Stage 2,
-  below).
+```
+META_API_KEY=LLM_...
+```
 
-## Stage 2 — parent app UI (HeroUI v3 + Tailwind v4)
+Restart the server after changing it. Sanity check: `GET /api/config`
+should report the provider as available. Without a key, grading fails
+honestly — the parent keeps their staged photos and sees "We couldn't mark
+the sheet just now — please try again in a moment." For keyless
+development, `GRADING_PROVIDER=demo` selects a scripted demo provider
+(fixed verdict patterns, no model call); it is never used as a fallback.
 
-The whole parent flow, mirroring the interactive prototype, in
-`components/` behind a single client shell (`components/AppShell.tsx`):
+## How it works
 
-- **Home** — account-level status slot (Needs-your-check card, or
-  "All caught up for this week 🎉"), kid switcher, current-week Homework
-  rows with download toasts, a two-stat Progress card, and an immutable
-  History of past final sheets only.
-- **Scan** — full-screen camera (getUserMedia with a graceful fallback),
-  Upload Photo, staged thumbnail tray (photos stored via IndexedDB),
-  full-screen photo preview with Remove, and a pinned Grade button.
-  Grading is a **local mock** behind `lib/grading.ts` (`gradeStagedPhotos`)
-  reproducing the Week 12 demo verdicts; Stage 3 swaps in `/api/grade`
-  behind that same function.
-- **Results** — live score badges ("7/8 graded" + "2 need your check",
-  collapsing to a final pill), question-by-question list with explanations,
-  and a guarded "Remove this sheet" (tap again to confirm).
-- **Parent check** — one consolidated queue across kids.
-- **Profile** — parent card, real member QR code, view-only kids list.
+### Parent app (local-first)
 
-All data flows through `lib/store.ts`; `lib/derive.ts` builds the read
-snapshot and derived state, `lib/demo.ts` owns the demo dataset lifecycle.
+- All data access goes through `lib/store.ts` — records in localStorage
+  (one versioned JSON document), photos in IndexedDB. UI code never touches
+  storage directly, so the data layer can be swapped for Supabase later
+  without changing screens. `lib/derive.ts` builds the read snapshot (home
+  state, scores, streaks); `scoreFor()` never counts an unresolved `unsure`.
+- Screens (`components/`, behind `AppShell.tsx`): **Sign-in** (emailed-link
+  flow plus Skip; device-local), **Home** (status slot — Needs-your-check
+  card or "All caught up", kid switcher, current-week Homework, two-stat
+  Progress card, immutable History of finished sheets), **Scan**
+  (full-screen camera or Upload Photo; photos stage in a tray and grading
+  starts only on **Grade**), **Results**, **Parent check** (one consolidated
+  queue across kids), **Profile** (member QR).
+- Seed data (`lib/seed.ts`): parent "David G."; kids Gina (Grade 4 · Math)
+  and Leo (Grade 1 · Math); seven sheets. A fresh profile opens with Gina's
+  Math · Week 12 already marked and two answers awaiting check, so the
+  Parent check flow is visible immediately.
 
-## Not yet built (later stages)
+### Grading (server)
 
-- Real grading pipeline at `/api/grade` (Stage 3) — currently the local
-  mock in `lib/grading.ts`.
-- Spaced review queue (deferred to v2), Supabase migration (only when real
-  accounts / multi-device access are needed).
+- `POST /api/grade` accepts the staged photos and returns `202 { jobId }`;
+  the client (`lib/grading.ts`) polls `GET /api/grade/:jobId` — with
+  parent-language progress steps — until the job completes. Outcomes:
+  **graded**; **rejected** with a plain-language reason (unreadable photo,
+  unknown sheet, missing answer key); **failed** (nothing is ever
+  fabricated). `GET /api/config` reports provider/model status without
+  exposing keys.
+- The grader is an agent harness on the Pi SDK
+  (`lib/server/pi-harness.ts`): one short-lived in-memory session per
+  photo, built-in tools disabled, only schema-typed submit tools —
+  `submit_identification` (reads the printed code; the server looks up the
+  key), `submit_grade`, and for wrong answers `submit_error_analysis` +
+  `submit_guidance`, which categorize the mistake against the taxonomy in
+  `lib/server/pi/context/` and write the kid-friendly guidance Results
+  displays. Verdicts under 0.8 confidence are coerced to `unsure`
+  server-side. Full design: `docs/stage-3-design.md`.
+- Providers are file-configured in `lib/server/pi/models.json` (Pi's
+  native format; keys referenced as `$ENV_VAR`, never committed). The
+  default provider is Meta (`muse-spark-1.3-contributor`); per-subject
+  routing lives in `lib/server/pi/subjects.json`, global settings in
+  `settings.json`. Adding a provider is a models.json edit. Note: a Baseten
+  provider is defined but its multimodal tool-calling path currently
+  hangs, so it is not usable for grading.
+- Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
+  versioned key, seeded from `lib/seed.ts`. 6 of 7 sheets have keys; Leo's
+  Week 12 key is not registered yet, so his sheet returns the "no answer
+  key yet" rejection.
+
+## Repo map
+
+```
+app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config
+components/     AppShell + screens (Home, Scan, Results, Check, Profile, SignIn), ui.tsx
+lib/            store.ts (data layer), derive.ts, seed.ts, grading.ts (client),
+                grade-contract.ts (wire types), demo.ts (seeded demo lifecycle)
+lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
+                pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
+                prompts/, context/ error taxonomy)
+docs/           stage-3-design.md (grading design), wireframe/ (design reference)
+```
+
+## Status
+
+- **Done:** scaffold + data layer; the full parent UI; Stage 3 real grading
+  (API, Pi harness, error analysis + generated guidance), verified
+  end-to-end against the live Meta provider, including messy-handwriting
+  cases that genuinely exercise the `unsure` path.
+- **Not built yet:** English grading agent (launch is math-first), Leo's
+  answer key, spaced-review queue (deferred to v2), Supabase migration
+  (only when real accounts / multi-device access are needed).
