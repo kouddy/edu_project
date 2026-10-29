@@ -9,8 +9,8 @@
  *
  * Stage 3.5 (docs/stage-3.5-design.md): photos are processed sequentially,
  * one provider call per attempt. Failed/read-rejected photos retry inside
- * the job (up to 3 attempts total; a deterministic rejection that repeats
- * with the same reason stops early; graded results and successes are
+ * the job (up to 3 attempts total; deterministic rejections are
+ * terminal on first occurrence; graded results and successes are
  * never re-run). A photo that identifies to a sheet already graded in
  * this job short-circuits to a `duplicate` outcome, and every photo ends
  * with its own outcome — the job completes with partial success rather

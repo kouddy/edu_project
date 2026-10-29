@@ -4,8 +4,9 @@
  * A harness run takes tens of seconds, so POST /api/grade starts a job and
  * the client polls GET /api/grade/:jobId. Jobs live in a process-global map:
  * right for the hackathon's single-instance dev/demo server, and the seam
- * where a real queue/store goes later. Jobs are not persisted — a restart
- * fails in-flight jobs, and the client reports the failure to the parent.
+ * where a real queue/store goes later. Jobs are not persisted — a server
+ * restart loses them; the client notices the loss and quietly resubmits
+ * the batch from the photos stored on the device (Stage 3.5 §6).
  */
 
 import type { GradeJobResult, GradeJobStatusValue, PhotoProgress } from "../grade-contract";

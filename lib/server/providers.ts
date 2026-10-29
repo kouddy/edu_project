@@ -22,7 +22,7 @@ import {
   resolveProviderApiKey,
 } from "./pi-config";
 import type { IdentifiedSheet } from "./pi-harness";
-import { findBySheetId, type RegistryEntry } from "./registry";
+import { findBySheetId, sheetLabelForEntry, type RegistryEntry } from "./registry";
 
 /** One photo's grading attempt, as reported to the job runner. */
 export interface PhotoAttempt {
@@ -63,7 +63,7 @@ function identifiedFor(entry: RegistryEntry): IdentifiedSheet {
     sheetId: entry.sheetId,
     printedCode: entry.printedCode,
     kidName: entry.kidName,
-    sheetLabel: `${entry.kidName} · ${entry.subject} · Week ${entry.week}`,
+    sheetLabel: sheetLabelForEntry(entry),
   };
 }
 

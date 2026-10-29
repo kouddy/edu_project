@@ -66,6 +66,18 @@ function buildRegistry(): RegistryEntry[] {
 
 export const REGISTRY: RegistryEntry[] = buildRegistry();
 
+/**
+ * "Gina · Math · Set C" / "Gina · Math · Week 12" — the display label for
+ * an identified sheet (progress lines, summaries). The one server-side
+ * implementation; mirrors lib/store.ts's sheetLabel for local records.
+ */
+export function sheetLabelForEntry(entry: RegistryEntry): string {
+  const base = entry.setName
+    ? `${entry.subject} · ${entry.setName}`
+    : `${entry.subject} · Week ${entry.week}`;
+  return `${entry.kidName} · ${base}`;
+}
+
 export function findByPrintedCode(code: string): RegistryEntry | null {
   return REGISTRY.find((e) => e.printedCode === code) ?? null;
 }

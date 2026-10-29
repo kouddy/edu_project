@@ -54,7 +54,7 @@ import type {
   KidContext,
 } from "../grade-contract";
 import { loadPiConfig, loadPrompt, subjectManifest, type PiConfig } from "./pi-config";
-import { findByPrintedCode, type RegistryEntry } from "./registry";
+import { findByPrintedCode, sheetLabelForEntry as sheetLabelFor, type RegistryEntry } from "./registry";
 
 const PER_PHOTO_TIMEOUT_MS = 150_000;
 
@@ -88,10 +88,6 @@ export interface IdentifiedSheet {
   kidName: string;
   /** "Gina · Math · Week 12" — for progress displays. */
   sheetLabel: string;
-}
-
-function sheetLabelFor(entry: RegistryEntry): string {
-  return `${entry.kidName} · ${entry.subject} · Week ${entry.week}`;
 }
 
 /** Taxonomy category ids are the bold slugs in the taxonomy context file. */

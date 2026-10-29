@@ -29,6 +29,7 @@ import {
   listPendingJobs,
   removePendingJob,
   saveGradeResult,
+  sheetLabel,
   updatePendingJob,
   type PendingGradeJob,
 } from "./store";
@@ -77,12 +78,13 @@ async function postGradeJob(photoKeys: string[]): Promise<string | null> {
   }
 }
 
-/** "Gina · Math · Week 12" for a sheet, from the local store. */
-function sheetLabel(sheetId: string): string {
+/** "Gina · Math · Set C" / "Gina · Math · Week 12" for a sheet, from the
+ *  local store (base label is lib/store.ts's sheetLabel). */
+function kidSheetLabel(sheetId: string): string {
   const sheet = getSheet(sheetId);
   if (!sheet) return "a sheet";
   const kid = listKids().find((k) => k.id === sheet.kidId);
-  return `${kid ? `${kid.name} · ` : ""}${sheet.subject} · Week ${sheet.week}`;
+  return `${kid ? `${kid.name} · ` : ""}${sheetLabel(sheet)}`;
 }
 
 /* ------------------------------------------------------------ dispatch */
@@ -162,7 +164,7 @@ async function applyJobResult(
       if (!sheet) continue;
       if (sheetResultIsFinal(outcome.sheetId)) {
         batch.lines.push(
-          `${sheetLabel(outcome.sheetId)} already has its finished result, so we kept it as is.`,
+          `${kidSheetLabel(outcome.sheetId)} already has its finished result, so we kept it as is.`,
         );
         await deletePhoto(photoKey).catch(() => {});
         continue;
@@ -185,7 +187,7 @@ async function applyJobResult(
     }
 
     if (outcome.kind === "duplicate") {
-      const label = outcome.sheetId ? sheetLabel(outcome.sheetId) : (progressLabel ?? "the same sheet");
+      const label = outcome.sheetId ? kidSheetLabel(outcome.sheetId) : (progressLabel ?? "the same sheet");
       batch.lines.push(`Two photos look like ${label} — we marked it once.`);
       await deletePhoto(photoKey).catch(() => {});
       continue;
@@ -195,7 +197,7 @@ async function applyJobResult(
     // tray, with a named, plain-language line in the summary.
     batch.trayPhotoKeys.push(photoKey);
     const label = outcome.sheetId
-      ? sheetLabel(outcome.sheetId)
+      ? kidSheetLabel(outcome.sheetId)
       : (progressLabel ?? `Photo ${outcome.photoIndex + 1}`);
     if (outcome.kind === "rejected-deterministic") {
       batch.lines.push(`${label}: ${outcome.reason ?? "We couldn't mark that sheet."} It's in your tray.`);
