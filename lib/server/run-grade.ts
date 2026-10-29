@@ -124,16 +124,14 @@ async function runBatch(
         return { photoIndex: index, kind: "duplicate", sheetId: res.identified?.sheetId, attempts: attempt };
       }
       if (res.kind === "rejected-deterministic") {
-        // Same deterministic reason twice in a row cannot change on a
-        // third look at the identical photo — stop early (Stage 3.5 §3).
-        if (attempt >= 2 && res.reason === lastReason) {
-          return { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt };
-        }
-        lastReason = res.reason;
-        if (attempt === MAX_ATTEMPTS) {
-          return { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt };
-        }
-        continue;
+        // Terminal on first occurrence. The identification step already
+        // re-reads the code inside the session before declaring it
+        // unknown — that second look is the safeguard. A cross-attempt
+        // retry adds nothing and risks the model force-fitting a similar
+        // code to a real sheet (observed live 2026-10-29: a sheet printed
+        // G9-MATH-W99-Z was "corrected" to G4-MATH-W12-A on attempt 2 and
+        // graded against the wrong key).
+        return { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt };
       }
       // rejected-read / failed: use the remaining attempts.
       lastReason = res.reason;

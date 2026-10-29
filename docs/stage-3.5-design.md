@@ -58,11 +58,13 @@ makes retakes unconditionally safe.
   total** (the first try counts).
 - Only `rejected-read` and `failed` outcomes retry. A `graded` result is
   never re-run; other photos' successes are never re-run either.
-- A `rejected-deterministic` outcome that repeats with the **same reason**
-  stops early — retrying an identical photo against a missing key or an
-  unknown code cannot change the answer. A read-type failure uses all 3
-  attempts, because a second pass genuinely can read what the first
-  couldn't.
+- A `rejected-deterministic` outcome is terminal on first occurrence.
+  The identification step already re-reads the code inside the session
+  before declaring it unknown — that second look is the safeguard.
+  A cross-attempt retry cannot change a missing key or an unknown code,
+  and live testing (2026-10-29) showed it can do harm: given a second
+  attempt, the model "corrected" an unknown code to a similar real one
+  and graded against the wrong key.
 - Attempts are invisible to the parent. Job progress steps stay in parent
   language ("Still working on 1 photo…"), and only the final outcome is
   ever reported.
@@ -177,8 +179,10 @@ a loading screen. (This removes the modal "Marking your sheets…" screen.)
    photo back in the tray, failures named by kid + sheet; the job log
    shows the failed photo was attempted more than once and the successes
    exactly once.
-7. Deterministic rejection (unregistered code) → attempted once more at
-   most (same-reason stop), reported by name.
+7. Deterministic rejection (unregistered code) → terminal on the first
+   attempt (the identification step re-reads the code inside the session
+   before declaring it unknown), reported by name, and never force-fitted
+   to a similar real code on a retry.
 8. Mixed batch (Gina + Leo sheets) → each result lands under the right
    kid; Leo's Week 12 grades against the registered key.
 9. Close the app mid-grade → on relaunch, results are applied (or the

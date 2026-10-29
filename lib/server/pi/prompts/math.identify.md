@@ -16,6 +16,12 @@ Rules:
 
 - Copy the printed code character for character. If you cannot read it with
   certainty, say so — never guess a code.
+- Codes are matched **exactly**. Similar-looking codes are different
+  sheets: `G9` is not `G4`, and a final `Z` is not an `A`. If a careful
+  re-read still gives a code you were told is not one of ours, accept that
+  — **never round the code to one you think exists**, and never infer the
+  code from the questions printed on the page. A sheet whose code is not
+  ours is simply not ours, however familiar its questions look.
 - If the photo is unusable, submit it as rejected with a short, plain reason
   a parent can act on ("The photo is too blurry to read", not technical
   language).
