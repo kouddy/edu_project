@@ -123,7 +123,7 @@ export interface CheckResolution {
 /* ------------------------------------------------------------- db document */
 
 interface Db {
-  version: 1;
+  version: 2;
   parents: Parent[];
   kids: Kid[];
   sheets: Sheet[];
@@ -133,10 +133,10 @@ interface Db {
   checkResolutions: CheckResolution[];
 }
 
-const DB_KEY = "practice-sheets:db:v1";
+const DB_KEY = "practice-sheets:db:v2";
 
 const EMPTY_DB: Db = {
-  version: 1,
+  version: 2,
   parents: [],
   kids: [],
   sheets: [],
@@ -156,7 +156,7 @@ function readDb(): Db {
     const raw = window.localStorage.getItem(DB_KEY);
     if (!raw) return structuredClone(EMPTY_DB);
     const parsed = JSON.parse(raw) as Db;
-    if (parsed.version !== 1) return structuredClone(EMPTY_DB);
+    if (parsed.version !== 2) return structuredClone(EMPTY_DB);
     return { ...structuredClone(EMPTY_DB), ...parsed };
   } catch {
     return structuredClone(EMPTY_DB);

@@ -50,7 +50,7 @@ export const SEED_SHEETS: Sheet[] = [
     subject: "Word Problems",
     week: 12,
     printedCode: "G4-WP-W12-A",
-    topic: "Word problems: money and measurement",
+    topic: "Read, choose the operation, solve — including two-step problems",
   },
   {
     id: GINA_MATH_W11,
@@ -258,23 +258,16 @@ const SETB_KEY: AnswerKey = {
 const WP12_KEY: AnswerKey = {
   sheetId: GINA_WP_W12,
   questions: [
-    { number: 1, prompt: "A toy costs $4. Ben buys 7 toys. How much does he spend?", correctAnswer: "28", explanation: "7 × 4 = 28 dollars.", topic: "Word problems: money", isReview: false },
-    { number: 2, prompt: "A ribbon is 96 cm long. It is cut into 8 equal pieces. How long is each piece?", correctAnswer: "12", explanation: "96 ÷ 8 = 12 cm each.", topic: "Word problems: measurement", isReview: false },
-    { number: 3, prompt: "Sara saved $45. She buys a game for $28. How much money does she have left?", correctAnswer: "17", explanation: "45 − 28 = 17 dollars left.", topic: "Word problems: money", isReview: false },
-    {
-      number: 4,
-      prompt: "There are 124 red pens and 89 blue pens. How many pens are there in all?",
-      correctAnswer: "213",
-      explanation: "Don't forget the tens carry: 4 + 9 = 13 (write 3, carry 1), 2 + 8 + 1 = 11 (write 1, carry 1), then the hundreds 1 + 1 = 2 — so it's 213, not 203.",
-      topic: "Word problems: addition",
-      isReview: false,
-    },
-    { number: 5, prompt: "Each van can carry 9 kids. 63 kids are going on the trip. How many vans are needed?", correctAnswer: "7", explanation: "63 ÷ 9 = 7 vans.", topic: "Word problems: division", isReview: false },
-    { number: 6, prompt: "A garden has 6 rows of 13 flowers. How many flowers are there in all?", correctAnswer: "78", explanation: "6 × 13 = 78 flowers.", topic: "Word problems: multiplication", isReview: true },
-    { number: 7, prompt: "Mia read 27 pages on Monday and 35 pages on Tuesday. How many pages did she read in all?", correctAnswer: "62", explanation: "27 + 35 = 62 pages.", topic: "Word problems: addition", isReview: false },
-    { number: 8, prompt: "A tank holds 500 L of water. 175 L are used. How much water is left?", correctAnswer: "325", explanation: "500 − 175 = 325 L left.", topic: "Word problems: measurement", isReview: false },
-    { number: 9, prompt: "Ben has 4 bags with 15 marbles in each bag. How many marbles does he have in all?", correctAnswer: "60", explanation: "4 × 15 = 60 marbles.", topic: "Word problems: multiplication", isReview: false },
-    { number: 10, prompt: "A school has 240 students. 118 of them are girls. How many are boys?", correctAnswer: "122", explanation: "240 − 118 = 122 boys.", topic: "Word problems: subtraction", isReview: true },
+    { number: 1, prompt: "4 boxes hold 12 pencils each — how many pencils in all?", correctAnswer: "48", explanation: "Each box has 12 pencils, so multiply: 4 × 12 = 48.", topic: "Multiplication", isReview: false },
+    { number: 2, prompt: "Mia collected 96 shells, then gave 28 away — how many left?", correctAnswer: "68", explanation: "Start with 96 and take away 28: 96 − 28 = 68.", topic: "Subtraction", isReview: false },
+    { number: 3, prompt: "5 shelves with 9 books on each — how many books?", correctAnswer: "45", explanation: "5 shelves of 9 books: 5 × 9 = 45.", topic: "Multiplication", isReview: false },
+    { number: 4, prompt: "A baker made 72 muffins and packed them in boxes of 8 — how many boxes?", correctAnswer: "9", explanation: "Share 72 into groups of 8: 72 ÷ 8 = 9 boxes.", topic: "Division", isReview: false },
+    { number: 5, prompt: "Tom ran 350 m on Monday and 275 m on Tuesday — total distance?", correctAnswer: "625 m", explanation: "Add the two days: 350 + 275 = 625 m.", topic: "Addition", isReview: true },
+    { number: 6, prompt: "Noah buys 3 packs of 8 markers and gives 5 markers away — how many markers does he have left?", correctAnswer: "19", explanation: "This one has two steps! First work out 3 × 8 = 24 markers, then take away the 5 he gave away: 24 − 5 = 19. Gina stopped after the first step and wrote 24.", topic: "Two-step word problems", isReview: false },
+    { number: 7, prompt: "48 students split into 6 equal teams — how many on each team?", correctAnswer: "8", explanation: "48 ÷ 6 = 8 on each team.", topic: "Division", isReview: false },
+    { number: 8, prompt: "A rope is 2 m long, cut into 4 equal pieces — each piece", correctAnswer: "50 cm", explanation: "2 m is 200 cm. Split into 4 equal pieces: 200 ÷ 4 = 50 cm.", topic: "Measurement", isReview: false },
+    { number: 9, prompt: "Sara had $50 and spent $17 on a game — how much left?", correctAnswer: "$33", explanation: "50 − 17 = 33 dollars left.", topic: "Subtraction", isReview: true },
+    { number: 10, prompt: "7 vans carry 8 children each — how many children?", correctAnswer: "56", explanation: "7 × 8 = 56 children.", topic: "Multiplication", isReview: false },
   ],
 };
 
@@ -400,7 +393,7 @@ export const SEED_GRADE_RESULTS: GradeResult[] = [
     id: "grade-gina-wp-w12",
     submissionId: "sub-gina-wp-w12",
     sheetId: GINA_WP_W12,
-    perQuestion: grades(WP12_KEY, { 4: "203" }),
+    perQuestion: grades(WP12_KEY, { 6: "24" }),
     gradedAt: "2026-10-26T16:20:30.000Z",
   },
   {

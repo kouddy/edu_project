@@ -2,7 +2,6 @@
 
 /** Shared bits: small stroke icons, the Results score badges, Back button. */
 
-import { Chip } from "@heroui/react";
 import type { ScoreSummary } from "@/lib/store";
 
 type IconProps = { size?: number; className?: string };
@@ -118,25 +117,31 @@ export function VerdictIcon({ kind }: { kind: "correct" | "wrong" | "unsure" }) 
  * amber "N need your check" pill, collapsing to one "X/Y final" pill once
  * every unsure answer has been settled.
  */
+/* The wireframe's .pill set: solid orange for a final score, green
+   "correct/graded graded" and amber "N need your check" while checks
+   are outstanding. */
+const PILL =
+  "inline-block rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold leading-tight";
+
 export function ScoreBadges({ score, align = "end" }: { score: ScoreSummary; align?: "end" | "start" }) {
   if (score.isFinal) {
     return (
       <div className={`flex ${align === "end" ? "justify-end" : "justify-start"}`}>
-        <Chip color="success" variant="primary" size="md" className="font-bold">
+        <span className={`${PILL} border-tangdeep bg-tang text-[#fff8ec]`}>
           {score.finalCorrect}/{score.total} final
-        </Chip>
+        </span>
       </div>
     );
   }
   return (
     <div className={`flex flex-col gap-1.5 ${align === "end" ? "items-end" : "items-start"}`}>
-      <Chip color="success" variant="soft" size="sm" className="font-bold">
+      <span className={`${PILL} border-leaf bg-leaf text-[#fff8ec]`}>
         {score.correct}/{score.graded} graded
-      </Chip>
+      </span>
       {score.unsure > 0 && (
-        <Chip color="warning" variant="soft" size="sm" className="font-bold">
+        <span className={`${PILL} border-[#d98a06] bg-[#f0a30c] text-[#402a12]`}>
           {score.unsure} need your check
-        </Chip>
+        </span>
       )}
     </div>
   );

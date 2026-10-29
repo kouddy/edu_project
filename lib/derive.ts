@@ -213,6 +213,11 @@ export function summaryText(st: SheetState): string {
   if (!st.score || !st.key || !st.result) return "";
   const { kid, score } = { kid: st.kid, score: st.score };
   if (score.isFinal && score.wrong === 0) {
+    if (st.sheet.subject === "Word Problems") {
+      const possessive = pronounFor(kid);
+      const subject = possessive === "her" ? "she" : possessive === "his" ? "he" : "they";
+      return `Perfect score, ${kid.name}! Every word problem solved — ${subject} read each one carefully and showed the right operation every time.`;
+    }
     return `Wonderful work, ${kid.name} — every answer is right.`;
   }
   // Name the topic of the first wrong (or resolved-wrong) question.
@@ -226,8 +231,11 @@ export function summaryText(st: SheetState): string {
     ? st.key.questions.find((q) => q.number === wrongQ.questionNumber)?.topic
     : undefined;
   if (topic) {
-    const topicText = topic.charAt(0).toLowerCase() + topic.slice(1);
-    return `Great work, ${kid.name}! ${topicText} is the one to keep practising — it's tracked in ${pronounFor(kid)} progress.`;
+    if (!score.isFinal && score.unsure > 0) {
+      const lower = topic.charAt(0).toLowerCase() + topic.slice(1);
+      return `Great work, ${kid.name}! Watch out for ${lower}. Once you check the ${score.unsure} unsure answer${score.unsure === 1 ? "" : "s"}, this score is final.`;
+    }
+    return `Great work, ${kid.name}! ${topic} is the one to keep practising — it's tracked in ${pronounFor(kid)} progress.`;
   }
   return `Great work, ${kid.name}! We marked the sheet.`;
 }
