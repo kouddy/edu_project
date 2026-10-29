@@ -112,10 +112,38 @@ const PROVIDERS: Record<string, GradingProvider> = {
   demo: demoProvider,
 };
 
+/**
+ * The real provider: the Pi harness on the Meta Model API (Phase 2).
+ * Registered lazily — resolveProvider returns it only when an API key is
+ * configured (META_API_KEY, or MODEL_API_KEY as Meta's docs name it), so a
+ * keyless deployment keeps the demo provider as its only option and the
+ * runner's "provider not available" path stays honest.
+ */
+export const metaProvider: GradingProvider = {
+  id: "meta",
+  model: "muse-spark-1.3",
+  async run({ photos, kidContext, onStep }) {
+    const apiKey = process.env.META_API_KEY ?? process.env.MODEL_API_KEY;
+    if (!apiKey) {
+      throw new Error("META_API_KEY is not set on the server — the Meta provider cannot run.");
+    }
+    const { gradeWithPiHarness } = await import("./pi-harness");
+    return gradeWithPiHarness({ photos, kidContext, apiKey, onStep });
+  },
+};
+
+export function metaProviderAvailable(): boolean {
+  return Boolean(process.env.META_API_KEY ?? process.env.MODEL_API_KEY);
+}
+
 export function resolveProvider(id: string): GradingProvider | null {
+  if (id === "meta") return metaProviderAvailable() ? metaProvider : null;
   return PROVIDERS[id] ?? null;
 }
 
-export function listProviders(): { id: string; model: string }[] {
-  return Object.values(PROVIDERS).map((p) => ({ id: p.id, model: p.model }));
+export function listProviders(): { id: string; model: string; available: boolean }[] {
+  return [
+    ...Object.values(PROVIDERS).map((p) => ({ id: p.id, model: p.model, available: true })),
+    { id: metaProvider.id, model: metaProvider.model, available: metaProviderAvailable() },
+  ];
 }

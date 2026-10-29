@@ -23,6 +23,8 @@ export interface PiSettings {
   maxStepsPerSheet: number;
   tokenBudgetPerSheet: number;
   maxRetries: number;
+  /** Meta Model API connection (Phase 2 provider). Key comes from env. */
+  meta?: { baseUrl: string; model: string };
 }
 
 export interface SubjectManifest {

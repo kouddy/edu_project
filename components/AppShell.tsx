@@ -116,6 +116,12 @@ export default function AppShell() {
     const outcome = await gradeStagedPhotos(keys);
     const wait = Math.max(0, 1400 - (Date.now() - started));
     await new Promise((r) => setTimeout(r, wait));
+    if (outcome.rejectedReason) {
+      // Keep the staged photos so the parent can retake the shot.
+      setScreen({ name: "scan" });
+      showToast(outcome.rejectedReason);
+      return;
+    }
     staged.forEach((p) => URL.revokeObjectURL(p.url));
     setStaged([]);
     refresh();

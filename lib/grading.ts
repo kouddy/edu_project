@@ -44,12 +44,19 @@ async function replaceSheetSubmission(sheetId: string, photoKeys: string[]): Pro
 export interface MockGradeOutcome {
   /** How many sheets were marked (1 or 2 in this demo). */
   markedSheets: number;
+  /**
+   * Set when the grading API rejected the photo(s) — a plain-language
+   * reason from the server. The staged photos are kept so the parent can
+   * retake the shot; no local fallback runs for a rejection.
+   */
+  rejectedReason?: string;
 }
 
 /* ------------------------------------------------------------ server API */
 
 const API_POLL_INTERVAL_MS = 500;
-const API_TIMEOUT_MS = 30_000;
+/** A real harness run can take a couple of minutes per photo. */
+const API_TIMEOUT_MS = 240_000;
 
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -94,10 +101,10 @@ async function applyApiResult(
 
 /**
  * Grade via /api/grade. Returns null whenever the API path doesn't produce
- * a graded result (unreachable, failed job, rejected photo, timeout) — the
- * caller then falls back to the local mock. Wiring the API's `rejected`
- * outcome into the Photo rejected screen is Phase 2 work; in Phase 1 the
- * demo provider never rejects.
+ * an outcome (unreachable, failed job, timeout) — the caller then falls
+ * back to the local mock. A `rejected` outcome is NOT a fallback case: it
+ * is returned as an outcome so the parent can be told why and retake the
+ * photo.
  */
 async function gradeViaApi(photoKeys: string[]): Promise<MockGradeOutcome | null> {
   try {
@@ -126,6 +133,9 @@ async function gradeViaApi(photoKeys: string[]): Promise<MockGradeOutcome | null
       const status = (await statusRes.json()) as GradeJobStatus;
       if (status.status === "done" && status.result?.outcome === "graded") {
         return applyApiResult(status.result, photoKeys);
+      }
+      if (status.status === "done" && status.result?.outcome === "rejected") {
+        return { markedSheets: 0, rejectedReason: status.result.reason };
       }
       if (status.status !== "running") return null;
     }

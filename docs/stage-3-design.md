@@ -97,13 +97,16 @@ no in-app review queue (v2).
 
 ## Build order
 
-- **Phase 1** — endpoints + job plumbing + server key registry + Pi config
-  directory, running the demo provider end-to-end. The Pi session runtime
-  itself is Phase 2; Phase 1's runner resolves providers through the same
-  config the Pi harness will use, and validates that the configured prompt
-  and context files exist.
-- **Phase 2** — the math agent on the real Meta provider (identification +
-  grading via Pi sessions and the `submit_*` tools).
+- **Phase 1** — ✅ done (branch `stage3`, commit 35d2efa8): endpoints + job
+  plumbing + server key registry + Pi config directory, running the demo
+  provider end-to-end.
+- **Phase 2** — implemented (branch `stage3`): the math agent runs in a real
+  Pi session (`lib/server/pi-harness.ts`) on the Meta provider —
+  identification + grading via the `submit_identification` / `submit_grade`
+  tools, server-side validation and confidence-rule enforcement in the tool
+  executors, API `rejected` outcomes wired into the client (staged photos
+  kept, back to Scan with the reason as a toast). Live end-to-end
+  verification against the real API is pending a server-side `META_API_KEY`.
 - **Phase 3** — error categorization + guidance generation steps.
 - **Phase 4** — the English agent, shape B.
 

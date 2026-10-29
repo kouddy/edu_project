@@ -28,7 +28,7 @@ export function startGradeJob(payload: GradeRequestPayload): GradeJob {
       const provider = resolveProvider(providerId);
       if (!provider) {
         throw new Error(
-          `Grading provider "${providerId}" is not available yet (it lands in Phase 2). Set GRADING_PROVIDER=demo to use the demo provider.`,
+          `Grading provider "${providerId}" is not available — it is not registered, or its API key is not set on the server (for "meta", set META_API_KEY).`,
         );
       }
       const result = await provider.run({

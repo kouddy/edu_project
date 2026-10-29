@@ -15,14 +15,17 @@ export async function GET() {
   await connection();
   const config = loadPiConfig();
   const missing = validatePiConfig(config);
-  const subjects = Object.entries(config.subjects).map(([agent, manifest]) => ({
-    agent,
-    displaySubjects: manifest.displaySubjects,
-    status: manifest.status,
-    schemaVersion: manifest.schemaVersion,
-    provider: providerForAgent(config, agent as AgentId),
-    model: manifest.model,
-  }));
+  const subjects = Object.entries(config.subjects).map(([agent, manifest]) => {
+    const provider = providerForAgent(config, agent as AgentId);
+    return {
+      agent,
+      displaySubjects: manifest.displaySubjects,
+      status: manifest.status,
+      schemaVersion: manifest.schemaVersion,
+      provider,
+      model: provider === "demo" ? "demo-scripted" : manifest.model,
+    };
+  });
   return NextResponse.json({
     providers: listProviders(),
     subjects,
