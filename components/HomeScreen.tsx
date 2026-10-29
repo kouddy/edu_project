@@ -1,12 +1,13 @@
 "use client";
 
-import { Button, Card, Chip } from "@heroui/react";
+import { Button, Card } from "@heroui/react";
 import {
   homeworkStates,
   historyStates,
   isDone,
   kidHasGradedSheet,
   reviewRetentionText,
+  scannedText,
   sheetLabel,
   shortDate,
   statusSlot,
@@ -27,6 +28,11 @@ interface Props {
   scrollSection: "homework" | "history" | null;
 }
 
+const CARD =
+  "border-[1.5px] border-linesoft bg-card shadow-[0_2px_7px_rgba(146,90,32,0.12)]";
+const PILL =
+  "inline-block shrink-0 rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold";
+
 export default function HomeScreen({
   snap,
   kid,
@@ -34,13 +40,24 @@ export default function HomeScreen({
   onOpenSheet,
   onOpenCheck,
   showToast,
-  scrollSection,
 }: Props) {
   const status = statusSlot(snap, kid);
   const homework = homeworkStates(snap, kid);
+  /* The wireframe lists Word Problems ahead of Math in the Homework card. */
+  const homeworkRows = [...homework].sort(
+    (a, b) =>
+      (a.sheet.subject === "Word Problems" ? 0 : 1) -
+      (b.sheet.subject === "Word Problems" ? 0 : 1),
+  );
   const history = historyStates(snap, kid);
   const showProgress = kidHasGradedSheet(snap, kid);
   const retention = reviewRetentionText(snap, kid);
+
+  /* The check card's copy, in the wireframe's words: the label arrives as
+     "Gina · Math · Week 12" and reads "Gina · Math Week 12" / "Math Week 12". */
+  const checkParts = status?.type === "check" ? status.label.split(" · ") : [];
+  const checkKid = checkParts[0] ?? "";
+  const checkSheet = checkParts.slice(1).join(" ");
 
   return (
     <div className="px-[18px] pb-6 pt-4">
@@ -51,31 +68,37 @@ export default function HomeScreen({
 
       {/* ---- status slot ---- */}
       {status?.type === "check" && (
-        <Card className="mb-4 border border-amberish/50 bg-ambersoft shadow-none">
-          <Card.Content className="flex-row items-center gap-3 p-4">
-            <div className="min-w-0 flex-1">
-              <p className="text-[16px] font-extrabold text-ink">
+        <Card className={`mb-4 ${CARD}`}>
+          <Card.Content className="p-[15px]">
+            <div className="flex items-center justify-between gap-2.5">
+              <h3 className="text-[15.5px] font-extrabold text-ink">
                 {status.count} {status.count === 1 ? "answer needs" : "answers need"} your check
-              </p>
-              <p className="truncate text-[13px] text-mid">{status.label}</p>
+              </h3>
+              <span className={`${PILL} border-tangdeep bg-tang text-white`}>{status.count}</span>
             </div>
-            <Button size="sm" onPress={onOpenCheck} className="shrink-0 font-bold">
+            <p className="mt-0.5 text-[13.5px] font-semibold text-ink">
+              {checkKid} · {checkSheet}
+            </p>
+            <p className="mt-0.5 text-[13.5px] leading-[1.45] text-mid">
+              We marked {checkSheet}, but we couldn’t read {status.count}{" "}
+              {status.count === 1 ? "answer" : "answers"} for sure. A quick look settles the
+              score.
+            </p>
+            <Button size="lg" fullWidth onPress={onOpenCheck} className="mt-[11px] font-bold">
               Check now
             </Button>
           </Card.Content>
         </Card>
       )}
       {status?.type === "caughtup" && (
-        <Card className="mb-4 border border-leaf/30 bg-leafsoft shadow-none">
-          <Card.Content className="p-4">
-            <p className="text-[16px] font-extrabold text-leaf">All caught up for this week 🎉</p>
-          </Card.Content>
-        </Card>
+        <div className="mb-4 rounded-2xl border-[1.5px] border-[#bcd8b2] bg-[#eaf4e4] px-[15px] py-[14px] text-center text-[15.5px] font-extrabold text-[#2f5d2a]">
+          All caught up for this week 🎉
+        </div>
       )}
 
       {/* ---- kid switcher ---- */}
       {snap.kids.length > 1 && (
-        <div className="mb-5 flex gap-2">
+        <div className="mb-4 mt-1 flex flex-wrap gap-2">
           {snap.kids.map((k) => {
             const active = k.id === kid.id;
             return (
@@ -83,36 +106,47 @@ export default function HomeScreen({
                 key={k.id}
                 type="button"
                 onClick={() => onSelectKid(k)}
-                className={`rounded-full px-4 py-2 text-[15px] font-bold transition-colors ${
-                  active ? "bg-tang text-white" : "bg-fill text-mid"
+                className={`rounded-full border-[1.5px] px-[15px] py-2 text-[14px] font-semibold transition-colors ${
+                  active
+                    ? "border-tang bg-tang text-white"
+                    : "border-line bg-card text-mid"
                 }`}
               >
-                {k.name}
+                {k.name} <span className="font-medium opacity-75">· Grade {k.grade}</span>
               </button>
             );
           })}
         </div>
       )}
-      {snap.kids.length <= 1 && <h2 className="mb-3 text-[20px] font-extrabold text-ink">{kid.name}</h2>}
+      {snap.kids.length <= 1 && (
+        <p className="mb-4 mt-0.5 text-[16px] font-extrabold text-ink">
+          {kid.name}{" "}
+          <span className="text-[13.5px] font-semibold text-mid">· Grade {kid.grade}</span>
+        </p>
+      )}
 
       {/* ---- homework ---- */}
       <section id="section-homework" className="scroll-mt-4">
-        <h2 className="mb-2 text-[13px] font-extrabold uppercase tracking-[0.12em] text-faint">
-          Homework · Week {homework[0]?.sheet.week ?? ""}
-        </h2>
-        <Card className="mb-5 shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
+        <Card className={`mb-4 ${CARD}`}>
           <Card.Content className="p-0">
-            {homework.map((st, i) => (
+            <h3 className="px-[15px] pb-1 pt-[14px] text-[15.5px] font-extrabold text-ink">
+              Homework
+            </h3>
+            {homeworkRows.map((st, i) => (
               <HomeworkRow
                 key={st.sheet.id}
                 st={st}
-                first={i === 0}
+                last={i === homeworkRows.length - 1}
                 onOpen={() => onOpenSheet(st.sheet.id, "homework")}
-                onDownload={() => showToast(`Saved: ${sheetLabel(st.sheet)} sheets (PDF)`)}
+                onDownload={() =>
+                  showToast(`Saved: Grade ${kid.grade} · ${sheetLabel(st.sheet)} sheets (PDF)`)
+                }
               />
             ))}
-            {homework.length === 0 && (
-              <p className="p-4 text-[14px] text-mid">Nothing assigned for this week yet.</p>
+            {homeworkRows.length === 0 && (
+              <p className="px-[15px] pb-[14px] text-[14px] text-mid">
+                No homework assigned yet.
+              </p>
             )}
           </Card.Content>
         </Card>
@@ -120,107 +154,124 @@ export default function HomeScreen({
 
       {/* ---- progress ---- */}
       {showProgress && (
-        <section className="mb-5">
-          <h2 className="mb-2 text-[13px] font-extrabold uppercase tracking-[0.12em] text-faint">
-            Progress
-          </h2>
-          <Card className="shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
-            <Card.Content className="flex-row p-4">
-              <div className="flex-1">
-                <p className="text-[26px] font-extrabold leading-none text-ink">
-                  {streakFor(snap, kid)} weeks
-                </p>
-                <p className="mt-1 text-[13px] text-mid">Weekly streak</p>
-              </div>
-              {retention && (
-                <div className="flex-1 border-l border-dashed border-linesoft pl-4">
-                  <p className="text-[26px] font-extrabold leading-none text-ink">
-                    {retention.split(" ")[0]}
-                  </p>
-                  <p className="mt-1 text-[13px] text-mid">of last month&rsquo;s review, still correct</p>
-                </div>
-              )}
-            </Card.Content>
-          </Card>
-        </section>
-      )}
-
-      {/* ---- history ---- */}
-      <section id="section-history" className="scroll-mt-4">
-        <h2 className="mb-2 text-[13px] font-extrabold uppercase tracking-[0.12em] text-faint">
-          History
-        </h2>
-        <Card className="shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
+        <Card className={`mb-4 ${CARD}`}>
           <Card.Content className="p-0">
-            {history.map((st, i) => (
-              <button
-                key={st.sheet.id}
-                type="button"
-                onClick={() => onOpenSheet(st.sheet.id, "history")}
-                className={`flex w-full items-center gap-3 px-4 py-3.5 text-left ${
-                  i > 0 ? "border-t border-dashed border-linesoft" : ""
-                }`}
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[15.5px] font-bold text-ink">
-                    {sheetLabel(st.sheet)}
-                  </span>
-                  <span className="block text-[12.5px] text-faint">
-                    Graded {st.result ? shortDate(st.result.gradedAt) : ""}
-                  </span>
-                </span>
-                {st.score && (
-                  <Chip color="success" variant="soft" size="sm" className="shrink-0 font-bold">
-                    {st.score.finalCorrect}/{st.score.total} final
-                  </Chip>
-                )}
-              </button>
-            ))}
-            {history.length === 0 && (
-              <p className="p-4 text-[14px] text-mid">No sheets scanned yet.</p>
+            <h3 className="px-[15px] pb-0.5 pt-[14px] text-[15.5px] font-extrabold text-ink">
+              Progress
+            </h3>
+            <div className="px-[15px] py-[11px]">
+              <p className="text-[14.5px] font-semibold text-ink">
+                ★ {streakFor(snap, kid)}-week streak
+              </p>
+              <p className="text-[12.5px] text-faint">Every pack finished, week after week</p>
+            </div>
+            {retention && (
+              <div className="flex items-center justify-between gap-2 border-t border-dashed border-linesoft px-[15px] py-[11px]">
+                <div>
+                  <p className="text-[14.5px] font-semibold text-ink">Review from last month</p>
+                  <p className="text-[12.5px] text-faint">Last month’s questions, asked again</p>
+                </div>
+                <span className={`${PILL} border-linesoft bg-fill text-mid`}>{retention}</span>
+              </div>
             )}
           </Card.Content>
         </Card>
-      </section>
+      )}
+
+      {/* ---- history ---- */}
+      {history.length > 0 ? (
+        <section id="section-history" className="scroll-mt-4">
+          <Card className={CARD}>
+            <Card.Content className="p-0">
+              <h3 className="px-[15px] pb-0.5 pt-[14px] text-[15.5px] font-extrabold text-ink">
+                History
+              </h3>
+              {history.map((st, i) => (
+                <button
+                  key={st.sheet.id}
+                  type="button"
+                  onClick={() => onOpenSheet(st.sheet.id, "history")}
+                  className={`flex w-full items-center justify-between gap-2 px-[15px] py-[11px] text-left ${
+                    i < history.length - 1 ? "border-b border-dashed border-linesoft" : ""
+                  }`}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-[14.5px] font-semibold text-ink">
+                      {sheetLabel(st.sheet)}
+                    </span>
+                    <span className="block text-[12.5px] text-faint">
+                      {st.sheet.setName
+                        ? capitalize(scannedText(st.result?.gradedAt))
+                        : `Graded ${st.result ? shortDate(st.result.gradedAt) : ""}`}
+                    </span>
+                  </span>
+                  {st.score && (
+                    <span className={`${PILL} border-linesoft bg-fill text-mid`}>
+                      {st.score.finalCorrect}/{st.score.total} final
+                    </span>
+                  )}
+                </button>
+              ))}
+            </Card.Content>
+          </Card>
+        </section>
+      ) : (
+        <div className="rounded-2xl border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center">
+          <div className="mb-1 text-[38px] leading-none text-tang">▤</div>
+          <h3 className="mb-1 text-[15.5px] font-extrabold text-ink">No sheets scanned yet</h3>
+          <p className="text-[13.5px] leading-[1.45] text-mid">
+            When {kid.name} finishes their first sheet, tap Scan below to add it — grading
+            takes a few seconds.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
+function capitalize(s: string): string {
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
+}
+
 function HomeworkRow({
   st,
-  first,
+  last,
   onOpen,
   onDownload,
 }: {
   st: SheetState;
-  first: boolean;
+  last: boolean;
   onOpen: () => void;
   onDownload: () => void;
 }) {
   const done = isDone(st);
   return (
     <div
-      className={`flex w-full items-center gap-2 px-4 ${first ? "" : "border-t border-dashed border-linesoft"}`}
+      className={`flex w-full items-center gap-1.5 px-[15px] py-[11px] ${
+        last ? "" : "border-b border-dashed border-linesoft"
+      }`}
     >
-      <button type="button" onClick={onOpen} className="min-w-0 flex-1 py-3.5 text-left">
-        <span className="block truncate text-[15.5px] font-bold text-ink">{sheetLabel(st.sheet)}</span>
-        <span className="block truncate text-[12.5px] text-faint">{st.sheet.topic}</span>
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <span className="block truncate text-[14.5px] font-semibold text-ink">
+          {sheetLabel(st.sheet)}
+        </span>
       </button>
-      <Chip
-        color={done ? "success" : "default"}
-        variant="soft"
-        size="sm"
-        className="shrink-0 font-bold"
+      <span
+        className={`${PILL} ${
+          done
+            ? "border-leaf bg-leaf text-[#fff8ec]"
+            : "border-linesoft bg-fill text-mid"
+        }`}
       >
         {done ? "Done" : "Not done"}
-      </Chip>
+      </span>
       <button
         type="button"
         aria-label={`Download ${sheetLabel(st.sheet)} sheets (PDF)`}
         onClick={onDownload}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-tang"
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-tangdeep"
       >
-        <IconDownload size={20} />
+        <IconDownload size={22} />
       </button>
     </div>
   );
