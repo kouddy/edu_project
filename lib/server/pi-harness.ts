@@ -31,8 +31,8 @@
  * that file from a temp dir (so Pi can never mutate the committed config)
  * and passes the resolved API key via setRuntimeApiKey; keys are never
  * written to a committed file. Adding a provider is a models.json edit.
- * Only models vetted for children's work belong in that file — e.g. Meta's
- * discounted "-contributor" variants train on prompts and are excluded.
+ * Which models belong in that file is a product decision recorded in
+ * docs/stage-3-design.md (see the contributor-tier note there).
  */
 
 import { copyFileSync, mkdtempSync, readFileSync } from "node:fs";

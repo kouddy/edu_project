@@ -5,8 +5,9 @@
  * contract (lib/grade-contract.ts). Phase 1 ships the scripted demo
  * provider: it reproduces the prototype's demo verdict patterns from the
  * server registry, with no model call — the same end-to-end shape the real
- * providers return, and the fallback that keeps the app demoable with
- * no API key configured. Real providers are defined in
+ * providers return. It is a development tool only, selected explicitly
+ * with GRADING_PROVIDER=demo; it is never a fallback. Real providers are
+ * defined in
  * lib/server/pi/models.json (Pi's native provider/model format) and all
  * run through the one Pi harness — adding a provider is a file edit.
  */
@@ -22,7 +23,7 @@ import {
 } from "./pi-config";
 import { findBySheetId } from "./registry";
 
-export interface ProviderRunInput extends GradeRequestPayload {
+interface ProviderRunInput extends GradeRequestPayload {
   onStep: (step: string) => void;
 }
 
@@ -74,7 +75,7 @@ function demoSheetResult(
   };
 }
 
-export const demoProvider: GradingProvider = {
+const demoProvider: GradingProvider = {
   id: "demo",
   model: "demo-scripted",
   async run({ photos, onStep }) {
@@ -120,8 +121,8 @@ export const demoProvider: GradingProvider = {
  * A real provider: any provider defined in lib/server/pi/models.json,
  * run through the Pi harness. Resolvable only when the provider's API key
  * is set on the server (or it is keyless by design), so a keyless
- * deployment keeps the demo provider as its fallback and the runner's
- * "provider not available" path stays honest.
+ * deployment fails honestly with the runner's "provider not available"
+ * error instead of silently grading with something else.
  */
 function piProvider(id: string): GradingProvider {
   const config = loadPiConfig();

@@ -19,7 +19,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { AgentId } from "./registry";
 
-export interface PiSettings {
+interface PiSettings {
   defaultProvider: string;
   thinkingLevel: string;
   confidenceThreshold: number;
@@ -29,7 +29,7 @@ export interface PiSettings {
 }
 
 /** One model entry in models.json (Pi's native models format). */
-export interface PiModelDef {
+interface PiModelDef {
   id: string;
   name?: string;
   reasoning?: boolean;

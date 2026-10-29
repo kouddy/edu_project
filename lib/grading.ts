@@ -15,14 +15,12 @@ import {
   createSubmission,
   deletePhoto,
   deleteSheetRecords,
-  getLatestSubmissionForSheet,
   getPhoto,
   listKids,
   saveGradeResult,
   updateSubmission,
 } from "./store";
 import type { GradeJobResult, GradeJobStatus } from "./grade-contract";
-import { GINA_MATH_W12 } from "./seed";
 
 async function replaceSheetSubmission(sheetId: string, photoKeys: string[]): Promise<void> {
   const keep = new Set(photoKeys);
@@ -84,7 +82,7 @@ async function applyApiResult(
     await replaceSheetSubmission(sheet.sheetId, [photoKey]);
     const sub = createSubmission({ sheetId: sheet.sheetId, photoKeys: [photoKey] });
     if (i === 0 && photoKeys.length > result.sheets.length) {
-      // Extra photos belong to the first sheet, as in the local mock.
+      // Extra photos belong to the first sheet.
       updateSubmission(sub.id, { photoKeys: [...photoKeys] });
     }
     saveGradeResult({
@@ -154,9 +152,4 @@ async function gradeViaApi(photoKeys: string[]): Promise<GradeOutcome> {
 export async function gradeStagedPhotos(photoKeys: string[]): Promise<GradeOutcome> {
   if (photoKeys.length === 0) return { markedSheets: 0 };
   return gradeViaApi(photoKeys);
-}
-
-/** The latest Week 12 submission, if any (used by demo helpers/tests). */
-export function latestWeek12Submission() {
-  return getLatestSubmissionForSheet(GINA_MATH_W12);
 }

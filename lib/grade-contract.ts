@@ -39,7 +39,7 @@ export interface ApiSheetResult {
   perQuestion: ApiQuestionGrade[];
 }
 
-export interface GradeTrace {
+interface GradeTrace {
   provider: string;
   model: string;
   /** Parent-language step labels the run went through. */

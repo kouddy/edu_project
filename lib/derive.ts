@@ -74,7 +74,7 @@ export function loadSnapshot(): Snapshot {
 
 /* ------------------------------------------------------------ per-kid views */
 
-export function currentWeek(snap: Snapshot, kid: Kid): number {
+function currentWeek(snap: Snapshot, kid: Kid): number {
   let max = 0;
   for (const st of snap.states.values()) {
     if (st.kid.id === kid.id) max = Math.max(max, st.sheet.week);
@@ -94,7 +94,7 @@ export function isDone(st: SheetState): boolean {
   return !!st.score?.isFinal;
 }
 
-export function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
+function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
   const rows = homeworkStates(snap, kid);
   return rows.length > 0 && rows.every(isDone);
 }
@@ -189,7 +189,7 @@ export function statusSlot(snap: Snapshot, viewedKid: Kid | null): StatusSlot {
 
 /* ------------------------------------------------------------------ display */
 
-export function pronounFor(kid: Kid): string {
+function pronounFor(kid: Kid): string {
   return kid.name === "Gina" ? "her" : kid.name === "Leo" ? "his" : "their";
 }
 

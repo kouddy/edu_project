@@ -61,57 +61,6 @@ export function IconDownload({ size = 20, className }: IconProps) {
   );
 }
 
-export function IconX({ size = 22, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M5 5l14 14M19 5 5 19" />
-    </svg>
-  );
-}
-
-export function IconChevronLeft({ size = 20, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="m14 6-6 6 6 6" />
-    </svg>
-  );
-}
-
-export function IconChevronRight({ size = 20, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="m10 6 6 6-6 6" />
-    </svg>
-  );
-}
-
-/** Verdict icons for the question-by-question list. */
-export function VerdictIcon({ kind }: { kind: "correct" | "wrong" | "unsure" }) {
-  if (kind === "correct") {
-    return (
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-leaf text-white">
-        <svg {...base(15)}>
-          <path d="m4.5 12.5 5 5 10-11" />
-        </svg>
-      </span>
-    );
-  }
-  if (kind === "wrong") {
-    return (
-      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-rose text-white">
-        <svg {...base(14)}>
-          <path d="M6 6l12 12M18 6 6 18" />
-        </svg>
-      </span>
-    );
-  }
-  return (
-    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amberish font-extrabold text-ink">
-      ?
-    </span>
-  );
-}
-
 /**
  * The two live grading pills: a green "correct/graded graded" pill and an
  * amber "N need your check" pill, collapsing to one "X/Y final" pill once

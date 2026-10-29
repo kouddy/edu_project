@@ -5,7 +5,7 @@
  * the client polls GET /api/grade/:jobId. Jobs live in a process-global map:
  * right for the hackathon's single-instance dev/demo server, and the seam
  * where a real queue/store goes later. Jobs are not persisted — a restart
- * fails in-flight jobs, and the client falls back to its local mock.
+ * fails in-flight jobs, and the client reports the failure to the parent.
  */
 
 import type { GradeJobResult, GradeJobStatusValue } from "../grade-contract";

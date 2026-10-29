@@ -14,8 +14,9 @@ supplies answer keys; the server is the source of truth for keys.
 
 1. **Client (unchanged role)** — the local-first store stays the home for UX
    state, results, and photos. `lib/grading.ts` keeps its single swap point:
-   it calls the API and falls back to the local mock if the API is
-   unreachable or a run fails.
+   it calls the API; if the API is unreachable or a run fails, the parent
+   is told plainly and keeps their photos — there is no on-device fallback
+   and no fabricated result (changed 2026-10-29: real grading by default).
 2. **API (two endpoints + one utility)**
    - `POST /api/grade` — accepts the staged photos plus minimal kid context
      (id/name/grade, for disambiguation only). Returns `202 { jobId }`,
@@ -88,7 +89,8 @@ core (verdict, confidence, what the kid wrote) plus a subject `meta` — for
 math: topic, error category, generated guidance. Three outcome types:
 **graded**; **rejected** with a plain-language reason (a normal outcome,
 routes to the Photo rejected screen); **failed** (budget exhausted or
-invalid output after retries → client falls back to the local mock). The
+invalid output after retries → the client reports the failure to the
+parent and keeps the staged photos; nothing is fabricated). The
 full run trace is returned with the result and stored with it — that's the
 eval data for comparing models in Stage 4.
 

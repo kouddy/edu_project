@@ -4,9 +4,9 @@
  * The runner resolves everything from the file-based Pi configuration
  * (lib/server/pi-config.ts): it validates the configured prompt/context
  * files exist, picks the provider for the agent, and streams parent-language
- * step labels into the job as the provider reports them. Phase 1 runs the
- * math agent only; the subject is chosen from the identified sheet once the
- * real harness (Phase 2) performs identification.
+ * step labels into the job as the provider reports them. The math agent is
+ * the only active subject today (English is Phase 4); the agent is chosen
+ * here, before identification, from the subjects the seeded sheets use.
  */
 
 import type { GradeRequestPayload } from "../grade-contract";
