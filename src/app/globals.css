@@ -1,8 +1,0 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Component styling comes from HeroUI + Tailwind utilities. */
-html {
-  -webkit-font-smoothing: antialiased;
-}
