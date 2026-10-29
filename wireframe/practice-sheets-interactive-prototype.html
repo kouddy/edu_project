@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+<title>Practice Sheets Interactive Prototype</title>
+<style>
+  :root{
+    --page:#e7d3b4;
+    --phone:#fff9ef;
+    --card:#fffdf7;
+    --ink:#3d2b1f;
+    --mid:#6f5138;
+    --faint:#a3805f;
+    --line:#cfa878;
+    --line-soft:#ecd9ba;
+    --fill:#fdf0da;
+    --fill-dark:#f8d9a3;
+    --btn:#e8710a;
+    --btn-deep:#c75b00;
+    --btn-ink:#fff8ec;
+    --accent:#e8710a;
+    --accent-pale:#fdebd0;
+    --green:#3f7d3a;
+    --red:#d2492b;
+    --amber:#f0a30c;
+    --shadow:0 18px 50px rgba(122,74,20,.35);
+    --card-shadow:0 2px 7px rgba(146,90,32,.12),0 1px 2px rgba(146,90,32,.10);
+    --grain:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0.48 0 0 0 0 0.30 0 0 0 0 0.10 0 0 0 0.055 0"/></filter><rect width="140" height="140" filter="url(%23n)"/></svg>');
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --page:#20160d;
+      --phone:#2c1f13;
+      --card:#382a1b;
+      --ink:#f7e9d2;
+      --mid:#d9bd97;
+      --faint:#b3946d;
+      --line:#7d5c36;
+      --line-soft:#54402a;
+      --fill:#46331e;
+      --fill-dark:#5d4426;
+      --btn:#f59e0b;
+      --btn-deep:#e8710a;
+      --btn-ink:#2b1a08;
+      --accent:#f59e0b;
+      --accent-pale:#4d3517;
+      --green:#7cc47f;
+      --red:#ff8a70;
+      --amber:#f5b73d;
+      --shadow:0 18px 50px rgba(0,0,0,.6);
+      --card-shadow:0 2px 7px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.3);
+      --grain:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0.95 0 0 0 0 0.80 0 0 0 0 0.55 0 0 0 0.05 0"/></filter><rect width="140" height="140" filter="url(%23n)"/></svg>');
+    }
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--page);
+    background-image:var(--grain);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    padding:22px 12px 34px;
+  }
+  .hint{
+    margin:0 0 16px;max-width:430px;text-align:center;
+    font-size:14.5px;line-height:1.45;color:var(--mid);
+  }
+  .hint strong{color:var(--ink);font-weight:600}
+
+  /* ---------- phone frame ---------- */
+  .phone{
+    position:relative;
+    width:min(392px,100%);
+    height:min(800px,calc(100vh - 110px));
+    min-height:560px;
+    background:var(--phone);
+    background-image:var(--grain);
+    border:2px solid var(--line);
+    border-radius:38px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  .statusbar{
+    flex:0 0 auto;
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 22px 4px;
+    font-size:12px;color:var(--faint);letter-spacing:.02em;
+  }
+  .statusbar .dots{font-size:10px;letter-spacing:.25em}
+  #screen{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;position:relative;scrollbar-width:thin}
+  .view{padding:14px 18px 26px;animation:fade .18s ease}
+  @keyframes fade{from{opacity:.35}to{opacity:1}}
+  @media (prefers-reduced-motion: reduce){.view{animation:none}}
+
+  /* ---------- generic wireframe bits ---------- */
+  .appname{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--btn-deep);margin:2px 0 6px;font-weight:700}
+  h1.scr{font-size:23px;margin:0 0 6px;font-weight:800;line-height:1.15;font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  h2.scr{font-size:19px;margin:0 0 6px;font-weight:800;font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .sub{font-size:13.5px;color:var(--mid);line-height:1.45;margin:0 0 14px}
+  .card{
+    background:var(--card);border:1.5px solid var(--line-soft);border-radius:16px;
+    padding:14px 15px;margin:0 0 12px;box-shadow:var(--card-shadow);
+  }
+  .card.flat{border-style:dashed;border-color:var(--line)}
+  .card h3{margin:0 0 4px;font-size:15.5px;font-weight:800;font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  .card p{margin:0;font-size:13.5px;color:var(--mid);line-height:1.45}
+  .rowline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .btn{
+    display:block;width:100%;border:1.5px solid var(--btn-deep);background:linear-gradient(165deg,#f07d12,var(--btn));color:var(--btn-ink);
+    font:inherit;font-size:15.5px;font-weight:700;padding:13px 14px;border-radius:12px;cursor:pointer;text-align:center;
+    box-shadow:0 3px 8px rgba(199,91,0,.28);
+  }
+  .btn:active{transform:scale(.99);background:var(--btn-deep)}
+  .btn.secondary{background:var(--card);color:var(--btn-deep);border-color:var(--line);box-shadow:var(--card-shadow)}
+  .btn.small{width:auto;display:inline-block;padding:8px 14px;font-size:13.5px;border-radius:10px}
+  .btnrow{display:flex;gap:10px}
+  .btnrow .btn{flex:1}
+  .linkish{
+    background:none;border:none;font:inherit;font-size:13px;color:var(--btn-deep);font-weight:600;
+    text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:6px 4px;
+  }
+  .remove-armed{
+    display:inline-block;background:#d2492b;color:#fff8ec;border:1.5px solid #a8321f;
+    font:inherit;font-size:14px;font-weight:800;padding:10px 18px;border-radius:999px;cursor:pointer;
+    box-shadow:0 4px 12px rgba(210,73,43,.38);
+  }
+  .remove-armed:active{background:#a8321f;transform:scale(.98)}
+  /* ---------- universal Back control ----------
+     One shared control for every detail screen: same markup, same
+     position (top-left of the screen header), same styling. */
+  .backrow{margin:0 0 10px}
+  .backbtn{
+    background:none;border:none;font:inherit;font-size:14.5px;font-weight:700;color:var(--btn-deep);
+    cursor:pointer;padding:6px 8px 6px 0;display:inline-flex;align-items:center;gap:3px;line-height:1;
+  }
+  .backbtn:active{opacity:.6}
+  .center{text-align:center}
+  label.f{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  input[type=email],input[type=text],select{
+    width:100%;font:inherit;font-size:15px;padding:12px 13px;border-radius:11px;
+    border:1.5px solid var(--line);background:var(--card);color:var(--ink);margin:0 0 14px;
+  }
+  input[type=email]:focus,input[type=text]:focus,select:focus{
+    outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-pale);
+  }
+  input::placeholder{color:var(--faint)}
+  .pill{
+    display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--line-soft);
+    border-radius:999px;padding:3px 10px;color:var(--mid);background:var(--fill);
+  }
+  .pill.solid{background:var(--btn);color:var(--btn-ink);border-color:var(--btn-deep)}
+  .pill.done{background:var(--green);color:#fff8ec;border-color:var(--green)}
+  .pill.check{background:var(--amber);color:#402a12;border-color:#d98a06}
+  .pill.todo{background:var(--fill);color:var(--mid);border-color:var(--line-soft)}
+  .badges{display:flex;flex-direction:column;gap:6px;align-items:flex-end;justify-content:center;margin-left:auto;text-align:right;flex:0 0 auto}
+  .badges .pill{white-space:nowrap}
+  .feeditem>.badges{margin-left:auto;justify-content:flex-end}
+  .feeditem>.pill{margin-left:auto;flex:0 0 auto}
+  @media (prefers-color-scheme: dark){
+    .pill.done{color:#122b10}
+    .pill.check{color:#2b1a08}
+  }
+  .hwsub{font-size:12.5px;color:var(--mid);margin:1px 0 4px}
+  .hwhint{font-size:12px;color:var(--faint);margin:2px 2px 0;line-height:1.4}
+  .dashedbox{
+    border:1.5px dashed var(--line);border-radius:12px;background:var(--fill);
+    background-image:repeating-linear-gradient(transparent,transparent 23px,rgba(180,110,40,.10) 24px);
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    color:var(--mid);font-size:13px;padding:14px;line-height:1.4;
+  }
+  .badge{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:24px;height:24px;border-radius:50%;border:1.5px solid var(--line);
+    font-size:14px;font-weight:800;background:var(--card);color:var(--ink);flex:0 0 auto;
+  }
+  .badge.ok{background:var(--green);color:#fff8ec;border-color:var(--green)}
+  .badge.no{background:var(--red);color:#fff6ec;border-color:var(--red)}
+  .badge.q{background:var(--amber);color:#402a12;border-color:#d98a06}
+  @media (prefers-color-scheme: dark){
+    .badge.ok{color:#122b10}
+    .badge.no{color:#3d130a}
+  }
+  .divider{border:none;border-top:1px dashed var(--line-soft);margin:12px 0}
+
+  /* ---------- kid switcher ---------- */
+  .chips{display:flex;gap:8px;margin:4px 0 16px;flex-wrap:wrap}
+  .chip{
+    font:inherit;font-size:14px;font-weight:600;padding:8px 15px;border-radius:999px;
+    border:1.5px solid var(--line);background:var(--card);color:var(--mid);cursor:pointer;
+  }
+  .chip.on{background:var(--btn);border-color:var(--btn);color:var(--btn-ink)}
+  .chip small{font-weight:500;opacity:.75}
+
+  /* ---------- scan ---------- */
+  .camera{
+    position:relative;border:2px solid var(--line);border-radius:16px;background:var(--fill);
+    background-image:linear-gradient(rgba(180,110,40,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(180,110,40,.07) 1px,transparent 1px);
+    background-size:22px 22px;
+    height:380px;overflow:hidden;
+  }
+  .camera .ph-label{
+    position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;
+    align-items:center;justify-content:center;color:var(--faint);font-size:13px;text-align:center;padding:20px;
+  }
+  .camera video,.camera canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .camera.live .ph-label{display:none}
+  .camstart{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:3;
+    border:1.5px solid var(--btn-deep);background:linear-gradient(165deg,#f07d12,var(--btn));color:var(--btn-ink);
+    font:inherit;font-size:14.5px;font-weight:700;padding:11px 18px;border-radius:999px;cursor:pointer;
+    box-shadow:0 4px 14px rgba(122,74,20,.35);white-space:nowrap;
+  }
+  .camstart:active{background:var(--btn-deep)}
+  .camnote{
+    position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:3;white-space:nowrap;
+    font-size:11.5px;color:var(--mid);background:var(--card);border:1px solid var(--line-soft);
+    padding:4px 10px;border-radius:999px;opacity:.92;
+  }
+  .corner{position:absolute;width:30px;height:30px;border:0 solid var(--btn-deep);opacity:.85}
+  .corner.tl{top:14px;left:14px;border-top-width:3px;border-left-width:3px;border-top-left-radius:8px}
+  .corner.tr{top:14px;right:14px;border-top-width:3px;border-right-width:3px;border-top-right-radius:8px}
+  .corner.bl{bottom:14px;left:14px;border-bottom-width:3px;border-left-width:3px;border-bottom-left-radius:8px}
+  .corner.br{bottom:14px;right:14px;border-bottom-width:3px;border-right-width:3px;border-bottom-right-radius:8px}
+  .shutterwrap{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px}
+  .scancontrols{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;width:100%;max-width:340px}
+  .gallerybtn{justify-self:start;display:flex;flex-direction:column;align-items:center;gap:5px;background:none;border:none;font:inherit;cursor:pointer;color:var(--mid);padding:2px 2px;max-width:76px}
+  .gallerythumb{width:50px;height:50px;border-radius:12px;border:1.5px solid var(--line);background:var(--card);display:flex;align-items:center;justify-content:center;color:var(--btn-deep);box-shadow:var(--card-shadow)}
+  .gallerythumb svg{width:26px;height:26px;display:block}
+  .gallerybtn .cap{font-size:11.5px;font-weight:700;line-height:1.15;text-align:center;color:var(--mid)}
+  .gallerybtn:active .gallerythumb{background:var(--fill)}
+  .scan-spacer{width:50px;justify-self:end}
+  .shutter{
+    width:66px;height:66px;border-radius:50%;border:2px solid var(--line);
+    background:var(--card);cursor:pointer;position:relative;justify-self:center;
+  }
+  .shutter::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--btn);box-shadow:inset 0 0 0 3px rgba(255,248,236,.45)}
+  .shutter:active::after{background:var(--btn-deep)}
+
+  /* ---------- full-screen scan (immersive camera) ---------- */
+  #screen.scan-screen{overflow:hidden}
+  .scanfs{height:100%;display:flex;flex-direction:column;background:#1a120b;animation:fade .18s ease}
+  @media (prefers-reduced-motion: reduce){.scanfs{animation:none}}
+  .camera.fullscreen{flex:1 1 auto;height:auto;min-height:0;border:none;border-radius:0}
+  .camera.fullscreen .corner.tl{top:64px;left:16px}
+  .camera.fullscreen .corner.tr{top:64px;right:16px}
+  .camera.fullscreen .corner.bl{bottom:178px;left:16px}
+  .camera.fullscreen .corner.br{bottom:178px;right:16px}
+  .camera.fullscreen .camnote{top:64px}
+  .camclose{
+    position:absolute;top:12px;left:12px;z-index:7;width:42px;height:42px;border-radius:50%;
+    border:1px solid rgba(255,255,255,.38);background:rgba(20,12,6,.58);color:#fff;
+    font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-family:inherit;padding:0 0 2px;
+  }
+  .camclose:active{background:rgba(20,12,6,.84)}
+  .cambad{
+    position:absolute;top:16px;right:12px;z-index:7;background:rgba(20,12,6,.52);color:rgba(255,255,255,.94);
+    border:1px solid rgba(255,255,255,.24);font:inherit;font-size:11px;font-weight:600;
+    padding:7px 10px;border-radius:999px;cursor:pointer;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .cambad:active{background:rgba(20,12,6,.78)}
+  .scan-bottom{
+    position:absolute;left:0;right:0;bottom:0;z-index:5;
+    padding:10px 16px 16px;
+    background:linear-gradient(to top,rgba(18,10,4,.72) 0%,rgba(18,10,4,.46) 62%,transparent 100%);
+    display:flex;flex-direction:column;align-items:center;gap:8px;
+  }
+  .scan-bottom .thumbtray{width:100%;padding:10px 8px 2px 2px;justify-content:flex-start}
+  .scan-bottom .scancontrols{max-width:360px}
+  .scan-bottom .gallerybtn{color:#fff}
+  .scan-bottom .gallerybtn .cap{color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.65)}
+  .scan-bottom .gallerythumb{background:rgba(255,249,239,.97)}
+  .scan-bottom .shutter{border-color:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(0,0,0,.38);width:72px;height:72px;background:rgba(255,253,247,.96)}
+  .tap-hint{font-size:12.5px;color:rgba(255,255,255,.94);text-shadow:0 1px 4px rgba(0,0,0,.65);font-weight:600}
+  .phone.scan-active #toast{bottom:196px}
+  /* Grade bar lives INSIDE .scan-bottom as its last (bottom-most) element,
+     so tray / controls / grade form one bottom-anchored stack. Negative
+     margins cancel .scan-bottom's side/bottom padding, making the bar
+     stretch full-width and sit flush with the bottom edge of the app area. */
+  .scan-grade{
+    align-self:stretch;
+    margin:6px -16px -16px;
+    padding:12px 18px 14px;
+    background:var(--phone);
+    background-image:var(--grain);
+    border-top:1.5px solid var(--line-soft);
+    box-shadow:0 -6px 16px rgba(0,0,0,.22);
+  }
+  .scan-grade .btn{margin:0;width:100%}
+
+  /* ---------- staged photo preview ---------- */
+  .scanfs{position:relative}
+  .thumbitem{cursor:pointer}
+  .preview-overlay{
+    position:absolute;inset:0;z-index:30;background:#0d0805;
+    display:flex;flex-direction:column;animation:fade .16s ease;
+  }
+  @media (prefers-reduced-motion: reduce){.preview-overlay{animation:none}}
+  .preview-stage{
+    flex:1 1 auto;min-height:0;position:relative;overflow:hidden;
+    display:flex;align-items:center;justify-content:center;
+    touch-action:none;
+  }
+  .preview-imgwrap{
+    width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+    will-change:transform;transform-origin:center center;padding:18px 14px;
+  }
+  .preview-imgwrap img{
+    max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;
+    pointer-events:none;user-select:none;-webkit-user-select:none;border-radius:6px;
+    box-shadow:0 10px 34px rgba(0,0,0,.5);background:#fff8ec;
+  }
+  .preview-ph{
+    width:min(82%,320px);aspect-ratio:3/4;max-height:72vh;
+    background:#fff8ec;border:1.5px solid var(--line);border-radius:14px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    color:var(--btn-deep);text-align:center;padding:22px;pointer-events:none;user-select:none;
+  }
+  .preview-ph .big{font-size:76px;line-height:1}
+  .preview-ph .cap{font-size:13.5px;color:var(--mid);line-height:1.45;font-weight:600}
+  .preview-ph.bad{opacity:.72;filter:blur(.4px)}
+  .preview-close{z-index:32}
+  .preview-arrow{
+    position:absolute;top:50%;transform:translateY(-50%);z-index:32;
+    width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.38);
+    background:rgba(20,12,6,.62);color:#fff;font-size:26px;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;font-family:inherit;padding:0 0 3px;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  }
+  .preview-arrow:active{background:rgba(20,12,6,.88)}
+  .preview-arrow.prev{left:12px}
+  .preview-arrow.next{right:12px}
+  .preview-arrow[disabled]{opacity:.35;pointer-events:none}
+  .preview-count{
+    position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:32;
+    background:rgba(20,12,6,.58);color:#fff;border:1px solid rgba(255,255,255,.24);
+    font-size:12.5px;font-weight:700;padding:6px 11px;border-radius:999px;
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);letter-spacing:.04em;
+  }
+  .preview-bottom{
+    flex:0 0 auto;padding:10px 16px 16px;background:rgba(13,8,5,.96);
+    border-top:1px solid rgba(255,255,255,.14);display:flex;flex-direction:column;gap:9px;
+  }
+  .preview-hint{font-size:12px;color:rgba(255,255,255,.72);text-align:center;line-height:1.4;margin:0}
+  .preview-remove{
+    display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+    border:1.5px solid #ff8a70;background:rgba(210,73,43,.16);color:#ffb4a3;
+    font:inherit;font-size:15.5px;font-weight:800;padding:13px 14px;border-radius:12px;cursor:pointer;
+  }
+  .preview-remove:active{background:rgba(210,73,43,.32)}
+  .preview-remove svg{width:19px;height:19px;flex:0 0 auto}
+
+  /* ---------- photo thumbnails ---------- */
+  .thumbtray{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:12px 8px 2px 4px;overflow-x:auto;overflow-y:visible;scrollbar-width:thin;
+  }
+  .thumbitem{position:relative;display:inline-block;width:56px;height:56px;flex:0 0 56px}
+  .thumbitem img{
+    width:56px;height:56px;display:block;object-fit:cover;
+    border:1.5px solid var(--line);border-radius:12px;background:#fff8ec;box-shadow:var(--card-shadow);
+  }
+  .thumbitem .thumbph{
+    width:56px;height:56px;display:flex;align-items:center;justify-content:center;
+    border:1.5px solid var(--line);border-radius:12px;background:#fff8ec;color:var(--btn-deep);
+    font-size:25px;box-shadow:var(--card-shadow);
+  }
+  .thumbitem.row{width:52px;height:52px;flex-basis:52px}
+  .thumbitem.row img,.thumbitem.row .thumbph{width:52px;height:52px;border-radius:11px}
+  .thumbx{
+    position:absolute;top:-7px;right:-7px;width:22px;height:22px;padding:0;
+    display:flex;align-items:center;justify-content:center;
+    border:1.5px solid var(--card);border-radius:50%;
+    background:var(--ink);color:var(--phone);
+    font:inherit;font-size:15px;font-weight:800;line-height:1;cursor:pointer;
+    box-shadow:0 2px 6px rgba(61,43,31,.35);z-index:2;
+  }
+  .thumbx:active{background:var(--btn-deep)}
+  .divbtn{display:block;width:100%;background:none;border:none;font:inherit;text-align:left;cursor:pointer;color:inherit;padding:0}
+
+  /* ---------- grading ---------- */
+  .track{height:12px;border:1.5px solid var(--line);border-radius:999px;background:var(--card);overflow:hidden;margin:16px 0 8px}
+  .track .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--btn),var(--amber));transition:width .25s ease}
+  .steps{font-size:13px;color:var(--mid);line-height:2}
+  .steps .done{color:var(--btn-deep);font-weight:700}
+
+  .qrow{display:flex;gap:11px;padding:11px 2px;border-bottom:1px dashed var(--line-soft);align-items:flex-start}
+  .qrow:last-child{border-bottom:none}
+  .qrow .qn{font-size:12px;font-weight:700;color:var(--faint);padding-top:3px;width:26px;flex:0 0 auto}
+  .qrow .body{flex:1}
+  .qrow .qp{font-size:14.5px;font-weight:600}
+  .qrow .qa{font-size:13px;color:var(--mid);margin-top:1px}
+  .qrow .expl{font-size:13px;color:var(--ink);background:var(--accent-pale);border-radius:9px;padding:8px 10px;margin-top:7px;line-height:1.45}
+  .banner{
+    border:1.5px dashed var(--btn-deep);border-radius:12px;padding:12px 14px;margin:0 0 12px;
+    display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--accent-pale);
+    font-size:14px;font-weight:700;cursor:pointer;width:100%;font-family:inherit;text-align:left;color:var(--ink);
+    box-shadow:var(--card-shadow);
+  }
+  .crop{
+    height:170px;font-size:14px;flex-direction:column;gap:8px;
+  }
+  .crop .hand{font-size:34px;font-weight:700;color:var(--ink);letter-spacing:.04em}
+  .progressdots{font-size:13px;color:var(--mid);font-weight:600;letter-spacing:.05em}
+
+  /* ---------- tab bar ---------- */
+  #tabbar{
+    flex:0 0 auto;display:none;
+    border-top:1.5px solid var(--line);background:var(--fill);
+    padding:8px 10px calc(10px + env(safe-area-inset-bottom));
+    grid-template-columns:1fr 76px 1fr;align-items:end;gap:2px;
+  }
+  #tabbar.show{display:grid}
+  .tab{
+    background:none;border:none;font:inherit;cursor:pointer;color:var(--faint);
+    font-size:11.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0 2px;
+  }
+  .tab svg{width:22px;height:22px}
+  .tab.on{color:var(--btn-deep)}
+  .tabscan{
+    background:linear-gradient(165deg,#f07d12,var(--btn));color:#fff8ec;cursor:pointer;font:inherit;
+    width:62px;height:62px;border-radius:50%;margin:-26px auto 0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+    font-size:10.5px;font-weight:800;box-shadow:0 6px 16px rgba(199,91,0,.4);border:2px solid var(--card);
+    font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,sans-serif;
+  }
+  .tabscan svg{width:24px;height:24px}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:absolute;left:50%;bottom:104px;transform:translateX(-50%) translateY(8px);
+    background:var(--ink);color:var(--phone);font-size:13.5px;font-weight:600;
+    padding:10px 16px;border-radius:999px;opacity:0;pointer-events:none;transition:all .25s ease;
+    max-width:86%;text-align:center;z-index:40;box-shadow:0 6px 18px rgba(61,43,31,.35);
+  }
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .mailbig{font-size:44px;line-height:1;text-align:center;margin:26px 0 10px;color:var(--btn)}
+  .emptyart{font-size:38px;text-align:center;margin:10px 0 6px;color:var(--btn)}
+  .feeditem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--line-soft)}
+  .feeditem>span:first-child{flex:1 1 auto;min-width:0}
+  .feeditem:last-child{border-bottom:none}
+  .feeditem .t{font-size:14.5px;font-weight:600}
+  .feeditem .d{font-size:12.5px;color:var(--mid)}
+  button.feedbtn{background:none;border:none;font:inherit;text-align:left;width:100%;cursor:pointer;color:inherit;padding:0}
+  .hwrow{background:none;border:none;font:inherit;text-align:left;width:100%;cursor:pointer;color:inherit;padding:0;display:block}
+  .feedbtn-sep>.feeditem{border-bottom:1px dashed var(--line-soft)}
+  .hwrow:not(:last-child)>.feeditem{border-bottom:1px dashed var(--line-soft)}
+  .hw-right{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+  .dlbtn{flex:0 0 auto;width:40px;height:40px;min-width:40px;display:inline-flex;align-items:center;justify-content:center;background:none;border:none;border-radius:10px;color:var(--btn-deep);cursor:pointer;padding:0}
+  .dlbtn svg{width:22px;height:22px;display:block}
+  .dlbtn:active{background:var(--accent-pale)}
+
+  /* ---------- caught-up ---------- */
+  .caughtup{
+    background:#eaf4e4;border-color:#bcd8b2;color:#2f5d2a;
+    text-align:center;font-weight:800;font-size:15.5px;line-height:1.35;
+    font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    .caughtup{background:#2e4426;border-color:#4c6b3e;color:#c8e6bc}
+  }
+
+  /* ---------- mocked sheet photo ---------- */
+  .mockphoto{height:220px;border-radius:16px;border:1.5px solid var(--line-soft);box-shadow:var(--card-shadow);overflow:hidden;background:#fdfcf6;margin:0 0 12px;position:relative}
+  .mockphoto .paper{height:100%;padding:12px 14px 10px;background:linear-gradient(180deg,#fffef9,#fdf8ec);color:#3a2e22;display:flex;flex-direction:column}
+  .mockphoto .ph-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;border-bottom:2px solid #d8c49a;padding-bottom:7px;margin-bottom:7px}
+  .mockphoto .ph-title{font-weight:800;font-size:13.5px;line-height:1.2;font-family:"Nunito",sans-serif}
+  .mockphoto .ph-sub{font-size:10.5px;color:#7a6248;margin-top:2px}
+  .mockphoto .ph-name{font-size:10.5px;color:#7a6248;text-align:right;white-space:nowrap}
+  .mockphoto .ph-name b{color:#2a4a8a;font-family:"Segoe Print","Comic Sans MS",cursive;font-weight:600}
+  .mockphoto .ph-rows{flex:1;display:flex;flex-direction:column;justify-content:space-between}
+  .mockphoto .ph-row{display:flex;justify-content:space-between;gap:10px;font-size:11px;line-height:1.25;border-bottom:1px dotted #e3d3ae;padding:2px 0}
+  .mockphoto .ph-row span:first-child{color:#5a4632}
+  .mockphoto .ph-ans{color:#2a4a8a;font-family:"Segoe Print","Comic Sans MS",cursive;font-size:11.5px;white-space:nowrap}
+  .mockphoto .ph-ans.wrong{color:#b13a22;text-decoration:line-through;text-decoration-thickness:1px}
+  .mockphoto .ph-tick{color:#3f7d3a;font-weight:800;margin-left:3px;text-decoration:none;display:inline-block}
+  /* ---------- profile / parent card ---------- */
+  .parentlabel{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);font-weight:700;margin:0 0 3px}
+  .parentname{font-size:24px;font-weight:800;margin:0;font-family:"Nunito","Avenir Next","Trebuchet MS",-apple-system,sans-serif}
+  .parentmeta{font-size:13px;color:var(--mid);margin:3px 0 0}
+  .qrcard{text-align:center;padding:20px 16px 16px}
+  .qrcard h3{font-size:16px;margin:0 0 4px}
+  .qrbox{
+    width:196px;height:196px;margin:12px auto 12px;background:#fff;border:1.5px solid var(--line-soft);
+    border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(146,90,32,.14);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qrbox svg{width:100%;height:100%;display:block}
+  .qrhelp{font-size:13.5px;color:var(--mid);line-height:1.5;margin:0 auto;max-width:280px}
+  .kidrow{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--line-soft)}
+  .kidrow:last-child{border-bottom:none}
+  .kidrow .t{font-size:14.5px;font-weight:600}
+  .kidrow .d{font-size:12.5px;color:var(--mid)}
+</style>
+</head>
+<body>
+
+<p class="hint"><strong>Interactive prototype.</strong> Click through: scan a sheet, see the results, resolve the 2 unsure answers.</p>
+
+<div class="phone" role="application" aria-label="Practice Sheets interactive prototype">
+  <div class="statusbar"><span>9:41</span><span class="dots">●●●●○</span></div>
+  <div id="screen"></div>
+  <nav id="tabbar" aria-label="Main">
+    <button class="tab" data-tab="home" style="grid-column:1;grid-row:1" onclick="go('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11 12 3l9 8"/><path d="M5 10v10h14V10"/></svg>
+      Home</button>
+    <button class="tab" data-tab="profile" style="grid-column:3;grid-row:1" onclick="go('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>
+      Profile</button>
+    <button class="tabscan" onclick="go('scan')" aria-label="Scan a sheet" style="grid-column:2;grid-row:1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M3 12h18"/></svg>
+      Scan</button>
+  </nav>
+  <div id="toast" role="status"></div>
+</div>
+<input type="file" id="photopicker" accept="image/*" multiple aria-hidden="true" tabindex="-1" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden">
+
+<script>
+/* ================= locked example data ================= */
+var QUESTIONS = [
+  {n:1,  q:"48 + 37",            ans:"85", correct:"85", verdict:"correct"},
+  {n:2,  q:"63 − 28",            ans:"35", correct:"35", verdict:"correct"},
+  {n:3,  q:"7 × 8",              ans:"56", correct:"56", verdict:"correct"},
+  {n:4,  q:"52 − 27",            ans:"35", correct:"25", verdict:"wrong",   topic:"Borrowing in subtraction",
+   expl:"Close! You took the smaller digit from the bigger one in each column. For 52 − 27, borrow first: 12 − 7 = 5, then 4 − 2 = 2 — so it's 25."},
+  {n:5,  q:"9 × 6",              ans:"54", correct:"54", verdict:"correct"},
+  {n:6,  q:"34 × 2",             ans:"68?", correct:"68", verdict:"unsure", topic:"2-digit × 1-digit multiplication",
+   aiSays:"We think this looks like “68”, but one digit is smudged", hand:"6 8"},
+  {n:7,  q:"125 + 248",          ans:"373", correct:"373", verdict:"correct"},
+  {n:8,  q:"90 ÷ 10",            ans:"9",  correct:"9",  verdict:"correct"},
+  {n:9,  q:"74 − 38",            ans:"36?", correct:"36", verdict:"unsure", topic:"Borrowing in subtraction",
+   aiSays:"We think this looks like “36”, but the 6 is written over another number", hand:"3 6"},
+  {n:10, q:"15 × 4",             ans:"60", correct:"60", verdict:"correct"}
+];
+var OLDER_SHEETS = [
+  {key:"math11", title:"Math Week 11", date:"Graded Oct 19", score:"9/10 final"},
+  {key:"math10", title:"Math Week 10", date:"Graded Oct 12", score:"8/10 final"},
+  {key:"wordB", title:"Word Problems · Set B", date:"Graded Oct 5", score:"10/10 final"}
+];
+var SHEET_SUMMARIES = {
+  "sheetC": {header:"Gina · Math · Set C", score:"9/10 final", date:"Graded today", summary:"Gina · Math · Set C — 9 out of 10 math answers correct. Multiplication and division facts were strong; the one miss is tracked in her progress."}
+};
+var MOCK_RESULTS = {
+  "word12": {
+    subline:"Gina · Word Problems · Week 12 · scanned this week",
+    score:"9/10 final",
+    summary:"Great work, Gina! Two-step word problems is the one to keep practising \u2014 it\u2019s tracked in her progress.",
+    photoTitle:"Word Problems \u00b7 Week 12",
+    photoSub:"Read, choose the operation, solve \u2014 including two-step problems",
+    questions:[
+      {prompt:"4 boxes hold 12 pencils each \u2014 how many pencils in all? = 48", wrote:"48", correct:true},
+      {prompt:"Mia collected 96 shells, then gave 28 away \u2014 how many left? = 68", wrote:"68", correct:true},
+      {prompt:"5 shelves with 9 books on each \u2014 how many books? = 45", wrote:"45", correct:true},
+      {prompt:"A baker made 72 muffins and packed them in boxes of 8 \u2014 how many boxes? = 9", wrote:"9", correct:true},
+      {prompt:"Tom ran 350 m on Monday and 275 m on Tuesday \u2014 total distance? = 625 m", wrote:"625 m", correct:true},
+      {prompt:"Noah buys 3 packs of 8 markers and gives 5 markers away \u2014 how many markers does he have left? = 19", wrote:"24", correct:false, correctAns:"19", expl:"This one has two steps! First work out 3 \u00d7 8 = 24 markers, then take away the 5 he gave away: 24 \u2212 5 = 19. Gina stopped after the first step and wrote 24."},
+      {prompt:"48 students split into 6 equal teams \u2014 how many on each team? = 8", wrote:"8", correct:true},
+      {prompt:"A rope is 2 m long, cut into 4 equal pieces \u2014 each piece = 50 cm", wrote:"50 cm", correct:true},
+      {prompt:"Sara had $50 and spent $17 on a game \u2014 how much left? = $33", wrote:"$33", correct:true},
+      {prompt:"7 vans carry 8 children each \u2014 how many children? = 56", wrote:"56", correct:true}
+    ]
+  },
+  "math11": {
+    subline:"Gina · Math Week 11 · Graded Oct 19",
+    score:"9/10 final",
+    summary:"Great work, Gina! Adding fractions is the one to keep practising \u2014 it\u2019s tracked in her progress.",
+    photoTitle:"Math \u00b7 Week 11",
+    photoSub:"Multiplication, division, fractions & measurement",
+    questions:[
+      {prompt:"6 \u00d7 7 = 42", wrote:"42", correct:true},
+      {prompt:"48 \u00f7 6 = 8", wrote:"8", correct:true},
+      {prompt:"3/4 of 12 = 9", wrote:"9", correct:true},
+      {prompt:"5 \u00d7 9 = 45", wrote:"45", correct:true},
+      {prompt:"72 \u00f7 8 = 9", wrote:"9", correct:true},
+      {prompt:"2.5 m in centimetres = 250 cm", wrote:"250 cm", correct:true},
+      {prompt:"1/2 + 1/4 = 3/4", wrote:"2/6", correct:false, correctAns:"3/4", expl:"Good try! Fractions need the same bottom number before you add. 1/2 is the same as 2/4, so 2/4 + 1/4 = 3/4 \u2014 don\u2019t add the bottom numbers."},
+      {prompt:"9 \u00d7 4 = 36", wrote:"36", correct:true},
+      {prompt:"1000 g in kilograms = 1 kg", wrote:"1 kg", correct:true},
+      {prompt:"56 \u00f7 7 = 8", wrote:"8", correct:true}
+    ]
+  },
+  "math10": {
+    subline:"Gina · Math Week 10 · Graded Oct 12",
+    score:"8/10 final",
+    summary:"Great work, Gina! Place value and rounding is the one to keep practising \u2014 it\u2019s tracked in her progress.",
+    photoTitle:"Math \u00b7 Week 10",
+    photoSub:"Place value, rounding, time & money",
+    questions:[
+      {prompt:"23 + 19 = 42", wrote:"42", correct:true},
+      {prompt:"8 \u00d7 3 = 24", wrote:"24", correct:true},
+      {prompt:"Value of the 7 in 4,721 = 700", wrote:"70", correct:false, correctAns:"700", expl:"Look at where the 7 sits: in 4,721 the 7 is in the hundreds place, so it is worth 700 \u2014 not 70. Gina counted it as tens."},
+      {prompt:"Half past 3 on a clock = 3:30", wrote:"3:30", correct:true},
+      {prompt:"$5.00 \u2212 $2.75 = $2.25", wrote:"$2.25", correct:true},
+      {prompt:"64 \u00f7 8 = 8", wrote:"8", correct:true},
+      {prompt:"Perimeter of a 5 cm by 3 cm rectangle = 16 cm", wrote:"16 cm", correct:true},
+      {prompt:"Round 682 to the nearest hundred = 700", wrote:"600", correct:false, correctAns:"700", expl:"682 is closer to 700 than to 600 \u2014 the 8 in the tens place tells us to round up. Gina rounded down to 600."},
+      {prompt:"7 \u00d7 6 = 42", wrote:"42", correct:true},
+      {prompt:"15 minutes after 2:40 = 2:55", wrote:"2:55", correct:true}
+    ]
+  },
+  "wordB": {
+    subline:"Gina · Word Problems \u00b7 Set B · Graded Oct 5",
+    score:"10/10 final",
+    summary:"Perfect score, Gina! Every word problem solved \u2014 she read each one carefully and showed the right operation every time.",
+    photoTitle:"Word Problems \u00b7 Set B",
+    photoSub:"Read, choose the operation, solve",
+    questions:[
+      {prompt:"3 bags of 8 marbles \u2014 how many in all? = 24", wrote:"24", correct:true},
+      {prompt:"45 stickers, gave away 17 \u2014 how many left? = 28", wrote:"28", correct:true},
+      {prompt:"A book costs $6. Mia buys 4 \u2014 total? = $24", wrote:"$24", correct:true},
+      {prompt:"36 cookies shared by 6 friends \u2014 each gets = 6", wrote:"6", correct:true},
+      {prompt:"Bus had 29 riders, 14 more get on \u2014 now = 43", wrote:"43", correct:true},
+      {prompt:"5 rows of 7 chairs \u2014 how many chairs? = 35", wrote:"35", correct:true},
+      {prompt:"Sam ran 800 m, then 200 m more \u2014 total = 1000 m", wrote:"1000 m", correct:true},
+      {prompt:"52 pencils in boxes of 10 \u2014 full boxes = 5", wrote:"5", correct:true},
+      {prompt:"Cake cut into 8 slices, 3 eaten \u2014 left = 5/8", wrote:"5/8", correct:true},
+      {prompt:"Train leaves at 9:15, ride is 45 min \u2014 arrives = 10:00", wrote:"10:00", correct:true}
+    ]
+  }
+};
+
+/* ================= state ================= */
+var state = {
+  screen:"signin",
+  kidId:"gina",
+  kids:[
+    {id:"gina", name:"Gina", grade:"Grade 4", gradedSheets:4},
+    {id:"leo",  name:"Leo",  grade:"Grade 1", gradedSheets:0}
+  ],
+  check:{ "6":null, "9":null },
+  scanDone:false,
+  email:"",
+  batch:[],
+  photos:[],
+  staged:[],
+  stagedSeq:0,
+  gradingSet:null,
+  gradingFor:null,
+  pendingThumb:null,
+  previewStagedId:null,
+  sheetKey:null,
+  sheetOrigin:null,
+  mockKey:null,
+  resultsEntrySource:null,
+  resultsOrigin:null,
+  checkOrigin:null,
+  pendingHomeScroll:null
+};
+var timers = [];
+function later(fn, ms){ var t=setTimeout(fn, ms); timers.push(t); return t; }
+function clearTimers(){ timers.forEach(clearTimeout); timers=[]; }
+
+function kid(){ for (var i=0;i<state.kids.length;i++) if (state.kids[i].id===state.kidId) return state.kids[i]; return state.kids[0]; }
+function isGina(){ return state.kidId==="gina"; }
+
+function resolvedCount(){ var c=0; if(state.check["6"])c++; if(state.check["9"])c++; return c; }
+function remainingUnsure(){ return 2 - resolvedCount(); }
+function correctCount(){
+  var c = 7;
+  if (state.check["6"]==="correct") c++;
+  if (state.check["9"]==="correct") c++;
+  return c;
+}
+function scoreText(){
+  var r = resolvedCount();
+  if (r===2) return correctCount() + "/10 final";
+  return correctCount() + "/" + (8 + r) + " graded · " + (2 - r) + " need" + ((2-r)===1?"s":"") + " your check";
+}
+function gradedText(){ return correctCount() + "/" + (8 + resolvedCount()) + " graded"; }
+function checkText(){ return remainingUnsure() + " need your check"; }
+function statusBadges(){
+  if (remainingUnsure()===0) return '<span class="pill solid">'+scoreText()+'</span>';
+  return '<span class="pill done">'+gradedText()+'</span><span class="pill check">'+checkText()+'</span>';
+}
+function verdictOf(q){
+  if (q.verdict==="unsure"){
+    var r = state.check[String(q.n)];
+    if (r) return r;
+    return "unsure";
+  }
+  return q.verdict;
+}
+function mark(v){ return v==="correct" ? "✓" : (v==="wrong" ? "✗" : "?"); }
+function badgeCls(v){ return v==="correct" ? "ok" : (v==="wrong" ? "no" : "q"); }
+
+/* ================= graded photos ================= */
+function photoLabel(key){ return key === "demo" ? "Math Week 12" : "Math · Set C"; }
+function photoFor(key){
+  for (var i=0;i<state.photos.length;i++) if (state.photos[i].key===key) return state.photos[i];
+  return null;
+}
+function nextPhotoKey(){
+  if (state.batch.indexOf("demo") < 0) return "demo";
+  if (state.batch.indexOf("sheetC") < 0) return "sheetC";
+  return null;
+}
+function addPhoto(key, thumb){
+  if (state.batch.indexOf(key) < 0) state.batch.push(key);
+  var p = photoFor(key);
+  if (p) p.thumb = thumb || null;
+  else state.photos.push({key:key, thumb:thumb || null});
+}
+function thumbFromDrawable(drawable, w, h){
+  if (!drawable || !w || !h) return null;
+  try {
+    var max = 320;
+    var scale = Math.min(1, max / Math.max(w, h));
+    var cw = Math.max(1, Math.round(w * scale));
+    var ch = Math.max(1, Math.round(h * scale));
+    var cv = document.createElement("canvas");
+    cv.width = cw; cv.height = ch;
+    var ctx = cv.getContext("2d");
+    if (!ctx) return null;
+    ctx.fillStyle = "#fff8ec";
+    ctx.fillRect(0, 0, cw, ch);
+    ctx.drawImage(drawable, 0, 0, cw, ch);
+    return cv.toDataURL("image/jpeg", 0.82);
+  } catch(e){ return null; }
+}
+/* ================= staged photos (pre-grading) =================
+   Photos taken or uploaded wait in the Scan tray, ungraded, until the
+   parent taps the Grade button. Staging never touches scanDone, the
+   check state, or anything on Home. */
+function slotsLeft(){
+  return 2 - state.batch.length - state.staged.length;
+}
+function pushStaged(thumb, bad){
+  state.stagedSeq++;
+  state.staged.push({id:state.stagedSeq, thumb:thumb || null, bad:!!bad});
+}
+function stageBadPhoto(){
+  if (slotsLeft() <= 0){ toast("Demo has two sample sheets"); return; }
+  pushStaged(null, true);
+  render();
+}
+function stagedThumbHtml(it){
+  var inner = it.thumb
+    ? '<img src="'+it.thumb+'" alt="">'
+    : '<span class="thumbph" aria-hidden="true"'+(it.bad ? ' style="opacity:.5;filter:blur(1px)"' : '')+'>▤</span>';
+  return '<span class="thumbitem" role="button" tabindex="0" aria-label="Preview staged photo" title="Tap to preview" onclick="openStagedPreview('+it.id+',event)" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openStagedPreview('+it.id+',event)}">' + inner +
+    '<button type="button" class="thumbx" aria-label="Remove '+(it.bad ? 'bad photo' : 'staged photo')+'" onclick="removeStagedPhoto('+it.id+',event)">×</button></span>';
+}
+/* ---------- staged photo preview ---------- */
+var pvScale=1, pvTx=0, pvTy=0;
+var pvPointers={}, pvStartDist=0, pvStartScale=1, pvStartX=0, pvStartY=0, pvLastTap=0, pvMoved=false;
+function pvApply(){
+  var el=document.getElementById('previewImgWrap');
+  if(el) el.style.transform='translate('+pvTx+'px,'+pvTy+'px) scale('+pvScale+')';
+}
+function pvResetZoom(){ pvScale=1; pvTx=0; pvTy=0; pvPointers={}; pvStartDist=0; pvMoved=false; pvApply(); }
+function previewIndex(){
+  if(state.previewStagedId==null) return -1;
+  for(var i=0;i<state.staged.length;i++) if(state.staged[i].id===state.previewStagedId) return i;
+  return -1;
+}
+function previewItem(){
+  var i=previewIndex(); return i>=0 ? state.staged[i] : null;
+}
+function openStagedPreview(id, ev){
+  if(ev && ev.stopPropagation) ev.stopPropagation();
+  state.previewStagedId=id;
+  pvResetZoom();
+  render();
+}
+function closeStagedPreview(){
+  state.previewStagedId=null;
+  pvResetZoom();
+  render();
+}
+function removeStagedFromPreview(){
+  var id=state.previewStagedId;
+  state.previewStagedId=null;
+  pvResetZoom();
+  if(id!=null) state.staged=state.staged.filter(function(it){ return it.id!==id; });
+  render();
+}
+function previewGo(dir){
+  var i=previewIndex(); if(i<0) return;
+  var n=i+dir;
+  if(n<0 || n>=state.staged.length) return;
+  state.previewStagedId=state.staged[n].id;
+  pvResetZoom();
+  render();
+}
+function togglePreviewZoom(){
+  if(pvScale>1){ pvScale=1; pvTx=0; pvTy=0; }
+  else { pvScale=2.2; }
+  pvApply();
+}
+function previewHtml(){
+  var it=previewItem();
+  if(!it) return '';
+  var idx=previewIndex();
+  var total=state.staged.length;
+  var inner='';
+  if(it.thumb){
+    inner='<img id="previewImg" src="'+it.thumb+'" alt="Your staged photo, full size" draggable="false">';
+  } else {
+    inner='<div class="preview-ph'+(it.bad?' bad':'')+'"><span class="big" aria-hidden="true">▤</span><span class="cap">'+(it.bad?'This photo is too dark and blurry to read.':'Demo photo — no camera image in this preview.')+'</span></div>';
+  }
+  var h='<div class="preview-overlay" id="previewOverlay" role="dialog" aria-modal="true" aria-label="Photo preview">';
+  h+='<button class="camclose preview-close" onclick="closeStagedPreview()" aria-label="Close preview">×</button>';
+  if(total>1) h+='<span class="preview-count" aria-live="polite">'+(idx+1)+' / '+total+'</span>';
+  h+='<div class="preview-stage" id="previewStage">';
+  h+='<div class="preview-imgwrap" id="previewImgWrap">'+inner+'</div>';
+  if(total>1){
+    h+='<button class="preview-arrow prev" onclick="event.stopPropagation();previewGo(-1)" aria-label="Previous photo"'+(idx===0?' disabled':'')+'>‹</button>';
+    h+='<button class="preview-arrow next" onclick="event.stopPropagation();previewGo(1)" aria-label="Next photo"'+(idx===total-1?' disabled':'')+'>›</button>';
+  }
+  h+='</div>';
+  h+='<div class="preview-bottom"><p class="preview-hint">Pinch to zoom · Double-tap to zoom in or out'+(total>1?' · Swipe to switch photos':'')+'</p>';
+  h+='<button class="preview-remove" onclick="removeStagedFromPreview()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>Remove photo</button>';
+  h+='<button class="btn secondary" onclick="closeStagedPreview()">Back</button>';
+  h+='</div></div>';
+  return h;
+}
+function setupPreviewGestures(){
+  var stage=document.getElementById('previewStage');
+  if(!stage) return;
+  pvApply();
+  stage.addEventListener('pointerdown', function(e){
+    if(e.target && e.target.closest && e.target.closest('button')) return;
+    try{ stage.setPointerCapture(e.pointerId); }catch(err){}
+    if(Object.keys(pvPointers).length===0){ pvStartX=e.clientX; pvStartY=e.clientY; pvMoved=false; }
+    pvPointers[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(Object.keys(pvPointers).length===2){
+      var pts=Object.keys(pvPointers).map(function(k){return pvPointers[k];});
+      pvStartDist=Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      pvStartScale=pvScale;
+    }
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!pvPointers[e.pointerId]) return;
+    var prev=pvPointers[e.pointerId];
+    var dx=e.clientX-prev.x, dy=e.clientY-prev.y;
+    if(Math.abs(e.clientX-pvStartX)+Math.abs(e.clientY-pvStartY)>8) pvMoved=true;
+    pvPointers[e.pointerId]={x:e.clientX,y:e.clientY};
+    if(Object.keys(pvPointers).length===2){
+      var pts=Object.keys(pvPointers).map(function(k){return pvPointers[k];});
+      var dist=Math.hypot(pts[0].x-pts[1].x, pts[0].y-pts[1].y);
+      if(pvStartDist>0){
+        pvScale=Math.min(4, Math.max(1, pvStartScale*dist/pvStartDist));
+        if(pvScale===1){ pvTx=0; pvTy=0; }
+        pvApply();
+      }
+    } else if(Object.keys(pvPointers).length===1 && pvScale>1){
+      pvTx+=dx; pvTy+=dy; pvApply();
+    }
+  });
+  function endPointer(e){
+    var wasSingle=Object.keys(pvPointers).length===1;
+    var dx=e.clientX-pvStartX, dy=e.clientY-pvStartY;
+    delete pvPointers[e.pointerId];
+    if(Object.keys(pvPointers).length<2) pvStartDist=0;
+    if(!wasSingle) return;
+    /* Swipe to switch photos (only when not zoomed) */
+    if(pvScale===1 && Math.abs(dx)>60 && Math.abs(dy)<80){
+      if(dx<0) previewGo(1); else previewGo(-1);
+      pvLastTap=0;
+      return;
+    }
+    /* Double-tap detection */
+    if(!pvMoved && pvScale===1 || !pvMoved && pvScale>1){
+      var now=Date.now();
+      if(now-pvLastTap<320){ togglePreviewZoom(); pvLastTap=0; return; }
+      pvLastTap=now;
+    }
+  }
+  stage.addEventListener('pointerup', endPointer);
+  stage.addEventListener('pointercancel', function(e){ delete pvPointers[e.pointerId]; });
+  /* Double-tap is handled in endPointer via pvLastTap (covers touch + mouse);
+     no separate dblclick listener, which would toggle a second time. */
+  stage.addEventListener('click', function(e){
+    if(e.target===stage){ closeStagedPreview(); }
+  });
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    pvScale=Math.min(4, Math.max(1, pvScale+(e.deltaY<0?0.25:-0.25)));
+    if(pvScale===1){ pvTx=0; pvTy=0; }
+    pvApply();
+  }, {passive:false});
+}
+function trayHtml(){
+  if (!state.staged.length) return '';
+  var h = '<div class="thumbtray" aria-label="Photos ready to grade">';
+  state.staged.forEach(function(it){ h += stagedThumbHtml(it); });
+  h += '</div>';
+  return h;
+}
+function removeStagedPhoto(id, ev){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  /* Pre-grading removal is just removal — nothing was graded yet,
+     so there is no state to revert. */
+  state.staged = state.staged.filter(function(it){ return it.id !== id; });
+  render();
+}
+function removePhoto(key, ev){
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  var i = state.batch.indexOf(key);
+  if (i < 0) return;
+  state.batch.splice(i, 1);
+  state.photos = state.photos.filter(function(p){ return p.key !== key; });
+  if (key === "demo"){
+    /* The demo Math sheet returns to its pre-scan state everywhere:
+       derived badges, Homework, streak and Home cards all read off
+       scanDone + check, so resetting both restores them together. */
+    state.scanDone = false;
+    state.check = { "6":null, "9":null };
+  }
+  render();
+}
+/* Removing a graded sheet from its state screen: exactly the state
+   effect removing that graded sheet has always had, then back Home,
+   where the Homework row, badges and check card already reflect it.
+   History is untouched — it holds only immutable past records. */
+function removeGradedSheet(key){
+  if (state.batch.indexOf(key) < 0) return;
+  removePhoto(key);
+  go("home");
+}
+/* ---------- Remove guard: tap-again-to-confirm ----------
+   First tap arms the control in place ("Tap again to remove",
+   solid red) and removes NOTHING. A second tap on the same sheet
+   while armed performs the removal via removeGradedSheet().
+   The armed state lasts ~4 seconds; expiry or leaving the screen
+   quietly disarms it. Only one sheet can be armed at a time. */
+var armedRemoveKey = null;
+var armedRemoveTimer = null;
+function disarmRemove(){
+  armedRemoveKey = null;
+  if (armedRemoveTimer){ clearTimeout(armedRemoveTimer); armedRemoveTimer = null; }
+}
+function armRemove(key){
+  disarmRemove();
+  armedRemoveKey = key;
+  armedRemoveTimer = setTimeout(function(){
+    armedRemoveTimer = null;
+    armedRemoveKey = null;
+    render();
+  }, 4000);
+  render();
+}
+function tapRemoveSheet(key){
+  if (armedRemoveKey === key){
+    disarmRemove();
+    removeGradedSheet(key);
+  } else {
+    armRemove(key);
+  }
+}
+function removeControlHtml(key){
+  if (armedRemoveKey === key){
+    return '<p class="center" style="margin-top:12px"><button type="button" class="remove-armed" onclick="tapRemoveSheet(\''+key+'\')">Tap again to remove</button></p>';
+  }
+  return '<p class="center" style="margin-top:10px"><button type="button" class="linkish" style="color:var(--red)" onclick="tapRemoveSheet(\''+key+'\')">Remove this sheet</button></p>';
+}
+
+/* ================= shell ================= */
+var screenEl = document.getElementById("screen");
+var tabbar = document.getElementById("tabbar");
+var toastEl = document.getElementById("toast");
+var toastTimer = null;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ toastEl.classList.remove("show"); }, 2400);
+}
+function go(s){
+  if (state.screen === "grading" && s === "home"){
+    /* Cancelling mid-grading keeps the staged photos: they were never
+       graded, so they wait in the tray on Scan. */
+    state.gradingSet = null;
+    state.gradingFor = null;
+    state.pendingThumb = null;
+  }
+  clearTimers();
+  disarmRemove();
+  if (s !== "scan"){ stopCamera(); state.previewStagedId=null; pvResetZoom(); }
+  state.screen = s;
+  render();
+  screenEl.scrollTop = 0;
+}
+function setKid(id){ state.kidId = id; render(); }
+function openSheet(key, source){
+  state.sheetKey = key;
+  state.sheetOrigin = source || (key === 'leo-math12' ? 'homework' : 'history');
+  go('sheetstate');
+}
+/* ---------- universal Back ----------
+   Every detail screen renders the same control via backBtnHtml() at
+   the top-left of its header. Origins are recorded when a screen is
+   OPENED (openResults / openCheck / openSheet / openMockResults) —
+   never when leaving it — so a detour (Results → Parent check →
+   Back → Results) cannot overwrite the original origin. */
+function backBtnHtml(fn){
+  return '<p class="backrow"><button class="backbtn" onclick="'+fn+'" aria-label="Back">‹ Back</button></p>';
+}
+/* The demo Results screen is reachable from Homework only — the
+   sheet never appears in History — so its Back always returns to
+   Home at the Homework section. */
+function openResults(){
+  state.resultsOrigin = 'homework';
+  go('results');
+}
+function backFromResults(){
+  state.pendingHomeScroll = state.resultsOrigin || 'homework';
+  go('home');
+}
+function openCheck(from){
+  state.checkOrigin = from || 'home';
+  go('check');
+}
+function backFromCheck(){
+  /* Back leaves any unresolved checks pending, unchanged. From
+     Results it returns to that Results screen (whose own origin is
+     untouched); from the Home check card it returns to Home. */
+  if (state.checkOrigin === 'results') go('results');
+  else go('home');
+}
+function backFromSheetState(){
+  state.pendingHomeScroll = state.sheetOrigin || 'homework';
+  go('home');
+}
+
+function render(){
+  var inApp = ["home","scan","grading","results","mockresults","check","rejected","profile","sheetstate"].indexOf(state.screen) >= 0;
+  var isScan = state.screen === "scan";
+  /* Scan is a full-screen camera: the tab bar is hidden while in it —
+     its job is only to get you to the camera. Every other in-app
+     screen keeps the tab bar exactly as before. */
+  tabbar.classList.toggle("show", inApp && !isScan);
+  screenEl.classList.toggle("scan-screen", isScan);
+  var phoneEl = document.querySelector(".phone");
+  if (phoneEl) phoneEl.classList.toggle("scan-active", isScan);
+  var tabs = tabbar.querySelectorAll(".tab");
+  tabs.forEach(function(t){
+    var key = t.getAttribute("data-tab");
+    var active = (key===state.screen) ||
+      (key==="home" && ["results","mockresults","check","grading","rejected","sheetstate"].indexOf(state.screen)>=0);
+    t.classList.toggle("on", !!active);
+  });
+  var html = "";
+  switch(state.screen){
+    case "signin":    html = vSignin(); break;
+    case "checkmail": html = vCheckmail(); break;
+    case "home":      html = vHome(); break;
+    case "profile":   html = vProfile(); break;
+    case "scan":      html = vScan(); break;
+    case "grading":   html = vGrading(); break;
+    case "results":   html = vResults(); break;
+    case "mockresults": html = vMockResults(); break;
+    case "sheetstate": html = vSheetState(); break;
+    case "check":     html = vCheck(); break;
+    case "rejected":  html = vRejected(); break;
+  }
+  screenEl.innerHTML = html;
+  if (state.screen==="home" && state.pendingHomeScroll){
+    var targetId = state.pendingHomeScroll==="homework" ? "homework-section" : "history-section";
+    state.pendingHomeScroll = null;
+    var targetEl = document.getElementById(targetId);
+    if (targetEl && targetEl.scrollIntoView) { try{ targetEl.scrollIntoView({block:"start"}); }catch(e){} if(screenEl) screenEl.scrollTop = Math.max(0, targetEl.offsetTop - 12); }
+  }
+  /* The Grade bar is rendered by vScan() itself, inside .scan-bottom as
+     its last element — there is no separate phone-level grade row to toggle. */
+  if (state.screen==="scan"){ startCamera(); if (state.previewStagedId!=null) setupPreviewGestures(); }
+  if (state.screen==="grading") startGrading();
+}
+function head(title, sub){
+  return '<p class="appname">Practice Sheets</p><h1 class="scr">'+title+'</h1>' + (sub ? '<p class="sub">'+sub+'</p>' : '');
+}
+function chips(){
+  if (!state.kids || state.kids.length === 0) return '';
+  if (state.kids.length === 1){
+    var only = state.kids[0];
+    return '<p style="font-size:16px;font-weight:800;margin:2px 0 16px;font-family:\'Nunito\',\'Avenir Next\',\'Trebuchet MS\',sans-serif">'+only.name+' <span style="font-weight:600;color:var(--mid);font-size:13.5px">· '+only.grade+'</span></p>';
+  }
+  var h = '<div class="chips">';
+  state.kids.forEach(function(k){
+    h += '<button class="chip'+(k.id===state.kidId?" on":"")+'" onclick="setKid(\''+k.id+'\')">'+k.name+' <small>· '+k.grade+'</small></button>';
+  });
+  h += '</div>';
+  return h;
+}
+
+/* ================= sign in ================= */
+function vSignin(){
+  return '<div class="view">' +
+    '<div style="padding-top:38px">' +
+    '<p class="appname">Practice Sheets</p>' +
+    '<h1 class="scr">Welcome back</h1>' +
+    '<p class="sub">Sign in to scan sheets, see the results, and check any answers we couldn\'t read.</p>' +
+    '<label class="f" for="email">Email address</label>' +
+    '<input type="email" id="email" placeholder="you@example.com" autocomplete="email" value="'+state.email.replace(/"/g,"&quot;")+'">' +
+    '<button class="btn" onclick="sendLink()">Email me a sign-in link</button>' +
+    '<p class="center" style="margin-top:14px"><button class="linkish" onclick="go(\'home\')">Skip for demo</button></p>' +
+    '<p class="center" style="font-size:12px;color:var(--faint);margin-top:26px">No password — we email you a one-tap link.</p>' +
+    '</div></div>';
+}
+function sendLink(){
+  var el = document.getElementById("email");
+  var v = el ? el.value.trim() : "";
+  if (!v || v.indexOf("@")<0){ toast("Enter an email address first"); if(el) el.focus(); return; }
+  state.email = v;
+  go("checkmail");
+}
+function vCheckmail(){
+  return '<div class="view"><div style="padding-top:30px" class="center">' +
+    '<div class="mailbig">✉</div>' +
+    '<h2 class="scr">Check your email</h2>' +
+    '<p class="sub">We sent a sign-in link to <strong style="color:var(--ink)">'+ (state.email||"your email") +'</strong>.<br>Tap it on this phone to continue.</p>' +
+    '<button class="btn" onclick="go(\'home\')">Continue (demo)</button>' +
+    '<div style="margin-top:10px"><button class="linkish" onclick="go(\'signin\')">Use a different email</button>' +
+    '<button class="linkish" onclick="toast(\'New sign-in link sent (demo)\')">Resend link</button></div>' +
+    '</div></div>';
+}
+
+/* ================= homework (per week) ================= */
+function dlBtn(fileLabel){
+  return '<button type="button" class="dlbtn" aria-label="Download ' + fileLabel + ' sheets" onclick="event.stopPropagation(); toast(\'Saved: ' + fileLabel + ' sheets (PDF)\')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg></button>';
+}
+function homeHead(){
+  return '<p class="appname">Practice Sheets</p><h1 class="scr">Home</h1>';
+}
+/* Is the given kid's current week fully Done? Derived from the same
+   states the Homework rows and badges read: Gina's Word Problems Week 12 is
+   Done (its pill) and her Math Week 12 is Done when it reaches its
+   final state — no checks remaining (statusBadges() collapses to the
+   single final pill then, whether the sheet was the pre-graded demo
+   sheet or one just scanned, where scanDone is also true). Leo's
+   only Week 12 row is Not done, so his week is never fully Done.
+   Removing the demo sheet resets check to unresolved, so Math stops
+   being Done and this returns false again. */
+function weekFullyDone(kidId){
+  if (kidId === "gina") return remainingUnsure() === 0;
+  return false;
+}
+function vHomework(){
+  var h = '';
+  if (isGina()){
+    var rem = remainingUnsure();
+    var week12Done = rem === 0;
+    h += '<div class="card" id="homework-section"><h3 style="margin-bottom:8px">Homework</h3>';
+    h += '<div class="hwrow" role="button" tabindex="0" onclick="openMockResults(\'word12\',\'homework\')"><span class="feeditem"><span><span class="t">Word Problems · Week 12</span></span><span class="hw-right"><span class="pill done">Done</span>' + dlBtn('Grade 4 · Word Problems · Week 12') + '</span></span></div>';
+    h += '<div class="hwrow" role="button" tabindex="0" onclick="openResults()"><span class="feeditem"><span><span class="t">Math · Week 12</span></span><span class="hw-right">' + (week12Done ? '<span class="pill done">Done</span>' : '<span class="pill todo">Not done</span>') + dlBtn('Grade 4 · Math · Week 12') + '</span></span></div>';
+    h += '</div>';
+  } else if (state.kidId === "leo"){
+    h += '<div class="card" id="homework-section"><h3 style="margin-bottom:8px">Homework</h3>' +
+      '<div class="hwrow" role="button" tabindex="0" onclick="openSheet(\'leo-math12\',\'homework\')"><span class="feeditem"><span><span class="t">Math · Week 12</span></span><span class="hw-right"><span class="pill todo">Not done</span>' + dlBtn('Grade 1 · Math · Week 12') + '</span></span></div></div>';
+  } else {
+    h += '<div class="card"><h3 style="margin-bottom:4px">Homework</h3><p>No homework assigned yet.</p></div>';
+  }
+  return h;
+}
+
+/* ================= progress (analytics) ================= */
+function vProgress(){
+  /* Progress (streak + review score) only makes sense once a kid has at
+     least one graded sheet; a newly enrolled kid shows no card at all. */
+  if (!kid().gradedSheets) return '';
+  var h = '<div class="card"><h3 style="margin-bottom:2px">Progress</h3>';
+  if (isGina()){
+    var week12Done = remainingUnsure() === 0;
+    var streak = week12Done ? 7 : 6;
+    h += '<div class="feeditem"><span><span class="t">★ ' + streak + '-week streak</span><br><span class="d">Every pack finished, week after week</span></span></div>';
+    h += '<div class="feeditem"><span><span class="t">Review from last month</span><br><span class="d">Last month\'s questions, asked again</span></span><span class="pill">8/10 still correct</span></div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ================= home ================= */
+function vHome(){
+  if (!state.kids.length){
+    return '<div class="view">' + homeHead() +
+      '<div class="card flat center"><div class="emptyart">▤</div><h3>No children yet</h3>' +
+      '<p>No children yet — show your member code to staff to get started.</p>' +
+      '<div style="margin-top:11px"><button class="btn" onclick="go(\'profile\')">Show my member code</button></div></div></div>';
+  }
+  var k = kid();
+  var h = '<div class="view">' + homeHead();
+  /* Account-level check card: above the kid switcher, identical on every
+     kid's Home, whenever ANY kid has unresolved answers. Sourced from the
+     account-wide pending count, not the selected kid. */
+  var remAcct = remainingUnsure();
+  if (remAcct > 0){
+    h += '<div class="card"><div class="rowline"><h3>'+(remAcct===1 ? '1 answer needs your check' : remAcct+' answers need your check')+'</h3><span class="pill solid">'+remAcct+'</span></div>' +
+      '<p style="margin-top:2px;font-weight:600;color:var(--ink)">Gina · Math Week 12</p>' +
+      '<p>We marked Math Week 12, but we couldn\'t read '+remAcct+' answer'+(remAcct===1?"":"s")+' for sure. A quick look settles the score.</p>' +
+      '<div style="margin-top:11px"><button class="btn" onclick="openCheck(\'home\')">Check now</button></div></div>';
+  } else if (weekFullyDone(state.kidId)){
+    /* Point 5: same top-of-Home slot, only when nothing is pending
+       anywhere AND the viewed kid's week is fully Done. One calm,
+       non-interactive line — nothing to tap, nothing to do — so a
+       finished week reads as finished instead of cards just vanishing.
+       Leo never reaches it (his Week 12 is not done). */
+    h += '<div class="card caughtup">All caught up for this week 🎉</div>';
+  }
+  h += chips();
+  if (isGina()){
+    h += vHomework();
+    h += vProgress();
+    /* History is immutable: finished, past records only — nothing
+       here ever changes. The live Math · Week 12 demo sheet never
+       appears in History; it lives in Homework, where its badges,
+       checks and removal belong. Set C joins History only after a
+       2-photo grade, already final at 9/10. */
+    h += '<div class="card" id="history-section"><h3 style="margin-bottom:2px">History</h3>';
+    if (state.batch.indexOf("sheetC") >= 0){
+      h += '<button class="feedbtn feedbtn-sep" onclick="openSheet(\'sheetC\',\'history\')"><span class="feeditem"><span><span class="t">Math · Set C</span><br><span class="d">Scanned today</span></span><span class="pill">9/10 final</span></span></button>';
+    }
+    OLDER_SHEETS.forEach(function(s, idx){
+      var sep = idx < OLDER_SHEETS.length - 1 ? ' feedbtn-sep' : '';
+      h += '<button class="feedbtn'+sep+'" onclick="openMockResults(\''+s.key+'\',\'history\')"><span class="feeditem"><span><span class="t">'+s.title+'</span><br><span class="d">'+s.date+'</span></span><span class="pill">'+s.score+'</span></span></button>';
+    });
+    h += '</div>';
+  } else {
+    h += vHomework();
+    h += vProgress();
+    h += '<div class="card flat center"><div class="emptyart">▤</div><h3>No sheets scanned yet</h3>' +
+      '<p>When Leo finishes his first sheet, tap Scan below to add it — grading takes a few seconds.</p></div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ================= profile / parent card ================= */
+function qrSvg(){
+  var n = 25, cell = 10;
+  var seed = 987654321;
+  function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  function inFinder(x,y){
+    return (x < 8 && y < 8) || (x >= n-8 && y < 8) || (x < 8 && y >= n-8);
+  }
+  var s = '<svg viewBox="0 0 250 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Your member QR code">';
+  s += '<rect width="250" height="250" fill="#ffffff"/>';
+  for (var y=0; y<n; y++){
+    for (var x=0; x<n; x++){
+      if (inFinder(x,y)) continue;
+      if (rnd() > 0.52) s += '<rect x="'+(x*cell)+'" y="'+(y*cell)+'" width="'+cell+'" height="'+cell+'" fill="#2b1a08"/>';
+    }
+  }
+  function finder(fx,fy){
+    var r = '';
+    r += '<rect x="'+(fx*cell)+'" y="'+(fy*cell)+'" width="'+(7*cell)+'" height="'+(7*cell)+'" fill="#2b1a08"/>';
+    r += '<rect x="'+((fx+1)*cell)+'" y="'+((fy+1)*cell)+'" width="'+(5*cell)+'" height="'+(5*cell)+'" fill="#ffffff"/>';
+    r += '<rect x="'+((fx+2)*cell)+'" y="'+((fy+2)*cell)+'" width="'+(3*cell)+'" height="'+(3*cell)+'" fill="#2b1a08"/>';
+    return r;
+  }
+  s += finder(0,0) + finder(n-7,0) + finder(0,n-7);
+  s += '</svg>';
+  return s;
+}
+function vProfile(){
+  var h = '<div class="view">' + head("Profile","");
+  h += '<div class="card"><p class="parentlabel">Parent account</p>' +
+    '<p class="parentname">David G.</p>' +
+    (state.email ? '<p class="parentmeta">'+state.email.replace(/</g,"&lt;")+'</p>' : '<p class="parentmeta">Signed in with an emailed link</p>') +
+    '</div>';
+  h += '<div class="card qrcard"><h3>Your member code</h3>' +
+    '<div class="qrbox">'+qrSvg()+'</div>' +
+    '<p class="qrhelp">Show this code to staff to add a child, or when picking up sheets.</p></div>';
+  h += '<div class="card"><h3 style="margin-bottom:4px">My kids</h3>' +
+    '<div class="kidrow"><span><span class="t">Gina</span><br><span class="d">Grade 4 · Math</span></span><span class="pill">Enrolled</span></div>' +
+    '<div class="kidrow"><span><span class="t">Leo</span><br><span class="d">Grade 1 · Math</span></span><span class="pill">Enrolled</span></div>' +
+    '<p style="margin-top:11px">Children are added by staff — just show your member code.</p></div>';
+  h += '<button class="btn secondary" onclick="go(\'signin\')">Sign out</button>';
+  h += '</div>';
+  return h;
+}
+
+/* ================= scan ================= */
+function gradeBarHtml(){
+  if (!state.staged || !state.staged.length) return '';
+  var n = state.staged.length;
+  return '<div class="scan-grade" id="gradepin"><button class="btn" id="gradepinbtn" onclick="startGradingStaged()">Grade ' + n + ' sheet' + (n===1 ? '' : 's') + '</button></div>';
+}
+function vScan(){
+  return '<div class="scanfs">' +
+    '<div class="camera fullscreen" id="cambox">' +
+    '<video id="camvideo" autoplay playsinline muted></video>' +
+    '<canvas id="camfreeze" style="display:none"></canvas>' +
+    '<span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>' +
+    '<div class="ph-label" id="camplaceholder"><span style="font-size:26px">▤</span><span>Camera view<br>Line the sheet up inside the frame.<br>Flat, filling the frame, no flash glare.</span></div>' +
+    '<div class="camnote" id="camnote" style="display:none">Camera isn\'t available here — showing a demo view</div>' +
+    '<button class="camstart" id="camstart" onclick="startCamera()">Turn on camera</button>' +
+    '<button class="camclose" onclick="go(\'home\')" aria-label="Close camera">×</button>' +
+    '<button class="cambad" onclick="stageBadPhoto()">demo: bad photo</button>' +
+    '<div class="scan-bottom">' +
+    trayHtml() +
+    '<div class="scancontrols">' +
+    '<button class="gallerybtn" onclick="pickExistingPhoto()" aria-label="Upload Photo"><span class="gallerythumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="1.6"/><path d="M21 15.5 16.5 11 9 18.5"/></svg></span><span class="cap">Upload Photo</span></button>' +
+    '<button class="shutter" onclick="shutterTap()" aria-label="Take photo"></button>' +
+    '<span class="scan-spacer" aria-hidden="true"></span></div>' +
+    '<span class="tap-hint">Tap to capture</span>' +
+    gradeBarHtml() +
+    '</div>' +
+    '</div>' +
+    previewHtml() +
+    '</div>';
+}
+/* ================= real camera =================
+   One stream, owned here: started when the Scan screen opens, every track
+   stopped when leaving it. Any failure (no API, denied, blocked in an
+   embed) falls back to the simulated viewfinder so scanning never dead-ends. */
+var camStream = null;
+var camLive = false;
+var camStarting = false;
+function markCamLive(){
+  camLive = true;
+  var box = document.getElementById("cambox");
+  if (box) box.classList.add("live");
+  var b = document.getElementById("camstart");
+  if (b) b.style.display = "none";
+  var note = document.getElementById("camnote");
+  if (note) note.style.display = "none";
+}
+function attachCamStream(){
+  var v = document.getElementById("camvideo");
+  if (!v || !camStream) return;
+  v.srcObject = camStream;
+  var p = v.play();
+  if (p && p.catch) p.catch(function(){});
+  markCamLive();
+}
+function camUnavailable(){
+  camLive = false;
+  camStarting = false;
+  var note = document.getElementById("camnote");
+  if (note) note.style.display = "block";
+  var b = document.getElementById("camstart");
+  if (b) b.style.display = "none";
+}
+function startCamera(){
+  if (camStream){ attachCamStream(); return; }
+  if (camStarting) return;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){ camUnavailable(); return; }
+  camStarting = true;
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+    .then(function(stream){
+      camStarting = false;
+      if (state.screen !== "scan"){
+        stream.getTracks().forEach(function(t){ t.stop(); });
+        return;
+      }
+      camStream = stream;
+      attachCamStream();
+    })
+    .catch(function(){ camUnavailable(); });
+}
+function stopCamera(){
+  if (camStream){
+    camStream.getTracks().forEach(function(t){ t.stop(); });
+    camStream = null;
+  }
+  camLive = false;
+  camStarting = false;
+  var v = document.getElementById("camvideo");
+  if (v) v.srcObject = null;
+}
+function shutterTap(){
+  if (slotsLeft() <= 0){ toast("Demo has two sample sheets"); return; }
+  var v = document.getElementById("camvideo");
+  var c = document.getElementById("camfreeze");
+  if (camLive && v && c && v.videoWidth){
+    /* Stage the real captured frame as this photo's thumbnail.
+       Grading waits for the Grade button. */
+    var thumb = thumbFromDrawable(v, v.videoWidth, v.videoHeight);
+    pushStaged(thumb, false);
+    c.width = v.videoWidth;
+    c.height = v.videoHeight;
+    var ctx = c.getContext("2d");
+    if (ctx){
+      ctx.drawImage(v, 0, 0, c.width, c.height);
+      c.style.display = "block";
+      /* Brief freeze as capture feedback, then back to the live
+         viewfinder with the new thumbnail in the tray. */
+      later(function(){ if (state.screen === "scan") render(); }, 750);
+      return;
+    }
+    render();
+    return;
+  }
+  /* Fallback demo view: no real frame, so the thumbnail is a placeholder. */
+  pushStaged(null, false);
+  render();
+}
+
+/* ================= grading ================= */
+function startGradingStaged(){
+  if (!state.staged.length) return;
+  state.previewStagedId=null; pvResetZoom();
+  /* Assign demo keys to the good photos in staged order; a bad photo
+     gets no key — it is rejected when the set is graded. */
+  var goods = [];
+  var hasBad = false;
+  var used = state.batch.slice();
+  state.staged.forEach(function(it){
+    if (it.bad){ hasBad = true; return; }
+    var key = null;
+    if (used.indexOf("demo") < 0) key = "demo";
+    else if (used.indexOf("sheetC") < 0) key = "sheetC";
+    if (key){ used.push(key); goods.push({key:key, thumb:it.thumb || null}); }
+  });
+  state.gradingSet = {goods:goods, hasBad:hasBad};
+  state.gradingFor = goods.length ? goods[0].key : "bad";
+  go("grading");
+}
+/* ================= upload photo (real file picker) =================
+   Tapping Upload Photo clicks the hidden file input inside the tap
+   gesture, so the phone opens its photo library / files picker. The
+   picker allows multiple photos: each picked photo is only STAGED
+   into the Scan tray, in the order picked — grading waits for the
+   Grade button. The two-sheet demo cap counts graded, staged,
+   camera and uploaded photos together; extras are not staged and
+   get one toast. Cancelling the picker fires no change event, so
+   nothing changes. */
+function pickExistingPhoto(){
+  var inp = document.getElementById("photopicker");
+  if (!inp || typeof inp.click !== "function" || !window.URL || !window.FileReader){
+    toast("Photo picker isn't available here");
+    return;
+  }
+  try { inp.click(); }
+  catch(e){ toast("Photo picker isn't available here"); }
+}
+function stageUploadedFiles(files, idx){
+  if (idx >= files.length){ render(); return; }
+  if (state.screen !== "scan") return;
+  var url = URL.createObjectURL(files[idx]);
+  var img = new Image();
+  img.onload = function(){
+    URL.revokeObjectURL(url);
+    if (state.screen !== "scan") return;
+    /* The actual picked image becomes this staged photo's thumbnail. */
+    pushStaged(thumbFromDrawable(img, img.naturalWidth, img.naturalHeight), false);
+    stageUploadedFiles(files, idx + 1);
+  };
+  img.onerror = function(){
+    URL.revokeObjectURL(url);
+    if (state.screen !== "scan") return;
+    pushStaged(null, false);
+    stageUploadedFiles(files, idx + 1);
+  };
+  img.src = url;
+}
+(function(){
+  var inp = document.getElementById("photopicker");
+  if (!inp) return;
+  inp.addEventListener("change", function(){
+    var files = inp.files ? Array.prototype.slice.call(inp.files) : [];
+    inp.value = ""; /* reset so the same photos can be picked again */
+    if (!files.length) return; /* picker cancelled — nothing happened */
+    if (state.screen !== "scan") return;
+    var slots = slotsLeft();
+    if (slots <= 0){ toast("Demo has two sample sheets"); return; }
+    var accepted = files.slice(0, slots);
+    if (accepted.length < files.length) toast("Demo has two sample sheets");
+    stageUploadedFiles(accepted, 0);
+  });
+})();
+function vGrading(){
+  var set = state.gradingSet;
+  var total = set ? set.goods.length + (set.hasBad ? 1 : 0) : 1;
+  var label = total === 1 ? "Gina's answers for Math Week 12" : "Gina's answers for Math Week 12 — " + total + " sheets";
+  return '<div class="view"><div style="padding-top:44px" class="center">' +
+    '<div class="emptyart">◌</div><h2 class="scr">Grading…</h2>' +
+    '<p class="sub">Reading '+label+'<br>and checking them against the answer key.</p></div>' +
+    '<div class="track"><div class="bar" id="gradebar"></div></div>' +
+    '<div class="steps" id="gradesteps"><div id="gs1">· Reading the photo…</div><div id="gs2">· Matching answers to the key…</div><div id="gs3">· Writing feedback…</div></div>' +
+    '<p class="center" style="margin-top:18px"><button class="linkish" onclick="go(\'home\')">Cancel</button></p></div>';
+}
+function startGrading(){
+  var bar = document.getElementById("gradebar");
+  var pct = 0;
+  var iv = setInterval(function(){
+    pct += 8 + Math.random()*10;
+    if (pct >= 100){ pct = 100; clearInterval(iv); }
+    if (bar) bar.style.width = pct + "%";
+    var s1=document.getElementById("gs1"), s2=document.getElementById("gs2"), s3=document.getElementById("gs3");
+    if (s1 && pct>20){ s1.className="done"; s1.textContent="✓ Photo read"; }
+    if (s2 && pct>55){ s2.className="done"; s2.textContent="✓ Answers matched"; }
+    if (s3 && pct>85){ s3.className="done"; s3.textContent="✓ Feedback written"; }
+  }, 220);
+  timers.push(iv);
+  later(function(){
+    clearInterval(iv);
+    var set = state.gradingSet;
+    state.gradingSet = null;
+    state.gradingFor = null;
+    state.pendingThumb = null;
+    if (!set) return;
+    /* The whole staged set grades at once: good photos become graded
+       sheets and the staged tray clears; a bad photo in the set is
+       rejected instead (it is discarded with the tray, the good ones
+       are already marked). Downstream state (scanDone, Week 12,
+       streak, badges) only ever changes here — at grading time.
+       There is no post-grading receipt screen: marking lands on
+       Home — the demo sheet updates its Homework row, and a second
+       sheet (Set C) joins History as a finished record. */
+    set.goods.forEach(function(g){
+      if (g.key === "demo") state.scanDone = true;
+      addPhoto(g.key, g.thumb);
+    });
+    state.staged = [];
+    var marked = set.goods.length;
+    state.lastMarked = set.hasBad ? marked : 0;
+    if (state.screen==="grading"){
+      if (set.hasBad){ go("rejected"); }
+      else {
+        go("home");
+        if (marked) toast(marked === 1 ? "1 sheet marked" : marked + " sheets marked");
+      }
+    }
+  }, 2600);
+}
+
+/* ================= mocked full results ================= */
+function openMockResults(key, source){
+  state.mockKey = key;
+  state.resultsEntrySource = source || "history";
+  go('mockresults');
+}
+function backFromMockResults(){
+  var src = state.resultsEntrySource || "history";
+  state.pendingHomeScroll = src;
+  go('home');
+}
+function mockPhotoHtml(data){
+  var rows='';
+  data.questions.slice(0,5).forEach(function(q,i){
+    rows += '<div class="ph-row"><span>Q'+(i+1)+'. '+q.prompt.replace(/ = .*$/,'')+'</span><span class="ph-ans'+(q.correct?'':' wrong')+'">'+q.wrote+(q.correct?'<span class="ph-tick">\u2713</span>':'')+'</span></div>';
+  });
+  return '<div class="mockphoto" role="img" aria-label="Photo of Gina\u2019s completed '+data.photoTitle+' sheet"><div class="paper"><div class="ph-head"><div><div class="ph-title">'+data.photoTitle+'</div><div class="ph-sub">'+data.photoSub+'</div></div><div class="ph-name">Name: <b>Gina</b><br>Grade 4</div></div><div class="ph-rows">'+rows+'</div><div class="ph-sub" style="margin-top:6px">\u2026 plus '+(data.questions.length-5)+' more questions on the sheet</div></div></div>';
+}
+function vMockResults(){
+  var data = MOCK_RESULTS[state.mockKey];
+  if (!data){
+    return '<div class="view">'+backBtnHtml('backFromMockResults()')+head("Results","")+'<div class="card"><p>Nothing to show here yet.</p></div></div>';
+  }
+  var h = '<div class="view">' + backBtnHtml('backFromMockResults()') + head("Results", data.subline);
+  h += mockPhotoHtml(data);
+  h += '<div class="card"><div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px"><span class="badges" style="margin-left:0"><span class="pill solid">'+data.score+'</span></span></div><p>'+data.summary+'</p></div>';
+  h += '<div class="card"><h3 style="margin-bottom:2px">Question by question</h3>';
+  data.questions.forEach(function(q, idx){
+    var v = q.correct ? "correct" : "wrong";
+    h += '<div class="qrow"><span class="qn">Q'+(idx+1)+'</span><span class="badge '+badgeCls(v)+'">'+mark(v)+'</span><div class="body"><div class="qp">'+q.prompt+'</div><div class="qa">Gina wrote '+q.wrote+'</div>'+(q.correct?'':'<div class="expl">'+q.expl+'</div>')+'</div></div>';
+  });
+  h += '</div>';
+  h += '<div style="margin-top:10px"><button class="btn secondary" onclick="backFromMockResults()">Back</button></div>';
+  h += '</div>';
+  return h;
+}
+
+/* ================= sheet state =================
+   One destination for any Homework or History row: the state of that
+   homework. The demo sheet uses the full Results screen instead;
+   this view covers the Not started form and the Summary form for
+   graded sheets that have no per-question dataset. */
+function vSheetState(){
+  var back = backBtnHtml('backFromSheetState()');
+  if (state.sheetKey === 'leo-math12'){
+    return '<div class="view">' + back + head("Leo · Math · Week 12","") +
+      '<div class="card flat center"><div class="emptyart">▤</div><h3>Not started yet</h3>' +
+      '<p>Leo hasn\'t done this sheet yet. When he finishes it, scan it to get it marked.</p></div>' +
+      '<button class="btn" onclick="go(\'scan\')">Scan</button>' +
+      '<div style="height:10px"></div>' +
+      '<button class="btn secondary" onclick="toast(\'Saved: Grade 1 · Math · Week 12 sheets (PDF)\')">Download sheet (PDF)</button>' +
+      '</div>';
+  }
+  var s = SHEET_SUMMARIES[state.sheetKey];
+  if (!s){
+    return '<div class="view">' + back + head("Homework","") +
+      '<div class="card"><p>Nothing to show here yet.</p></div>' +
+      '<button class="btn secondary" onclick="backFromSheetState()">Back</button></div>';
+  }
+  var h = '<div class="view">' + back + head(s.header,"");
+  h += '<div class="card"><div class="rowline"><h3>Status</h3>' +
+    (s.score ? '<span class="pill done">'+s.score+'</span>' : '<span class="pill done">Done</span>') + '</div>';
+  if (s.date) h += '<p style="margin-top:6px">'+s.date+'</p>';
+  else h += '<p style="margin-top:6px">This sheet is done.</p>';
+  if (s.summary) h += '<p style="margin-top:6px">'+s.summary+'</p>';
+  h += '</div>';
+  h += '<button class="btn secondary" onclick="backFromSheetState()">Back</button>';
+  if (state.sheetKey === "sheetC" && state.batch.indexOf("sheetC") >= 0){
+    h += removeControlHtml('sheetC');
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ================= results ================= */
+function vResults(){
+  var rem = remainingUnsure();
+  var h = '<div class="view">' + backBtnHtml('backFromResults()') + head("Results","Gina · Math Week 12 · scanned today");
+  if (rem > 0){
+    h += '<button class="banner" onclick="openCheck(\'results\')"><span>'+rem+' answer'+(rem===1?"":"s")+' need'+(rem===1?"s":"")+' your check</span><span>→</span></button>';
+  }
+  var demoPhoto = photoFor("demo");
+  if (demoPhoto && demoPhoto.thumb){
+    h += '<div style="margin:0 0 12px"><img src="'+demoPhoto.thumb+'" alt="Your photo of Gina\'s Math Week 12 sheet" style="display:block;width:100%;height:220px;object-fit:cover;border-radius:16px;border:1.5px solid var(--line-soft);box-shadow:var(--card-shadow)"></div>';
+  }
+  h += '<div class="card"><div style="display:flex;justify-content:flex-end;align-items:center;margin-bottom:8px"><span class="badges" style="margin-left:0">'+statusBadges()+'</span></div>' +
+    '<p>'+(rem===0
+      ? "Great work, Gina! Borrowing in subtraction is the one to keep practising — it's tracked in her progress."
+      : "Great work, Gina! Watch out for borrowing in subtraction. Once you check the "+rem+" unsure answer"+(rem===1?"":"s")+", this score is final.")+'</p></div>';
+  h += '<div class="card"><h3 style="margin-bottom:2px">Question by question</h3>';
+  QUESTIONS.forEach(function(q){
+    var v = verdictOf(q);
+    h += '<div class="qrow"><span class="qn">Q'+q.n+'</span><span class="badge '+badgeCls(v)+'">'+mark(v)+'</span><div class="body">' +
+      '<div class="qp">'+q.q+' = '+q.correct+'</div>' +
+      '<div class="qa">'+(v==="unsure" ? "We couldn't read this one for sure — needs your check." : "Gina wrote "+q.ans.replace("?",""))+'</div>' +
+      (q.verdict==="wrong" ? '<div class="expl">'+q.expl+'</div>' : '') +
+      (q.verdict==="unsure" && state.check[String(q.n)]==="wrong" ? '<div class="expl">You marked this wrong. Correct answer: '+q.correct+'. Recorded in Gina\'s progress.</div>' : '') +
+      (q.verdict==="unsure" && state.check[String(q.n)]==="correct" ? '<div class="expl">You confirmed Gina\'s answer was correct.</div>' : '') +
+      '</div></div>';
+  });
+  h += '</div>';
+  if (rem > 0) h += '<button class="btn" onclick="openCheck(\'results\')">Check the '+rem+' unsure answer'+(rem===1?"":"s")+'</button>';
+  h += '<div style="margin-top:10px"><button class="btn secondary" onclick="backFromResults()">Done</button></div>';
+  if (state.batch.indexOf("demo") >= 0){
+    h += removeControlHtml('demo');
+  }
+  h += '</div>';
+  return h;
+}
+
+/* ================= parent check ================= */
+function currentCheckQ(){
+  var order = [6,9];
+  for (var i=0;i<order.length;i++) if (!state.check[String(order[i])]) return order[i];
+  return null;
+}
+function vCheck(){
+  var qn = currentCheckQ();
+  var h = '<div class="view">' + backBtnHtml('backFromCheck()') + head("Parent check","We never guess. If we can't read an answer, you settle it — it takes seconds.");
+  if (qn === null){
+    h += '<div class="card center"><div class="emptyart">✓</div><h3>All checked — nice work</h3>' +
+      '<p>Final score for Math Week 12:</p>' +
+      '<p style="font-size:26px;font-weight:700;color:var(--ink);margin:8px 0">'+scoreText()+'</p>' +
+      (state.check["9"]==="wrong" ? '<p>Q9 marked wrong — recorded in Gina\'s progress.</p>' : '<p>All results are recorded in Gina\'s progress.</p>') +
+      '<div style="margin-top:13px"><button class="btn" onclick="go(\'home\')">Back to Home</button></div></div>';
+  } else {
+    var q = QUESTIONS[qn-1];
+    var pos = resolvedCount() + 1;
+    h += '<p class="progressdots center" style="margin-bottom:12px">'+pos+' of 2</p>';
+    h += '<div class="card"><h3>Gina · Math Week 12 · Q'+q.n+'</h3>' +
+      '<p style="margin-bottom:10px"><strong style="color:var(--ink)">'+q.q+'</strong> &nbsp;·&nbsp; Correct answer: <strong style="color:var(--ink)">'+q.correct+'</strong></p>' +
+      '<div class="dashedbox crop"><span>Gina\'s answer, zoomed from the photo</span><span class="hand">'+q.hand+'</span></div>' +
+      '<p style="margin-top:10px">'+q.aiSays+'. Was Gina\'s final answer <strong style="color:var(--ink)">'+q.correct+'</strong>?</p>' +
+      '<div class="btnrow" style="margin-top:13px">' +
+      '<button class="btn" onclick="resolveCheck('+q.n+',\'correct\')">It was correct</button>' +
+      '<button class="btn secondary" onclick="resolveCheck('+q.n+',\'wrong\')">It was wrong</button></div></div>';
+    h += '<p class="center"><button class="linkish" onclick="backFromCheck()">Finish later'+(state.checkOrigin==='results' ? ' — back to results' : ' — back to Home')+'</button></p>';
+  }
+  h += '</div>';
+  return h;
+}
+function resolveCheck(n, verdict){
+  state.check[String(n)] = verdict;
+  if (n===9 && verdict==="wrong") toast("Q9 marked wrong — recorded in Gina's progress");
+  else if (verdict==="correct") toast("Marked correct");
+  else toast("Marked wrong");
+  render();
+}
+
+/* ================= rejected ================= */
+function rejectedHome(){
+  /* The bad photo was discarded when the set was graded; any good
+     photos in the set are already marked, so Home reflects them (the
+     demo sheet in Homework, Set C in History) with the usual
+     confirmation toast. */
+  var marked = state.lastMarked || 0;
+  state.lastMarked = 0;
+  go("home");
+  if (marked) toast(marked === 1 ? "1 sheet marked" : marked + " sheets marked");
+}
+function vRejected(){
+  return '<div class="view">' + head("We couldn't grade that photo","No harm done — a retake usually fixes it.") +
+    '<div class="dashedbox" style="height:210px;flex-direction:column;gap:8px"><span style="font-size:26px">▤</span><span>The photo that was sent</span></div>' +
+    '<div style="height:12px"></div>' +
+    '<div class="card"><h3>What went wrong</h3><p>The photo is too dark and blurry to read any answers, and the sheet\'s code isn\'t visible — so we can\'t match it to an answer key.</p></div>' +
+    '<div class="card flat"><h3>For a readable photo</h3><p>· Lay the sheet flat, in good light<br>· Fill the whole frame with the sheet<br>· Keep the printed code in the corner visible<br>· Turn the flash off to avoid glare</p></div>' +
+    '<button class="btn" onclick="go(\'scan\')">Retake photo</button>' +
+    '<p class="center" style="margin-top:6px"><button class="linkish" onclick="rejectedHome()">Back to Home</button></p></div>';
+}
+
+render();
+</script>
+</body>
+</html>
