@@ -6,7 +6,7 @@
                 "English"
             ],
             "maxSteps": 32,
-            "model": "muse-spark-1.3",
+            "model": "muse-spark-1.3-contributor",
             "plannedProvider": "meta",
             "promptFiles": {},
             "provider": "demo",
@@ -23,7 +23,7 @@
                 "Word Problems"
             ],
             "maxSteps": 24,
-            "model": "muse-spark-1.3",
+            "model": "muse-spark-1.3-contributor",
             "plannedProvider": "meta",
             "promptFiles": {
                 "errorAnalysis": "prompts/math.error-analysis.md",
