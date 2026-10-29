@@ -1,19 +1,14 @@
 /**
  * lib/grading.ts — the ONE place staged photos become grade results.
  *
- * Stage 3: grading goes through the server API (POST /api/grade, then poll
- * the job) — the server holds the answer keys and runs the grading harness;
- * this client only sends photos + kid context and writes the returned
- * verdicts into the store. If the API is unreachable, the job fails, or the
- * outcome isn't a graded result, we fall back to the Stage 2 local mock
- * below so the parent flow never dead-ends (the mock reproduces the demo
- * pattern entirely on-device).
- *
- * Mock behaviour (mirrors the interactive prototype):
- * - The first staged photo is Gina's Math · Week 12: it (re)produces the
- *   demo verdict pattern — 7 correct, Q4 wrong, Q6 + Q9 "unsure".
- * - A second staged photo additionally produces Math · Set C, final at 9/10.
- * - Any further photos are kept as extra photos of the Week 12 sheet.
+ * Grading runs on the server (POST /api/grade, then poll the job): the
+ * server holds the answer keys and runs the real grading harness, and this
+ * client only sends photos + kid context and writes the returned verdicts
+ * into the store. There is deliberately NO on-device fallback — if the API
+ * is unreachable or the job fails, the parent is told plainly and keeps
+ * their staged photos to try again, rather than being shown demo results
+ * dressed up as a real grade. (The scripted demo provider still exists
+ * server-side for development: select it with GRADING_PROVIDER=demo.)
  */
 
 import {
@@ -27,7 +22,7 @@ import {
   updateSubmission,
 } from "./store";
 import type { GradeJobResult, GradeJobStatus } from "./grade-contract";
-import { GINA_MATH_SETC, GINA_MATH_W12, SETC_DEMO_GRADES, W12_DEMO_GRADES } from "./seed";
+import { GINA_MATH_W12 } from "./seed";
 
 async function replaceSheetSubmission(sheetId: string, photoKeys: string[]): Promise<void> {
   const keep = new Set(photoKeys);
@@ -41,16 +36,25 @@ async function replaceSheetSubmission(sheetId: string, photoKeys: string[]): Pro
   }
 }
 
-export interface MockGradeOutcome {
-  /** How many sheets were marked (1 or 2 in this demo). */
+export interface GradeOutcome {
+  /** How many sheets were marked. */
   markedSheets: number;
   /**
    * Set when the grading API rejected the photo(s) — a plain-language
    * reason from the server. The staged photos are kept so the parent can
-   * retake the shot; no local fallback runs for a rejection.
+   * retake the shot.
    */
   rejectedReason?: string;
+  /**
+   * Set when grading itself failed (API unreachable, job failed, timed
+   * out). The staged photos are kept so the parent can try again; no
+   * result is written and nothing is faked.
+   */
+  failedReason?: string;
 }
+
+/** Parent-language message for a grading failure, whatever the cause. */
+const FAILED_MESSAGE = "We couldn't mark the sheet just now — please try again in a moment.";
 
 /* ------------------------------------------------------------ server API */
 
@@ -73,7 +77,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function applyApiResult(
   result: Extract<GradeJobResult, { outcome: "graded" }>,
   photoKeys: string[],
-): Promise<MockGradeOutcome> {
+): Promise<GradeOutcome> {
   let markedSheets = 0;
   for (const [i, sheet] of result.sheets.entries()) {
     const photoKey = photoKeys[i] ?? photoKeys[0];
@@ -100,18 +104,18 @@ async function applyApiResult(
 }
 
 /**
- * Grade via /api/grade. Returns null whenever the API path doesn't produce
- * an outcome (unreachable, failed job, timeout) — the caller then falls
- * back to the local mock. A `rejected` outcome is NOT a fallback case: it
- * is returned as an outcome so the parent can be told why and retake the
- * photo.
+ * Grade via /api/grade. Every path returns an outcome: `graded` writes the
+ * real verdicts into the store, `rejected` carries the server's
+ * plain-language reason, and any failure (unreachable, failed job,
+ * timeout) returns a failed outcome — never a fabricated result.
  */
-async function gradeViaApi(photoKeys: string[]): Promise<MockGradeOutcome | null> {
+async function gradeViaApi(photoKeys: string[]): Promise<GradeOutcome> {
+  const failed: GradeOutcome = { markedSheets: 0, failedReason: FAILED_MESSAGE };
   try {
     const photos: string[] = [];
     for (const key of photoKeys) {
       const blob = await getPhoto(key);
-      if (!blob) return null;
+      if (!blob) return failed;
       photos.push(await blobToDataUrl(blob));
     }
     const kidContext = listKids().map((k) => ({ id: k.id, name: k.name, grade: k.grade }));
@@ -121,15 +125,15 @@ async function gradeViaApi(photoKeys: string[]): Promise<MockGradeOutcome | null
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ photos, kidContext }),
     });
-    if (!startRes.ok) return null;
+    if (!startRes.ok) return failed;
     const { jobId } = (await startRes.json()) as { jobId?: string };
-    if (!jobId) return null;
+    if (!jobId) return failed;
 
     const deadline = Date.now() + API_TIMEOUT_MS;
     while (Date.now() < deadline) {
       await sleep(API_POLL_INTERVAL_MS);
       const statusRes = await fetch(`/api/grade/${jobId}`);
-      if (!statusRes.ok) return null;
+      if (!statusRes.ok) return failed;
       const status = (await statusRes.json()) as GradeJobStatus;
       if (status.status === "done" && status.result?.outcome === "graded") {
         return applyApiResult(status.result, photoKeys);
@@ -137,53 +141,19 @@ async function gradeViaApi(photoKeys: string[]): Promise<MockGradeOutcome | null
       if (status.status === "done" && status.result?.outcome === "rejected") {
         return { markedSheets: 0, rejectedReason: status.result.reason };
       }
-      if (status.status !== "running") return null;
+      if (status.status !== "running") return failed;
     }
-    return null;
+    return failed;
   } catch {
-    return null;
+    return failed;
   }
-}
-
-/* ------------------------------------------------------------ local mock */
-
-async function gradeLocally(photoKeys: string[]): Promise<MockGradeOutcome> {
-  const [first, second, ...rest] = photoKeys;
-
-  // Sheet 1 — Gina's Math · Week 12, demo verdict pattern.
-  await replaceSheetSubmission(GINA_MATH_W12, [first]);
-  const sub = createSubmission({ sheetId: GINA_MATH_W12, photoKeys: [first] });
-  if (rest.length > 0) {
-    updateSubmission(sub.id, { photoKeys: [first, ...rest] });
-  }
-  saveGradeResult({
-    submissionId: sub.id,
-    sheetId: GINA_MATH_W12,
-    perQuestion: W12_DEMO_GRADES.map((g) => ({ ...g })),
-  });
-
-  let markedSheets = 1;
-
-  // Sheet 2 — Math · Set C, final 9/10.
-  if (second) {
-    await replaceSheetSubmission(GINA_MATH_SETC, [second]);
-    const subC = createSubmission({ sheetId: GINA_MATH_SETC, photoKeys: [second] });
-    saveGradeResult({
-      submissionId: subC.id,
-      sheetId: GINA_MATH_SETC,
-      perQuestion: SETC_DEMO_GRADES.map((g) => ({ ...g })),
-    });
-    markedSheets = 2;
-  }
-
-  return { markedSheets };
 }
 
 /* ------------------------------------------------------------ entry point */
 
-export async function gradeStagedPhotos(photoKeys: string[]): Promise<MockGradeOutcome> {
+export async function gradeStagedPhotos(photoKeys: string[]): Promise<GradeOutcome> {
   if (photoKeys.length === 0) return { markedSheets: 0 };
-  return (await gradeViaApi(photoKeys)) ?? (await gradeLocally(photoKeys));
+  return gradeViaApi(photoKeys);
 }
 
 /** The latest Week 12 submission, if any (used by demo helpers/tests). */

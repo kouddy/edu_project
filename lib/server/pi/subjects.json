@@ -31,7 +31,7 @@
                 "guidance": "prompts/math.guidance.md",
                 "identify": "prompts/math.identify.md"
             },
-            "provider": "demo",
+            "provider": "meta",
             "schemaVersion": "A1",
             "status": "active",
             "tokenBudget": 60000

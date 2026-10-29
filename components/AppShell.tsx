@@ -122,6 +122,13 @@ export default function AppShell() {
       showToast(outcome.rejectedReason);
       return;
     }
+    if (outcome.failedReason) {
+      // Grading failed — keep the staged photos so the parent can retry.
+      // Nothing was marked and no result was written.
+      setScreen({ name: "scan" });
+      showToast(outcome.failedReason);
+      return;
+    }
     staged.forEach((p) => URL.revokeObjectURL(p.url));
     setStaged([]);
     refresh();

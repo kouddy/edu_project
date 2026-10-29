@@ -131,7 +131,11 @@ no in-app review queue (v2).
 
 ## Environment variables
 
-- `GRADING_PROVIDER` — `demo` (default) or a provider id from `models.json`.
+- `GRADING_PROVIDER` — a provider id from `models.json`; unset, the subject
+  manifest's provider is used (math defaults to `meta`, the real grader).
+  Set `GRADING_PROVIDER=demo` for the scripted demo provider (development
+  only — the client has no demo fallback; a failed grade is reported to
+  the parent as a failure, never as fabricated results).
 - `META_API_KEY` — Meta Model API key (server-only; `MODEL_API_KEY` also accepted).
 - `BASETEN_API_KEY` — Baseten API key (server-only).
 - `PI_CONFIG_DIR` — optional override for the `lib/server/pi/` config directory.
