@@ -294,7 +294,93 @@ const SETC_KEY: AnswerKey = {
   ],
 };
 
-export const SEED_ANSWER_KEYS: AnswerKey[] = [W12_KEY, W11_KEY, W10_KEY, SETB_KEY, WP12_KEY, SETC_KEY];
+const LEO_W12_KEY: AnswerKey = {
+  sheetId: LEO_MATH_W12,
+  questions: [
+    {
+      number: 1,
+      prompt: "3 + 4",
+      correctAnswer: "7",
+      explanation: "Count on from 3: 4, 5, 6, 7 — so 3 + 4 = 7.",
+      topic: "Addition to 10",
+      isReview: true,
+    },
+    {
+      number: 2,
+      prompt: "6 + 5",
+      correctAnswer: "11",
+      explanation: "Make a ten first: 6 + 4 = 10, plus 1 more is 11.",
+      topic: "Adding to 20",
+      isReview: false,
+    },
+    {
+      number: 3,
+      prompt: "9 + 8",
+      correctAnswer: "17",
+      explanation: "Take 1 from the 8 to make 10, then 10 + 7 = 17.",
+      topic: "Adding to 20",
+      isReview: false,
+    },
+    {
+      number: 4,
+      prompt: "12 − 4",
+      correctAnswer: "8",
+      explanation: "Count back from 12: 11, 10, 9, 8 — so 12 − 4 = 8.",
+      topic: "Subtracting within 20",
+      isReview: false,
+    },
+    {
+      number: 5,
+      prompt: "7 + 7",
+      correctAnswer: "14",
+      explanation: "7 + 7 is a double — two groups of 7 make 14.",
+      topic: "Doubles",
+      isReview: true,
+    },
+    {
+      number: 6,
+      prompt: "15 − 6",
+      correctAnswer: "9",
+      explanation: "Count back from 15: 14, 13, 12, 11, 10, 9 — so 15 − 6 = 9.",
+      topic: "Subtracting within 20",
+      isReview: false,
+    },
+    {
+      number: 7,
+      prompt: "10 + 5",
+      correctAnswer: "15",
+      explanation: "10 and 5 more is 15.",
+      topic: "Adding to 20",
+      isReview: false,
+    },
+    {
+      number: 8,
+      prompt: "9 − 5",
+      correctAnswer: "4",
+      explanation: "Count back from 9: 8, 7, 6, 5, 4 — so 9 − 5 = 4.",
+      topic: "Subtraction to 10",
+      isReview: true,
+    },
+    {
+      number: 9,
+      prompt: "8 + 6",
+      correctAnswer: "14",
+      explanation: "Make a ten: 8 + 2 = 10, plus 4 more is 14.",
+      topic: "Adding to 20",
+      isReview: false,
+    },
+    {
+      number: 10,
+      prompt: "18 − 9",
+      correctAnswer: "9",
+      explanation: "9 is half of 18, so 18 − 9 = 9.",
+      topic: "Subtracting within 20",
+      isReview: false,
+    },
+  ],
+};
+
+export const SEED_ANSWER_KEYS: AnswerKey[] = [W12_KEY, W11_KEY, W10_KEY, SETB_KEY, WP12_KEY, SETC_KEY, LEO_W12_KEY];
 
 /* ------------------------------------------------------- demo submissions
  * The prototype's opening state, as records:
