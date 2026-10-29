@@ -48,7 +48,7 @@ supplies answer keys; the server is the source of truth for keys.
      models). Adding a provider is a file edit; the harness hands Pi's
      ModelRuntime a copy of this file. Current providers: `meta`
      (api.meta.ai, muse-spark-1.3) and `baseten`
-     (inference.baseten.co, Muse Spark Open / GLM 5.2) — both
+     (inference.baseten.co, Muse Spark Open / DeepSeek V4.1 Flash) — both
      OpenAI-compatible and vision-capable.
    - `prompts/` — prompt templates per subject and stage (`math.identify`,
      `math.grade`, `math.error-analysis`, `math.guidance`; English added
