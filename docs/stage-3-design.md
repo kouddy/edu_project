@@ -43,6 +43,13 @@ supplies answer keys; the server is the source of truth for keys.
      confidence threshold, per-sheet budgets.
    - `subjects.json` — subject manifest: subject → provider/model override,
      prompt set, context files, schema version, step/token budget.
+   - `models.json` — providers and models in Pi's own native format
+     (providers → baseUrl / api / apiKey as `"$ENV_VAR"` interpolation /
+     models). Adding a provider is a file edit; the harness hands Pi's
+     ModelRuntime a copy of this file. Current providers: `meta`
+     (api.meta.ai, muse-spark-1.3) and `baseten`
+     (inference.baseten.co, Muse Spark Open / GLM 5.2) — both
+     OpenAI-compatible and vision-capable.
    - `prompts/` — prompt templates per subject and stage (`math.identify`,
      `math.grade`, `math.error-analysis`, `math.guidance`; English added
      later).
@@ -56,11 +63,13 @@ supplies answer keys; the server is the source of truth for keys.
    `submit_grade`, `submit_error_analysis`, `submit_guidance`. The tool
    parameters *are* that subject's result shape, validated before anything
    is accepted.
-7. **Providers** — behind Pi's model layer: Meta Model API first (hackathon
-   credits), a scripted demo provider that reproduces the Week 12 pattern
-   with no key configured (demo-day insurance), others swappable by config.
+7. **Providers** — behind Pi's model layer, all defined in `models.json`:
+   Meta Model API first (hackathon credits), Baseten as an alternate host,
+   a scripted demo provider that reproduces the Week 12 pattern with no
+   key configured (demo-day insurance), others added by editing the file.
    Provider selection: `GRADING_PROVIDER` env var overrides the manifest
-   default.
+   default. The model used is the subject manifest's model when the chosen
+   provider offers it, else that provider's first listed model.
 
 ## The run, step by step
 
@@ -112,6 +121,7 @@ no in-app review queue (v2).
 
 ## Environment variables
 
-- `GRADING_PROVIDER` — `demo` (default) or a provider id from the manifest.
-- `META_API_KEY` — Meta Model API key (Phase 2; server-only).
+- `GRADING_PROVIDER` — `demo` (default) or a provider id from `models.json`.
+- `META_API_KEY` — Meta Model API key (server-only; `MODEL_API_KEY` also accepted).
+- `BASETEN_API_KEY` — Baseten API key (server-only).
 - `PI_CONFIG_DIR` — optional override for the `lib/server/pi/` config directory.

@@ -11,7 +11,7 @@
 
 import type { GradeRequestPayload } from "../grade-contract";
 import { createJob, updateJob, type GradeJob } from "./jobs";
-import { loadPiConfig, providerForAgent, validatePiConfig } from "./pi-config";
+import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, validatePiConfig } from "./pi-config";
 import { resolveProvider } from "./providers";
 
 export function startGradeJob(payload: GradeRequestPayload): GradeJob {
@@ -27,8 +27,12 @@ export function startGradeJob(payload: GradeRequestPayload): GradeJob {
       const providerId = providerForAgent(config, "math");
       const provider = resolveProvider(providerId);
       if (!provider) {
+        const def = providerDef(config, providerId);
+        const keyEnv = def ? providerKeyEnvName(def) : null;
         throw new Error(
-          `Grading provider "${providerId}" is not available — it is not registered, or its API key is not set on the server (for "meta", set META_API_KEY).`,
+          def
+            ? `Grading provider "${providerId}" is not available — its API key is not set on the server${keyEnv ? ` (set ${keyEnv})` : ""}.`
+            : `Grading provider "${providerId}" is not available — it is not defined in lib/server/pi/models.json.`,
         );
       }
       const result = await provider.run({

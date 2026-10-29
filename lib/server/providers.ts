@@ -5,13 +5,21 @@
  * contract (lib/grade-contract.ts). Phase 1 ships the scripted demo
  * provider: it reproduces the prototype's demo verdict patterns from the
  * server registry, with no model call — the same end-to-end shape the real
- * providers will return, and the fallback that keeps the app demoable with
- * no API key configured. Real providers (Meta Model API via the Pi harness)
- * land in Phase 2 and register in PROVIDERS below.
+ * providers return, and the fallback that keeps the app demoable with
+ * no API key configured. Real providers are defined in
+ * lib/server/pi/models.json (Pi's native provider/model format) and all
+ * run through the one Pi harness — adding a provider is a file edit.
  */
 
 import type { ApiSheetResult, GradeJobResult, GradeRequestPayload } from "../grade-contract";
 import { GINA_MATH_SETC, GINA_MATH_W12, SETC_DEMO_GRADES, W12_DEMO_GRADES } from "../seed";
+import {
+  effectiveModel,
+  loadPiConfig,
+  providerDef,
+  providerKeyAvailable,
+  resolveProviderApiKey,
+} from "./pi-config";
 import { findBySheetId } from "./registry";
 
 export interface ProviderRunInput extends GradeRequestPayload {
@@ -108,42 +116,49 @@ export const demoProvider: GradingProvider = {
   },
 };
 
-const PROVIDERS: Record<string, GradingProvider> = {
-  demo: demoProvider,
-};
-
 /**
- * The real provider: the Pi harness on the Meta Model API (Phase 2).
- * Registered lazily — resolveProvider returns it only when an API key is
- * configured (META_API_KEY, or MODEL_API_KEY as Meta's docs name it), so a
- * keyless deployment keeps the demo provider as its only option and the
- * runner's "provider not available" path stays honest.
+ * A real provider: any provider defined in lib/server/pi/models.json,
+ * run through the Pi harness. Resolvable only when the provider's API key
+ * is set on the server (or it is keyless by design), so a keyless
+ * deployment keeps the demo provider as its fallback and the runner's
+ * "provider not available" path stays honest.
  */
-export const metaProvider: GradingProvider = {
-  id: "meta",
-  model: "muse-spark-1.3",
-  async run({ photos, kidContext, onStep }) {
-    const apiKey = process.env.META_API_KEY ?? process.env.MODEL_API_KEY;
-    if (!apiKey) {
-      throw new Error("META_API_KEY is not set on the server — the Meta provider cannot run.");
-    }
-    const { gradeWithPiHarness } = await import("./pi-harness");
-    return gradeWithPiHarness({ photos, kidContext, apiKey, onStep });
-  },
-};
-
-export function metaProviderAvailable(): boolean {
-  return Boolean(process.env.META_API_KEY ?? process.env.MODEL_API_KEY);
+function piProvider(id: string): GradingProvider {
+  const config = loadPiConfig();
+  const def = providerDef(config, id);
+  return {
+    id,
+    model: def?.models[0]?.id ?? "",
+    async run({ photos, kidContext, onStep }) {
+      const apiKey = resolveProviderApiKey(config, id);
+      const { gradeWithPiHarness } = await import("./pi-harness");
+      return gradeWithPiHarness({
+        photos,
+        kidContext,
+        providerId: id,
+        modelId: effectiveModel(config, "math", id),
+        apiKey,
+        onStep,
+      });
+    },
+  };
 }
 
 export function resolveProvider(id: string): GradingProvider | null {
-  if (id === "meta") return metaProviderAvailable() ? metaProvider : null;
-  return PROVIDERS[id] ?? null;
+  if (id === "demo") return demoProvider;
+  const config = loadPiConfig();
+  if (!providerDef(config, id) || !providerKeyAvailable(config, id)) return null;
+  return piProvider(id);
 }
 
 export function listProviders(): { id: string; model: string; available: boolean }[] {
+  const config = loadPiConfig();
   return [
-    ...Object.values(PROVIDERS).map((p) => ({ id: p.id, model: p.model, available: true })),
-    { id: metaProvider.id, model: metaProvider.model, available: metaProviderAvailable() },
+    { id: demoProvider.id, model: demoProvider.model, available: true },
+    ...Object.entries(config.providers).map(([id, def]) => ({
+      id,
+      model: def.models[0]?.id ?? "",
+      available: providerKeyAvailable(config, id),
+    })),
   ];
 }

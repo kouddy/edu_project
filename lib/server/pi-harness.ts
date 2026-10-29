@@ -18,15 +18,17 @@
  * the confidence rule is enforced — a verdict under the configured
  * threshold is coerced to "unsure"; the agent cannot argue past it).
  *
- * The Meta provider is registered programmatically on a ModelRuntime whose
- * auth/models files live in a temp dir — the API key arrives via
- * setRuntimeApiKey from the META_API_KEY / MODEL_API_KEY env var and is
- * never written to a committed file. Only Standard models are used: the
- * discounted "-contributor" variants train on prompts, which is not
- * acceptable for children's work.
+ * Providers and models come from lib/server/pi/models.json — Pi's own
+ * native format (providers → baseUrl / api / apiKey with "$ENV_VAR"
+ * interpolation / models). The harness hands Pi's ModelRuntime a copy of
+ * that file from a temp dir (so Pi can never mutate the committed config)
+ * and passes the resolved API key via setRuntimeApiKey; keys are never
+ * written to a committed file. Adding a provider is a models.json edit.
+ * Only models vetted for children's work belong in that file — e.g. Meta's
+ * discounted "-contributor" variants train on prompts and are excluded.
  */
 
-import { mkdtempSync, readFileSync } from "node:fs";
+import { copyFileSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import {
@@ -48,7 +50,6 @@ import type {
 import { loadPiConfig, loadPrompt, subjectManifest, type PiConfig } from "./pi-config";
 import { findByPrintedCode, type RegistryEntry } from "./registry";
 
-const PROVIDER_ID = "meta";
 const PER_PHOTO_TIMEOUT_MS = 150_000;
 
 const STEP_BY_TOOL: Record<string, string> = {
@@ -197,32 +198,16 @@ function buildTools(captured: Captured, threshold: number) {
   return [submitIdentification, submitGrade];
 }
 
-async function createModelRuntime(config: PiConfig, apiKey: string): Promise<{ runtime: ModelRuntime; modelId: string }> {
-  const meta = config.settings.meta;
-  if (!meta) throw new Error("Pi settings are missing the meta provider block.");
+async function createModelRuntime(config: PiConfig, providerId: string, apiKey: string | null): Promise<ModelRuntime> {
   const dir = mkdtempSync(path.join(tmpdir(), "pi-grading-"));
+  const modelsCopy = path.join(dir, "models.json");
+  copyFileSync(config.modelsPath, modelsCopy);
   const runtime = await ModelRuntime.create({
     authPath: path.join(dir, "auth.json"),
-    modelsPath: path.join(dir, "models.json"),
+    modelsPath: modelsCopy,
   });
-  runtime.registerProvider(PROVIDER_ID, {
-    name: "Meta Model API",
-    baseUrl: meta.baseUrl,
-    api: "openai-completions",
-    models: [
-      {
-        id: meta.model,
-        name: "Muse Spark 1.3",
-        reasoning: true,
-        input: ["text", "image"],
-        cost: { input: 1.25, output: 4.25, cacheRead: 0.15, cacheWrite: 1.25 },
-        contextWindow: 1_048_576,
-        maxTokens: 8192,
-      },
-    ],
-  });
-  await runtime.setRuntimeApiKey(PROVIDER_ID, apiKey);
-  return { runtime, modelId: meta.model };
+  if (apiKey) await runtime.setRuntimeApiKey(providerId, apiKey);
+  return runtime;
 }
 
 interface PhotoOutcome {
@@ -235,12 +220,13 @@ interface PhotoOutcome {
 async function gradeOnePhoto(args: {
   config: PiConfig;
   runtime: ModelRuntime;
+  providerId: string;
   modelId: string;
   photoDataUrl: string;
   kidContext: KidContext[];
   onStep: (step: string) => void;
 }): Promise<PhotoOutcome> {
-  const { config, runtime, modelId } = args;
+  const { config, runtime, providerId, modelId } = args;
   const manifest = subjectManifest(config, "math");
   const threshold = config.settings.confidenceThreshold;
   const taxonomyRel = manifest.contextFiles[0];
@@ -268,8 +254,8 @@ async function gradeOnePhoto(args: {
     reload: async () => {},
   };
 
-  const model = runtime.getModel(PROVIDER_ID, modelId);
-  if (!model) throw new Error(`Model ${PROVIDER_ID}/${modelId} is not registered.`);
+  const model = runtime.getModel(providerId, modelId);
+  if (!model) throw new Error(`Model ${providerId}/${modelId} is not defined in lib/server/pi/models.json.`);
 
   const captured: Captured = { entry: null, rejection: null, perQuestion: null, coercedUnsure: [] };
   const steps: string[] = [];
@@ -345,15 +331,17 @@ async function gradeOnePhoto(args: {
   throw new Error("The grading agent finished without identifying or grading the sheet.");
 }
 
-/** Grade all staged photos with the Pi harness on the Meta provider. */
+/** Grade all staged photos with the Pi harness on a models.json provider. */
 export async function gradeWithPiHarness(args: {
   photos: string[];
   kidContext: KidContext[];
-  apiKey: string;
+  providerId: string;
+  modelId: string;
+  apiKey: string | null;
   onStep: (step: string) => void;
 }): Promise<GradeJobResult> {
   const config = loadPiConfig();
-  const { runtime, modelId } = await createModelRuntime(config, args.apiKey);
+  const runtime = await createModelRuntime(config, args.providerId, args.apiKey);
   const sheets: ApiSheetResult[] = [];
   const allSteps: string[] = [];
   const coerced: number[] = [];
@@ -362,7 +350,8 @@ export async function gradeWithPiHarness(args: {
     const outcome = await gradeOnePhoto({
       config,
       runtime,
-      modelId,
+      providerId: args.providerId,
+      modelId: args.modelId,
       photoDataUrl: photo,
       kidContext: args.kidContext,
       onStep: args.onStep,
@@ -373,7 +362,7 @@ export async function gradeWithPiHarness(args: {
       return {
         outcome: "rejected",
         reason: outcome.rejection,
-        trace: { provider: PROVIDER_ID, model: modelId, steps: allSteps },
+        trace: { provider: args.providerId, model: args.modelId, steps: allSteps },
       };
     }
     if (outcome.sheet) sheets.push(outcome.sheet);
@@ -383,8 +372,8 @@ export async function gradeWithPiHarness(args: {
     outcome: "graded",
     sheets,
     trace: {
-      provider: PROVIDER_ID,
-      model: modelId,
+      provider: args.providerId,
+      model: args.modelId,
       steps: allSteps,
       ...(coerced.length > 0
         ? { note: `Confidence rule enforced server-side: Q${coerced.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).` }

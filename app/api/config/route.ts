@@ -5,7 +5,7 @@
  */
 
 import { connection, NextResponse } from "next/server";
-import { loadPiConfig, providerForAgent, validatePiConfig } from "@/lib/server/pi-config";
+import { effectiveModel, loadPiConfig, providerForAgent, validatePiConfig } from "@/lib/server/pi-config";
 import { listProviders } from "@/lib/server/providers";
 import { REGISTRY, type AgentId } from "@/lib/server/registry";
 
@@ -23,7 +23,7 @@ export async function GET() {
       status: manifest.status,
       schemaVersion: manifest.schemaVersion,
       provider,
-      model: provider === "demo" ? "demo-scripted" : manifest.model,
+      model: effectiveModel(config, agent as AgentId, provider),
     };
   });
   return NextResponse.json({
