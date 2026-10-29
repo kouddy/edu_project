@@ -5,7 +5,7 @@
  * assigned kid, and the versioned key. The client never sends keys with its
  * photos (see lib/grade-contract.ts).
  *
- * Phase 1 seeds the registry from the same data the local-first demo uses
+ * The registry is seeded from the same data the local-first app uses
  * (lib/seed.ts), but this module is imported ONLY by server code (route
  * handlers and lib/server/*) so keys stay out of the client flow. Later the
  * registry moves to a database; the lookup functions are the seam.
@@ -65,6 +65,18 @@ function buildRegistry(): RegistryEntry[] {
 }
 
 export const REGISTRY: RegistryEntry[] = buildRegistry();
+
+/**
+ * "Gina · Math · Set C" / "Gina · Math · Week 12" — the display label for
+ * an identified sheet (progress lines, summaries). The one server-side
+ * implementation; mirrors lib/store.ts's sheetLabel for local records.
+ */
+export function sheetLabelForEntry(entry: RegistryEntry): string {
+  const base = entry.setName
+    ? `${entry.subject} · ${entry.setName}`
+    : `${entry.subject} · Week ${entry.week}`;
+  return `${entry.kidName} · ${base}`;
+}
 
 export function findByPrintedCode(code: string): RegistryEntry | null {
   return REGISTRY.find((e) => e.printedCode === code) ?? null;

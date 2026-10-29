@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
-import { deletePhoto, getAuthState, resolveCheck, savePhoto, signIn } from "@/lib/store";
-import { gradeStagedPhotos } from "@/lib/grading";
+import { deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn } from "@/lib/store";
+import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
+import type { GradeJobStatus } from "@/lib/grade-contract";
 import { loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
@@ -19,7 +20,6 @@ type Screen =
   | { name: "home" }
   | { name: "signin" }
   | { name: "scan" }
-  | { name: "marking" }
   | { name: "results"; sheetId: string; origin: "homework" | "history" }
   | { name: "check"; from: "home" } 
   | { name: "check"; from: "results"; sheetId: string; origin: "homework" | "history" }
@@ -30,6 +30,8 @@ export default function AppShell() {
   const [kidId, setKidId] = useState<string | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
   const [staged, setStaged] = useState<StagedPhoto[]>([]);
+  const [runningJobs, setRunningJobs] = useState<GradeJobStatus[]>([]);
+  const [settledLines, setSettledLines] = useState<string[] | null>(null);
   const [toast, setToast] = useState<{ id: number; msg: string } | null>(null);
   const [scrollSection, setScrollSection] = useState<"homework" | "history" | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -106,37 +108,73 @@ export default function AppShell() {
     });
   }, []);
 
-  /* ------------------------------------------------------------ grading flow */
+  /* ------------------------------------------------------------ grading flow
+     Grade dispatches the batch and marking runs in the
+     background. The poller collects finished jobs, applies their results,
+     returns failed photos to the tray, and feeds the Home Marking card. */
+
+  const pollingRef = useRef(false);
+
+  const pollOnce = useCallback(async () => {
+    if (pollingRef.current) return;
+    if (listPendingJobs().length === 0) {
+      setRunningJobs((prev) => (prev.length === 0 ? prev : []));
+      return;
+    }
+    pollingRef.current = true;
+    try {
+      const { settled, running } = await pollPendingJobs();
+      setRunningJobs(running);
+      if (settled.length > 0) {
+        for (const batch of settled) {
+          for (const key of batch.trayPhotoKeys) {
+            try {
+              const blob = await getPhoto(key);
+              if (blob) {
+                setStaged((prev) =>
+                  prev.some((p) => p.key === key)
+                    ? prev
+                    : [...prev, { key, url: URL.createObjectURL(blob) }],
+                );
+              }
+            } catch {
+              /* photo gone — nothing to restore */
+            }
+          }
+        }
+        const lines = settled.flatMap((b) => b.lines);
+        if (lines.length > 0) setSettledLines((prev) => [...(prev ?? []), ...lines]);
+        const marked = settled.reduce((n, b) => n + b.markedSheets, 0);
+        refresh();
+        if (marked > 0) {
+          showToast(marked === 1 ? "1 sheet marked" : `${marked} sheets marked`);
+        }
+      }
+    } finally {
+      pollingRef.current = false;
+    }
+  }, [refresh, showToast]);
+
+  useEffect(() => {
+    void pollOnce();
+    const t = setInterval(() => void pollOnce(), 1500);
+    return () => clearInterval(t);
+  }, [pollOnce]);
 
   const handleGrade = useCallback(async () => {
     const keys = staged.map((p) => p.key);
     if (keys.length === 0) return;
-    setScreen({ name: "marking" });
-    const started = Date.now();
-    const outcome = await gradeStagedPhotos(keys);
-    const wait = Math.max(0, 1400 - (Date.now() - started));
-    await new Promise((r) => setTimeout(r, wait));
-    if (outcome.rejectedReason) {
-      // Keep the staged photos so the parent can retake the shot.
-      setScreen({ name: "scan" });
-      showToast(outcome.rejectedReason);
-      return;
-    }
+    const outcome = await dispatchGrading(keys);
     if (outcome.failedReason) {
-      // Grading failed — keep the staged photos so the parent can retry.
-      // Nothing was marked and no result was written.
-      setScreen({ name: "scan" });
+      // Couldn't even start — keep the staged photos so the parent can retry.
       showToast(outcome.failedReason);
       return;
     }
     staged.forEach((p) => URL.revokeObjectURL(p.url));
     setStaged([]);
-    refresh();
-    setScreen({ name: "home" });
-    showToast(
-      outcome.markedSheets === 1 ? "1 sheet marked" : `${outcome.markedSheets} sheets marked`,
-    );
-  }, [staged, refresh, showToast]);
+    goHome();
+    void pollOnce();
+  }, [staged, showToast, goHome, pollOnce]);
 
   /* ------------------------------------------------------------ checks */
 
@@ -166,8 +204,7 @@ export default function AppShell() {
   }
 
   const kid: Kid = snap.kids.find((k) => k.id === kidId) ?? snap.kids[0];
-  const tabVisible =
-    screen.name !== "scan" && screen.name !== "marking" && screen.name !== "signin";
+  const tabVisible = screen.name !== "scan" && screen.name !== "signin";
   const activeTab =
     screen.name === "profile" ? "profile" : screen.name === "scan" ? "scan" : "home";
 
@@ -189,6 +226,21 @@ export default function AppShell() {
               onOpenCheck={() => setScreen({ name: "check", from: "home" })}
               showToast={showToast}
               scrollSection={scrollSection}
+              marking={
+                runningJobs.length > 0 || settledLines
+                  ? {
+                      lines: runningJobs.flatMap((s) =>
+                        (s.photoProgress ?? []).map((p) => ({
+                          label: p.sheetLabel ?? `Photo ${p.index + 1}`,
+                          state: p.state === "marked" ? "marked ✓" : `${p.step ?? "Marking"}…`,
+                          done: p.state !== "marking",
+                        })),
+                      ),
+                      summary: settledLines,
+                      onDismissSummary: () => setSettledLines(null),
+                    }
+                  : null
+              }
             />
           )}
 
@@ -250,13 +302,6 @@ export default function AppShell() {
             <ProfileScreen snap={snap} onSignOut={() => setScreen({ name: "signin" })} />
           )}
 
-          {screen.name === "marking" && (
-            <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-center">
-              <Spinner size="lg" color="accent" />
-              <p className="text-[19px] font-extrabold text-ink">Marking your sheets…</p>
-              <p className="text-[14px] text-mid">This takes just a moment.</p>
-            </div>
-          )}
         </div>
 
         {screen.name === "scan" && (

@@ -1,10 +1,15 @@
 /**
  * lib/grade-contract.ts — the wire contract between the parent app and the
- * Stage 3 grading API. Pure types, shared by client and server code.
+ * grading API. Pure types, shared by client and server code.
  *
  * The client sends photos + minimal kid context only. Answer keys never
  * travel from the client: the server looks them up by printed code in its
  * own registry (lib/server/registry.ts).
+ *
+ * A job's result is a list of
+ * per-photo outcomes, not a single all-or-nothing verdict — batches
+ * succeed partially, failed photos are retried inside the job, and a
+ * question can be marked "no answer" (blank) as its own signal.
  */
 
 import type { QuestionGradeMeta, Verdict } from "./store";
@@ -47,16 +52,54 @@ interface GradeTrace {
   note?: string;
 }
 
-export type GradeJobResult =
-  | { outcome: "graded"; sheets: ApiSheetResult[]; trace: GradeTrace }
-  | { outcome: "rejected"; reason: string; trace: GradeTrace };
+/**
+ * How one photo in a job ended. `already-final` is NOT a
+ * server outcome — it is decided by the client at apply time, against the
+ * sheet's stored state.
+ */
+export type PhotoOutcomeKind =
+  | "graded"
+  | "duplicate"
+  | "rejected-deterministic"
+  | "rejected-read"
+  | "failed";
+
+export interface PhotoOutcome {
+  photoIndex: number;
+  kind: PhotoOutcomeKind;
+  /** For graded/duplicate: the sheet this photo belongs to. */
+  sheetId?: string;
+  /** Parent-language reason, for rejected/failed outcomes. */
+  reason?: string;
+  /** How many grading attempts this photo used (1–3). */
+  attempts: number;
+}
+
+export interface GradeJobResult {
+  outcome: "completed";
+  /** One result per graded photo (duplicates appear only as outcomes). */
+  sheets: ApiSheetResult[];
+  photoOutcomes: PhotoOutcome[];
+  trace: GradeTrace;
+}
 
 export type GradeJobStatusValue = "running" | "done" | "failed";
+
+/** Live per-photo progress for the Home Marking card. */
+export interface PhotoProgress {
+  index: number;
+  state: "marking" | "marked" | "settled";
+  /** "Gina · Math · Week 12" once the photo has been identified. */
+  sheetLabel?: string;
+  /** Current parent-language step for this photo, while marking. */
+  step?: string;
+}
 
 export interface GradeJobStatus {
   status: GradeJobStatusValue;
   /** Current (or final) step label, in parent language. */
   step: string;
+  photoProgress?: PhotoProgress[];
   result?: GradeJobResult;
   error?: string;
 }
