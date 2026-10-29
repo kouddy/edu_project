@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Avatar, Card } from "@heroui/react";
 import QRCode from "qrcode";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
 import { getAuthState, signOut } from "@/lib/store";
@@ -12,6 +11,16 @@ interface Props {
   onSignOut: () => void;
 }
 
+/* Styled directly from the wireframe's Profile (.card, .parentlabel,
+   .qrcard/.qrbox, .kidrow, .btn.secondary): Sign out uses the same
+   12px-radius rectangular secondary button as the other screens —
+   not a rounded pill. */
+const CARD =
+  "mb-3 rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
+const H3 = "font-display text-[15.5px] font-extrabold text-ink";
+const BTN_SECONDARY =
+  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
+
 export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;
   const [qrUrl, setQrUrl] = useState<string | null>(null);
@@ -20,80 +29,67 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
   useEffect(() => {
     if (!parent) return;
     QRCode.toDataURL(`practice-sheets:member:${parent.id}`, {
-      width: 240,
-      margin: 1,
-      color: { dark: "#3d2b1f", light: "#fffdf7" },
+      width: 336,
+      margin: 0,
+      color: { dark: "#3d2b1f", light: "#ffffff" },
     })
       .then(setQrUrl)
       .catch(() => setQrUrl(null));
   }, [parent]);
 
   if (!parent) return null;
-  const initials = parent.name
-    .replace(".", "")
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
 
   return (
-    <div className="px-[18px] pb-6 pt-4">
+    <div className="px-[18px] pb-[26px] pt-[14px]">
       <ScreenHeader kicker="Practice Sheets" title="Profile" />
 
-      <Card className="mb-4 shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
-        <Card.Content className="flex-row items-center gap-3.5 p-4">
-          <Avatar size="lg" color="accent">
-            <Avatar.Fallback className="font-extrabold">{initials}</Avatar.Fallback>
-          </Avatar>
-          <div>
-            <p className="text-[18px] font-extrabold text-ink">{parent.name}</p>
-            <p className="text-[13px] text-mid">{email ?? "Signed in with an emailed link"}</p>
-          </div>
-        </Card.Content>
-      </Card>
+      <div className={CARD}>
+        <p className="mb-[3px] text-[11.5px] font-bold uppercase tracking-[0.12em] text-faint">
+          Parent account
+        </p>
+        <p className="font-display text-[24px] font-extrabold leading-tight text-ink">
+          {parent.name}
+        </p>
+        <p className="mt-[3px] text-[13px] text-mid">
+          {email ?? "Signed in with an emailed link"}
+        </p>
+      </div>
 
-      <Card className="mb-4 shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
-        <Card.Content className="items-center p-5 text-center">
+      <div className={`${CARD} px-4 pb-4 pt-5 text-center`}>
+        <h3 className="font-display text-[16px] font-extrabold text-ink">Your member code</h3>
+        <div className="mx-auto my-3 flex h-[196px] w-[196px] items-center justify-center rounded-[14px] border-[1.5px] border-linesoft bg-white p-[14px] shadow-[0_2px_8px_rgba(146,90,32,0.14)]">
           {qrUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrUrl} alt="Your member code" className="h-[200px] w-[200px]" />
+            <img src={qrUrl} alt="Your member code" className="block h-full w-full" />
           ) : (
-            <div className="flex h-[200px] w-[200px] items-center justify-center rounded-xl border-2 border-dashed border-line text-faint">
-              ▦
-            </div>
+            <span className="text-[28px] text-faint">▦</span>
           )}
-          <p className="mt-3 max-w-[270px] text-[13.5px] leading-snug text-mid">
-            Show this code to staff to add a child, or when picking up sheets.
-          </p>
-        </Card.Content>
-      </Card>
+        </div>
+        <p className="mx-auto max-w-[280px] text-[13.5px] leading-[1.5] text-mid">
+          Show this code to staff to add a child, or when picking up sheets.
+        </p>
+      </div>
 
-      <h2 className="mb-2 text-[13px] font-extrabold uppercase tracking-[0.12em] text-faint">
-        My kids
-      </h2>
-      <Card className="mb-5 shadow-[0_2px_7px_rgba(146,90,32,0.12)]">
-        <Card.Content className="p-0">
-          {snap.kids.map((kid, i) => (
-            <div
-              key={kid.id}
-              className={`flex items-center gap-3 px-4 py-3.5 ${i > 0 ? "border-t border-dashed border-linesoft" : ""}`}
-            >
-              <Avatar size="md" color="accent">
-                <Avatar.Fallback className="font-bold">{kid.name[0]}</Avatar.Fallback>
-              </Avatar>
-              <div>
-                <p className="text-[15.5px] font-bold text-ink">{kid.name}</p>
-                <p className="text-[12.5px] text-faint">{kidTrackLabel(kid)}</p>
-              </div>
+      <div className={CARD}>
+        <h3 className={`${H3} mb-1`}>My kids</h3>
+        {snap.kids.map((kid) => (
+          <div
+            key={kid.id}
+            className="flex items-center justify-between gap-2.5 border-b border-dashed border-linesoft px-0.5 py-[11px] last:border-b-0"
+          >
+            <div>
+              <p className="text-[14.5px] font-semibold leading-snug text-ink">{kid.name}</p>
+              <p className="text-[12.5px] text-mid">{kidTrackLabel(kid)}</p>
             </div>
-          ))}
-          <p className="border-t border-dashed border-linesoft px-4 py-3 text-[12.5px] leading-snug text-faint">
-            Children are added by staff. If anything looks off, talk to us when you pick up
-            sheets.
-          </p>
-        </Card.Content>
-      </Card>
+            <span className="inline-block rounded-full border-[1.5px] border-linesoft bg-fill px-2.5 py-[3px] text-[12px] font-bold text-mid">
+              Enrolled
+            </span>
+          </div>
+        ))}
+        <p className="mt-[11px] text-[13.5px] leading-[1.45] text-mid">
+          Children are added by staff — just show your member code.
+        </p>
+      </div>
 
       <button
         type="button"
@@ -101,7 +97,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
           signOut();
           onSignOut();
         }}
-        className="block w-full rounded-xl border-[1.5px] border-line bg-card py-3 text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12)]"
+        className={BTN_SECONDARY}
       >
         Sign out
       </button>
