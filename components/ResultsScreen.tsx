@@ -38,29 +38,31 @@ interface ResultsProps {
 
 export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
   const { sheet, kid, key, result, score } = st;
-  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const [armed, setArmed] = useState(false);
   const armTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const firstPhotoKey = st.submission?.photoKeys[0];
+  const photoKeysSig = (st.submission?.photoKeys ?? []).join(",");
   useEffect(() => {
-    let url: string | null = null;
+    let urls: string[] = [];
     let live = true;
-    if (firstPhotoKey) {
-      getPhoto(firstPhotoKey)
-        .then((blob) => {
-          if (blob && live) {
-            url = URL.createObjectURL(blob);
-            setPhotoUrl(url);
-          }
+    if (photoKeysSig) {
+      Promise.all(photoKeysSig.split(",").map((k) => getPhoto(k).catch(() => null)))
+        .then((blobs) => {
+          if (!live) return;
+          urls = blobs.filter((b): b is Blob => !!b).map((b) => URL.createObjectURL(b));
+          setPhotoUrls(urls);
         })
         .catch(() => {});
+    } else {
+      setPhotoUrls([]);
     }
     return () => {
       live = false;
-      if (url) URL.revokeObjectURL(url);
+      urls.forEach((u) => URL.revokeObjectURL(u));
     };
-  }, [firstPhotoKey]);
+  }, [photoKeysSig]);
 
   useEffect(() => () => {
     if (armTimer.current) clearTimeout(armTimer.current);
@@ -114,15 +116,32 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
         </button>
       )}
 
-      {photoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={photoUrl}
-          alt={`Your photo of ${kid.name}'s sheet`}
-          className="mb-3 block h-[220px] w-full rounded-[16px] border-[1.5px] border-linesoft object-cover shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
-        />
+      {photoUrls.length > 0 ? (
+        <button
+          type="button"
+          onClick={() => setPhotoOpen(true)}
+          aria-label="View the photo full size"
+          className="relative mb-3 block w-full overflow-hidden rounded-[16px] border-[1.5px] border-linesoft shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photoUrls[0]}
+            alt={`Your photo of ${kid.name}'s sheet`}
+            className="block h-[220px] w-full object-cover"
+          />
+          <span
+            className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-[15px] leading-none text-white"
+            aria-hidden
+          >
+            ⤢
+          </span>
+        </button>
       ) : (
         sheet.id !== GINA_MATH_W12 && <MockPhoto st={st} kindFor={kindFor} />
+      )}
+
+      {photoOpen && photoUrls.length > 0 && (
+        <PhotoViewer urls={photoUrls} kidName={kid.name} onClose={() => setPhotoOpen(false)} />
       )}
 
       <div className={`${CARD} mb-3`}>
@@ -233,6 +252,66 @@ function Badge({ kind }: { kind: Kind }) {
     >
       {mark}
     </span>
+  );
+}
+
+/* Full-screen viewer for a submission's uploaded photos: the whole
+   photo, uncropped, at the largest size the screen allows. The Results
+   strip is only a thumbnail — this is where a parent actually reads
+   the sheet, for this week's homework and for History alike. */
+function PhotoViewer({
+  urls,
+  kidName,
+  onClose,
+}: {
+  urls: string[];
+  kidName: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/90"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Photos of ${kidName}'s sheet`}
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close photo viewer"
+        className="fixed right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-[17px] font-bold leading-none text-white"
+      >
+        ✕
+      </button>
+      <div
+        className="mx-auto flex min-h-full w-full max-w-[480px] flex-col items-center justify-center gap-3 px-3 py-14"
+        onClick={onClose}
+      >
+        {urls.map((u, i) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={u}
+            src={u}
+            alt={`Your photo of ${kidName}'s sheet${urls.length > 1 ? ` (${i + 1} of ${urls.length})` : ""}`}
+            className="block h-auto w-full rounded-[8px]"
+            onClick={(e) => e.stopPropagation()}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
