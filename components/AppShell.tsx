@@ -160,7 +160,7 @@ export default function AppShell() {
 
   return (
     <div className="flex min-h-dvh justify-center bg-paper">
-      <div className="relative flex h-dvh w-full max-w-[430px] flex-col bg-cream shadow-[0_0_50px_rgba(122,74,20,0.25)]">
+      <div className="grain-surface relative flex h-dvh w-full max-w-[392px] flex-col bg-cream shadow-[0_0_50px_rgba(122,74,20,0.25)]">
         {/* ------------------------------------------------------ screens */}
         <div ref={scrollRef} className="screen-scroll min-h-0 flex-1 overflow-y-auto">
           {screen.name === "signin" && (

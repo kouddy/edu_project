@@ -238,7 +238,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
         </span>
 
         {staged.length > 0 && (
-          <div className="-mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-linesoft bg-[#fff9ef] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
+          <div className="grain-surface -mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-linesoft bg-[#fff9ef] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
             <button type="button" onClick={onGrade} className={BTN}>
               Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
             </button>
