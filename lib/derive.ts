@@ -139,6 +139,7 @@ export interface CheckItem {
   kid: Kid;
   questionNumber: number;
   prompt: string;
+  correctAnswer: string;
   readAnswer: string | null;
 }
 
@@ -157,6 +158,7 @@ export function pendingChecks(snap: Snapshot): CheckItem[] {
         kid: st.kid,
         questionNumber: g.questionNumber,
         prompt: q?.prompt ?? `Question ${g.questionNumber}`,
+        correctAnswer: q?.correctAnswer ?? "",
         readAnswer: g.readAnswer,
       });
     }

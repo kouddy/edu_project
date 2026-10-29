@@ -216,7 +216,10 @@ export default function AppShell() {
 
           {screen.name === "check" && (
             <CheckScreen
+              snap={snap}
               items={pendingChecks(snap)}
+              from={screen.from}
+              onDone={() => goHome()}
               onBack={() =>
                 screen.from === "results"
                   ? setScreen({
