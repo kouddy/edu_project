@@ -4,9 +4,9 @@
  * One ephemeral, in-memory Pi session per photo. The session is built with
  * full explicit control — no ambient discovery:
  * - a hand-written ResourceLoader whose system prompt is assembled from the
- *   configured prompt files (server/pi/prompts) and whose only context file
+ *   configured prompt files (lib/server/pi/prompts) and whose only context file
  *   is the subject's taxonomy;
- * - SettingsManager.inMemory from server/pi/settings.json values;
+ * - SettingsManager.inMemory from lib/server/pi/settings.json values;
  * - SessionManager.inMemory — nothing is persisted;
  * - Pi's built-in tools are suppressed (noTools: "builtin"); the only tools
  *   are our schema-typed submit_* tools, whose parameters ARE the result

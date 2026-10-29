@@ -96,7 +96,7 @@ export type Verdict = "correct" | "wrong" | "unsure";
 export interface QuestionGradeMeta {
   /** The question's topic, from the answer key. */
   topic?: string;
-  /** For wrong answers: the categorized cause (see server/pi taxonomy). */
+  /** For wrong answers: the categorized cause (see the lib/server/pi taxonomy). */
   errorCategory?: string;
   /** For wrong answers: generated guidance for the student. */
   guidance?: string;

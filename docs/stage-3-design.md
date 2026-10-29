@@ -37,7 +37,7 @@ supplies answer keys; the server is the source of truth for keys.
    files. The tool set is restricted to our grading tools only; Pi's built-in
    file/shell tools are excluded. API keys come from server env, never from
    committed files.
-5. **File-based configuration** (`server/pi/`) — Pi's configurability does
+5. **File-based configuration** (`lib/server/pi/`) — Pi's configurability does
    the work:
    - `settings.json` — default provider, thinking level, retry behaviour,
      confidence threshold, per-sheet budgets.
@@ -114,4 +114,4 @@ no in-app review queue (v2).
 
 - `GRADING_PROVIDER` — `demo` (default) or a provider id from the manifest.
 - `META_API_KEY` — Meta Model API key (Phase 2; server-only).
-- `PI_CONFIG_DIR` — optional override for the `server/pi/` config directory.
+- `PI_CONFIG_DIR` — optional override for the `lib/server/pi/` config directory.

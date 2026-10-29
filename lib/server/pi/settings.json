@@ -1,0 +1,1 @@
+{"confidenceThreshold":0.8,"defaultProvider":"demo","maxRetries":1,"maxStepsPerSheet":24,"meta":{"baseUrl":"https://api.meta.ai/v1","model":"muse-spark-1.3"},"thinkingLevel":"medium","tokenBudgetPerSheet":60000}

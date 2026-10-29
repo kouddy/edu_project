@@ -3,13 +3,13 @@
  *
  * The Stage 3 design leans on Pi's file-based configuration (see
  * docs/stage-3-design.md): settings, the per-subject manifest, prompt
- * templates and context files all live under `server/pi/` and are read at
+ * templates and context files all live under `lib/server/pi/` and are read at
  * runtime — never hard-coded, never bundled into client code. The Pi
  * session runtime arrives in Phase 2 and consumes this same config through
  * an explicit resource loader; Phase 1 loads and validates it so a broken
  * config fails a grading job loudly instead of grading badly.
  *
- * Config directory: `PI_CONFIG_DIR` env var, else `<cwd>/server/pi`.
+ * Config directory: `PI_CONFIG_DIR` env var, else `<cwd>/lib/server/pi`.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -51,7 +51,7 @@ let cached: PiConfig | null = null;
 
 export function loadPiConfig(): PiConfig {
   if (cached) return cached;
-  const configDir = process.env.PI_CONFIG_DIR ?? path.join(process.cwd(), "server", "pi");
+  const configDir = process.env.PI_CONFIG_DIR ?? path.join(process.cwd(), "lib", "server", "pi");
   const settings = JSON.parse(readFileSync(path.join(configDir, "settings.json"), "utf8")) as PiSettings;
   const subjectsDoc = JSON.parse(readFileSync(path.join(configDir, "subjects.json"), "utf8")) as {
     subjects: Record<string, SubjectManifest>;
