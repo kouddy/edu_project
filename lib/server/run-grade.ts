@@ -4,10 +4,10 @@
  * The runner resolves everything from the file-based Pi configuration
  * (lib/server/pi-config.ts): it validates the configured prompt/context
  * files exist and picks the provider for the agent. The math agent is the
- * only active subject today (English is Phase 4); the agent is chosen
+ * only active subject today (English is not active yet); the agent is chosen
  * here, before identification, from the subjects the seeded sheets use.
  *
- * Stage 3.5 (docs/stage-3.5-design.md): photos are processed sequentially,
+ * Photos are processed sequentially,
  * one provider call per attempt. Failed/read-rejected photos retry inside
  * the job (up to 3 attempts total; deterministic rejections are
  * terminal on first occurrence; graded results and successes are
@@ -128,9 +128,9 @@ async function runBatch(
         // re-reads the code inside the session before declaring it
         // unknown — that second look is the safeguard. A cross-attempt
         // retry adds nothing and risks the model force-fitting a similar
-        // code to a real sheet (observed live 2026-10-29: a sheet printed
-        // G9-MATH-W99-Z was "corrected" to G4-MATH-W12-A on attempt 2 and
-        // graded against the wrong key).
+        // code to a real sheet — e.g. "correcting" a sheet printed
+        // G9-MATH-W99-Z to G4-MATH-W12-A and grading it against the
+        // wrong key.
         return { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt };
       }
       // rejected-read / failed: use the remaining attempts.
@@ -144,7 +144,7 @@ async function runBatch(
 
   for (const [index, photo] of payload.photos.entries()) {
     // Byte-identical photos in one batch are the same sheet photographed
-    // twice — never spend a grading call on the copy (Stage 3.5 §4).
+    // twice — never spend a grading call on the copy.
     const earlierSheetId = seenPayloads.get(photo);
     if (earlierSheetId) {
       photoOutcomes.push({ photoIndex: index, kind: "duplicate", sheetId: earlierSheetId, attempts: 0 });

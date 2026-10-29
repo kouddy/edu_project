@@ -109,7 +109,7 @@ export default function AppShell() {
   }, []);
 
   /* ------------------------------------------------------------ grading flow
-     Stage 3.5 §6: Grade dispatches the batch and marking runs in the
+     Grade dispatches the batch and marking runs in the
      background. The poller collects finished jobs, applies their results,
      returns failed photos to the tray, and feeds the Home Marking card. */
 

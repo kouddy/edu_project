@@ -1,8 +1,8 @@
 /**
  * lib/server/pi-config.ts — loads the Pi harness configuration from files.
  *
- * The Stage 3 design leans on Pi's file-based configuration (see
- * docs/stage-3-design.md): settings, the per-subject manifest, prompt
+ * Configuration is file-based, in Pi's style: settings,
+ * the per-subject manifest, prompt
  * templates and context files all live under `lib/server/pi/` and are read
  * at runtime — never hard-coded, never bundled into client code.
  *
@@ -52,7 +52,7 @@ export interface PiProviderDef {
 export interface SubjectManifest {
   displaySubjects: string[];
   provider: string;
-  /** Provider planned once real model calls land (Phase 2). */
+  /** Provider to use once this subject becomes active. */
   plannedProvider?: string;
   model: string;
   schemaVersion: string;
@@ -172,7 +172,7 @@ export function validatePiConfig(config: PiConfig): string[] {
   return missing;
 }
 
-/** Read one configured prompt template (Phase 2 harness input). */
+/** Read one configured prompt template for the harness. */
 export function loadPrompt(config: PiConfig, agent: AgentId, kind: keyof SubjectManifest["promptFiles"]): string {
   const rel = subjectManifest(config, agent).promptFiles[kind];
   if (!rel) throw new Error(`No "${kind}" prompt configured for agent "${agent}"`);

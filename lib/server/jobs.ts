@@ -6,7 +6,7 @@
  * right for the hackathon's single-instance dev/demo server, and the seam
  * where a real queue/store goes later. Jobs are not persisted — a server
  * restart loses them; the client notices the loss and quietly resubmits
- * the batch from the photos stored on the device (Stage 3.5 §6).
+ * the batch from the photos stored on the device.
  */
 
 import type { GradeJobResult, GradeJobStatusValue, PhotoProgress } from "../grade-contract";
@@ -15,7 +15,7 @@ export interface GradeJob {
   id: string;
   status: GradeJobStatusValue;
   step: string;
-  /** Stage 3.5 §6: live per-photo progress for the Home Marking card. */
+  /** Live per-photo progress for the Home Marking card. */
   photoProgress: PhotoProgress[];
   result?: GradeJobResult;
   error?: string;

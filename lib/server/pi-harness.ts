@@ -1,5 +1,5 @@
 /**
- * lib/server/pi-harness.ts — the Pi SDK grading harness (Phases 2–3).
+ * lib/server/pi-harness.ts — the Pi SDK grading harness.
  *
  * One ephemeral, in-memory Pi session per photo. The session is built with
  * full explicit control — no ambient discovery:
@@ -31,8 +31,9 @@
  * that file from a temp dir (so Pi can never mutate the committed config)
  * and passes the resolved API key via setRuntimeApiKey; keys are never
  * written to a committed file. Adding a provider is a models.json edit.
- * Which models belong in that file is a product decision recorded in
- * docs/stage-3-design.md (see the contributor-tier note there).
+ * Which models belong in that file is a product decision: the
+ * contributor tier trains on prompts and completions, so it is fine for
+ * synthetic test sheets but must never grade a real child's work.
  */
 
 import { copyFileSync, mkdtempSync, readFileSync } from "node:fs";
@@ -68,17 +69,17 @@ const STEP_BY_TOOL: Record<string, string> = {
 interface Captured {
   entry: RegistryEntry | null;
   rejection: string | null;
-  /** Stage 3.5 §2: whether a rejection can never change on a retry. */
+  /** Whether a rejection can never change on a retry. */
   rejectionKind: "read" | "deterministic" | null;
-  /** Stage 3.5 §4: the runner said this sheet is already graded in this job. */
+  /** The runner said this sheet is already graded in this job. */
   duplicate: boolean;
   /** How many printed-code lookups have failed in this session. */
   codeAttempts: number;
   perQuestion: ApiQuestionGrade[] | null;
   coercedUnsure: number[];
-  /** Phase 3: questionNumber → taxonomy category + what the student likely did. */
+  /** questionNumber → taxonomy category + what the student likely did. */
   analyses: Map<number, { category: string; observation: string }>;
-  /** Phase 3: questionNumber → generated guidance text. */
+  /** questionNumber → generated guidance text. */
   guidances: Map<number, string>;
 }
 
@@ -139,7 +140,7 @@ function buildTools(
         captured.codeAttempts += 1;
         if (captured.codeAttempts >= 2) {
           // The code has been re-read carefully and still matches nothing
-          // we know — retrying this photo cannot change that (Stage 3.5 §2).
+          // we know — retrying this photo cannot change that.
           captured.rejection = "We couldn't find that sheet — the photo needs to show the code printed in the corner.";
           captured.rejectionKind = "deterministic";
           return { content: [{ type: "text" as const, text: "Recorded: not one of our sheets. Stop here." }], details: {} };
@@ -251,7 +252,7 @@ function buildTools(
         .slice()
         .sort((a, b) => a.questionNumber - b.questionNumber)
         .map((g) => {
-          // Stage 3.5 §1: an explicitly asserted blank is its own signal —
+          // An explicitly asserted blank is its own signal —
           // wrong, no read answer, never a Parent check item. If the agent
           // is not confident the space is truly empty, it stays unsure:
           // the never-guess rule covers blankness too.
@@ -443,7 +444,7 @@ interface PhotoOutcome {
   identified?: IdentifiedSheet;
   steps: string[];
   coercedUnsure: number[];
-  /** Phase 3 trace summary, e.g. "Q4: borrowing-slip". */
+  /** Trace summary of the error analysis, e.g. "Q4: borrowing-slip". */
   analysisSummary: string[];
 }
 
@@ -616,7 +617,7 @@ async function gradeOnePhoto(args: {
   throw new Error("The grading agent finished without identifying or grading the sheet.");
 }
 
-/** The runner's per-photo result from the Pi harness (Stage 3.5 §2). */
+/** The runner's per-photo result from the Pi harness. */
 export interface PiPhotoAttempt {
   kind: "graded" | "duplicate" | "rejected-deterministic" | "rejected-read" | "failed";
   sheet?: ApiSheetResult;
@@ -655,7 +656,7 @@ export async function gradePhotoWithPiHarness(args: {
     });
   } catch (err) {
     // Timeouts, provider errors, and a session that ends without a result
-    // are transient failures — the runner may retry them (Stage 3.5 §3).
+    // are transient failures — the runner may retry them.
     return {
       kind: "failed",
       reason: err instanceof Error ? err.message : "Grading failed.",

@@ -2,7 +2,7 @@
  * Seed data for the local-first MVP.
  *
  * Loaded through lib/store.ts on first run (see `ensureSeeded`), with the
- * Stage 2 demo dataset (extra sheets, past submissions and their results)
+ * demo dataset (extra sheets, past submissions and their results)
  * layered on by lib/demo.ts via `seedRecords`.
  *
  * Gina's Math · Week 12 answer key is the interactive prototype's demo sheet,

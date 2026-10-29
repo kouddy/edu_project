@@ -92,7 +92,7 @@ export interface Submission {
 
 export type Verdict = "correct" | "wrong" | "unsure";
 
-/** Subject-specific extras a grader can attach to a question (Stage 3). */
+/** Subject-specific extras a grader can attach to a question. */
 export interface QuestionGradeMeta {
   /** The question's topic, from the answer key. */
   topic?: string;
@@ -101,7 +101,7 @@ export interface QuestionGradeMeta {
   /** For wrong answers: generated guidance for the student. */
   guidance?: string;
   /**
-   * Stage 3.5: the grader asserted this answer box was completely empty.
+   * The grader asserted this answer box was completely empty.
    * The verdict is `wrong` with readAnswer null, Results shows "No answer
    * written", and the question never enters Parent check.
    */
@@ -115,7 +115,7 @@ export interface QuestionGrade {
   confidence: number;
   /** What the child actually wrote, or null if nothing could be read. */
   readAnswer: string | null;
-  /** Optional subject metadata from the grading harness (Stage 3). */
+  /** Optional subject metadata from the grading harness. */
   meta?: QuestionGradeMeta;
 }
 
@@ -271,7 +271,7 @@ export function signOut(): void {
 /* -------------------------------------------------- pending grade jobs */
 
 /**
- * Stage 3.5 §6: grading runs in the background. A pending-job record is
+ * Grading runs in the background, so a pending-job record is
  * kept device-locally (next to the auth record, not inside the data
  * document) from dispatch until its result has been applied, so an app
  * restart can collect — or, if the server lost the job, resubmit — the

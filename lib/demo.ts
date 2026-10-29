@@ -1,7 +1,7 @@
 /**
  * lib/demo.ts — owns the demo dataset's lifecycle.
  *
- * `ensureDemoData` layers the Stage 2 demo state (past submissions and their
+ * `ensureDemoData` layers the demo state (past submissions and their
  * results) onto the base seed. It inserts each demo submission/result only
  * when its sheet has no submission yet, so it never resurrects a sheet the
  * parent removed and never duplicates one that was re-scanned.
@@ -30,7 +30,7 @@ import {
 export function ensureDemoData(): void {
   ensureSeeded();
   // Sheets and answer keys are insert-if-absent, so this is a no-op on a
-  // fresh install and backfills databases created in Stage 1.
+  // fresh install and backfills older databases missing them.
   seedRecords({ sheets: SEED_SHEETS, answerKeys: SEED_ANSWER_KEYS });
   for (const sub of SEED_SUBMISSIONS) {
     if (listSubmissions({ sheetId: sub.sheetId }).length > 0) continue;

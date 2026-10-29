@@ -5,7 +5,7 @@
  * assigned kid, and the versioned key. The client never sends keys with its
  * photos (see lib/grade-contract.ts).
  *
- * Phase 1 seeds the registry from the same data the local-first demo uses
+ * The registry is seeded from the same data the local-first app uses
  * (lib/seed.ts), but this module is imported ONLY by server code (route
  * handlers and lib/server/*) so keys stay out of the client flow. Later the
  * registry moves to a database; the lookup functions are the seam.

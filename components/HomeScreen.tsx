@@ -18,7 +18,7 @@ import type { Kid } from "@/lib/store";
 import { Spinner } from "@heroui/react";
 import { IconDownload } from "./ui";
 
-/** Stage 3.5 §6: the Home Marking card's data, built by the app shell. */
+/** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
   /** Live per-photo lines while marking is in flight. */
   lines: { label: string; state: string; done: boolean }[];
@@ -84,7 +84,7 @@ export default function HomeScreen({
         Home
       </h1>
 
-      {/* ---- marking card (Stage 3.5 §6) ---- */}
+      {/* ---- marking card ---- */}
       {marking && (
         <div className={`${CARD} px-[15px] py-[14px]`}>
           {marking.lines.length > 0 && (

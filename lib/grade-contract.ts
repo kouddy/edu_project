@@ -6,7 +6,7 @@
  * travel from the client: the server looks them up by printed code in its
  * own registry (lib/server/registry.ts).
  *
- * Stage 3.5 (docs/stage-3.5-design.md): a job's result is a list of
+ * A job's result is a list of
  * per-photo outcomes, not a single all-or-nothing verdict — batches
  * succeed partially, failed photos are retried inside the job, and a
  * question can be marked "no answer" (blank) as its own signal.
@@ -53,9 +53,9 @@ interface GradeTrace {
 }
 
 /**
- * How one photo in a job ended (Stage 3.5 §2). `already-final` is NOT a
+ * How one photo in a job ended. `already-final` is NOT a
  * server outcome — it is decided by the client at apply time, against the
- * sheet's stored state (Stage 3.5 §5).
+ * sheet's stored state.
  */
 export type PhotoOutcomeKind =
   | "graded"
@@ -85,7 +85,7 @@ export interface GradeJobResult {
 
 export type GradeJobStatusValue = "running" | "done" | "failed";
 
-/** Live per-photo progress for the Home Marking card (Stage 3.5 §6). */
+/** Live per-photo progress for the Home Marking card. */
 export interface PhotoProgress {
   index: number;
   state: "marking" | "marked" | "settled";

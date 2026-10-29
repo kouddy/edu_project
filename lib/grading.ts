@@ -1,7 +1,7 @@
 /**
  * lib/grading.ts — the ONE place staged photos become grade results.
  *
- * Stage 3.5 (docs/stage-3.5-design.md): grading is background work.
+ * Grading is background work.
  * `dispatchGrading` sends the batch to the server (POST /api/grade) and
  * records a pending job in the store; `pollPendingJobs` — driven by the
  * app shell — collects finished jobs and applies their per-photo
@@ -9,7 +9,7 @@
  * fails, the parent is told plainly and the photos go back to the tray,
  * rather than being shown demo results dressed up as a real grade.
  *
- * Apply-time rules (§5): a graded sheet replaces its previous result only
+ * Apply-time rules: a graded sheet replaces its previous result only
  * while that result is unfinished (checks outstanding). A final result
  * is a record — a rescan is reported as already-final and never
  * overwrites it.
@@ -110,7 +110,7 @@ export async function dispatchGrading(photoKeys: string[]): Promise<DispatchOutc
 /* ------------------------------------------------------------ applying */
 
 /** True when the sheet's current result is settled: graded, with every
- *  unsure question resolved by the parent (Stage 3.5 §5). */
+ *  unsure question resolved by the parent. */
 function sheetResultIsFinal(sheetId: string): boolean {
   const sub = getLatestSubmissionForSheet(sheetId);
   if (!sub) return false;
@@ -221,7 +221,7 @@ export interface PollResult {
 /**
  * One polling pass over all pending jobs. Finished jobs are applied and
  * removed; a job the server has lost is resubmitted from its stored
- * photos (Stage 3.5 §6); a job-level failure settles with every photo
+ * photos; a job-level failure settles with every photo
  * returned to the tray.
  */
 export async function pollPendingJobs(): Promise<PollResult> {

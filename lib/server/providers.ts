@@ -1,6 +1,6 @@
 /**
  * lib/server/providers.ts — grading providers behind one per-photo
- * interface (Stage 3.5: the job runner in lib/server/run-grade.ts owns
+ * interface (the job runner in lib/server/run-grade.ts owns
  * attempts, dedupe, and aggregation; a provider grades ONE photo per call).
  *
  * The scripted demo provider reproduces the prototype's demo verdict
@@ -41,7 +41,7 @@ interface PhotoRunInput {
   kidContext: GradeRequestPayload["kidContext"];
   onStep: (step: string) => void;
   onIdentified?: (info: IdentifiedSheet) => void;
-  /** Stage 3.5 §4: return true when this sheet is already graded in this job. */
+  /** Return true when this sheet is already graded in this job. */
   shouldStopAfterIdentify?: (sheetId: string) => boolean;
 }
 
@@ -81,7 +81,7 @@ function demoSheetResult(
     keyVersion: entry.keyVersion,
     perQuestion: pattern.map((g) => {
       const keyQ = keyByNumber.get(g.questionNumber);
-      // Stage 3.5: the demo pattern's Q10 on Week 12 is a BLANK answer, so
+      // The demo pattern's Q10 on Week 12 is a BLANK answer, so
       // the no-answer flow is exercisable without a model call. (The seed's
       // shared W12_DEMO_GRADES is untouched — the pre-graded seed record
       // keeps its original pattern.)
@@ -132,7 +132,7 @@ const demoProvider: GradingProvider = {
 
     await step("Reading the sheet", 350);
     // Demo identification: the first staged photo is Gina's Math · Week 12;
-    // any further photo is Math · Set C — the prototype's pattern.
+    // any further photo is Math · Set C.
     const sheetId = photoIndex === 0 ? GINA_MATH_W12 : GINA_MATH_SETC;
     const entry = findBySheetId(sheetId);
     if (!entry) throw new Error(`Demo provider: no registry entry for ${sheetId}`);
