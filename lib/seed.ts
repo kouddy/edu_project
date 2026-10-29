@@ -28,12 +28,12 @@ export const SEED_KIDS: Kid[] = [
 ];
 
 export const GINA_MATH_W12 = "sheet-gina-math-w12";
-export const GINA_MATH_W11 = "sheet-gina-math-w11";
-export const GINA_MATH_W10 = "sheet-gina-math-w10";
-export const GINA_WP_SETB = "sheet-gina-wp-setb";
-export const GINA_WP_W12 = "sheet-gina-wp-w12";
+const GINA_MATH_W11 = "sheet-gina-math-w11";
+const GINA_MATH_W10 = "sheet-gina-math-w10";
+const GINA_WP_SETB = "sheet-gina-wp-setb";
+const GINA_WP_W12 = "sheet-gina-wp-w12";
 export const GINA_MATH_SETC = "sheet-gina-math-setc";
-export const LEO_MATH_W12 = "sheet-leo-math-w12";
+const LEO_MATH_W12 = "sheet-leo-math-w12";
 
 export const SEED_SHEETS: Sheet[] = [
   {
