@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   homeworkGroups,
   historyStates,
@@ -78,8 +77,7 @@ export default function HomeScreen({
   const checkSheet = checkParts.slice(1).join(" ");
 
   /* Marking summary: parents need a count and a sense of time, not a
-     per-photo log. The per-sheet list stays one tap away. */
-  const [markingOpen, setMarkingOpen] = useState(false);
+     per-photo log or extra controls. */
   const mPhotos = marking?.photos ?? [];
   const mTotal = mPhotos.length;
   const mDone = mPhotos.filter((p) => p.state !== "marking").length;
@@ -131,37 +129,6 @@ export default function HomeScreen({
                   : "Finishing up…"}
                 {mEta && <span className="text-faint"> · {mEta}</span>}
               </p>
-              <button
-                type="button"
-                onClick={() => setMarkingOpen((o) => !o)}
-                aria-expanded={markingOpen}
-                className="mt-1 text-[13px] font-bold text-tangdeep"
-              >
-                {markingOpen ? "Hide sheets" : `Show all ${mTotal} sheets`}
-              </button>
-              {markingOpen && (
-                <div className="mt-1.5 space-y-1 border-t border-dashed border-linesoft pt-2">
-                  {mPhotos.map((p, i) => (
-                    <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
-                      {p.state === "marking" ? (
-                        p.step ? (
-                          <>
-                            <span className="font-semibold text-ink">{p.label ?? `Sheet ${i + 1}`}</span>
-                            {" — marking…"}
-                          </>
-                        ) : (
-                          <>
-                            <span>{p.label ?? `Sheet ${i + 1}`}</span>
-                            {" — waiting"}
-                          </>
-                        )
-                      ) : (
-                        <span className="font-semibold text-ink">✓ {p.label ?? `Sheet ${i + 1}`}</span>
-                      )}
-                    </p>
-                  ))}
-                </div>
-              )}
             </>
           )}
           {marking.summary && marking.summary.length > 0 && (
