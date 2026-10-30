@@ -9,10 +9,11 @@
  * carry the labels the printed pages use (Practice A, B, C… for
  * practice; Part 1, 2… for a review kind), with the printed code
  * underneath — and tapping a sheet opens it. A single-sheet section
- * is a plain sheet row.
+ * is a plain sheet row in a card of its own, so it never blends in
+ * with the section rows.
  */
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { isDone, topicGroups, type SheetState } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { BackButton, ScreenHeader } from "./ui";
@@ -121,34 +122,22 @@ export default function PacketScreen({
       return next;
     });
 
-  return (
-    <div className="px-[18px] pb-[26px] pt-[14px]">
-      <BackButton onPress={onBack} />
-      <ScreenHeader
-        kicker="Practice Sheets"
-        title={`${kid.name} · ${subject} · Week ${week}`}
-      />
-      <div className={CARD}>
-        {groups.map((group, gi) => {
-          const lastGroup = gi === groups.length - 1;
-          if (group.states.length === 1) {
-            const st = group.states[0];
-            return (
-              <SheetRow
-                key={group.topic}
-                title={st.sheet.topic}
-                code={st.sheet.printedCode}
-                done={isDone(st)}
-                last={lastGroup}
-                onOpen={() => onOpenSheet(st.sheet.id)}
-              />
-            );
-          }
+  // Render in packet order as a stack of cards: runs of section rows
+  // share one card; each single-sheet row gets a card of its own.
+  const cards: ReactNode[] = [];
+  let sections: typeof groups = [];
+  const flushSections = () => {
+    if (sections.length === 0) return;
+    const run = sections;
+    sections = [];
+    cards.push(
+      <div key={`sections-${cards.length}`} className={CARD}>
+        {run.map((group, i) => {
           const open = openTopics.has(group.topic);
           return (
             <div
               key={group.topic}
-              className={lastGroup ? "" : "border-b border-dashed border-linesoft"}
+              className={i === run.length - 1 ? "" : "border-b border-dashed border-linesoft"}
             >
               <button
                 type="button"
@@ -184,7 +173,38 @@ export default function PacketScreen({
             </div>
           );
         })}
-      </div>
+      </div>,
+    );
+  };
+  for (const group of groups) {
+    if (group.states.length === 1) {
+      flushSections();
+      const st = group.states[0];
+      cards.push(
+        <div key={group.topic} className={CARD}>
+          <SheetRow
+            title={st.sheet.topic}
+            code={st.sheet.printedCode}
+            done={isDone(st)}
+            last
+            onOpen={() => onOpenSheet(st.sheet.id)}
+          />
+        </div>,
+      );
+    } else {
+      sections.push(group);
+    }
+  }
+  flushSections();
+
+  return (
+    <div className="px-[18px] pb-[26px] pt-[14px]">
+      <BackButton onPress={onBack} />
+      <ScreenHeader
+        kicker="Practice Sheets"
+        title={`${kid.name} · ${subject} · Week ${week}`}
+      />
+      <div className="flex flex-col gap-3">{cards}</div>
     </div>
   );
 }
