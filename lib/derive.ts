@@ -7,6 +7,7 @@
  */
 
 import {
+  getActiveMode,
   getAnswerKey,
   getCurrentParent,
   getGradeResultForSubmission,
@@ -27,6 +28,7 @@ import {
   type Submission,
 } from "./store";
 import { ensureDemoData } from "./demo";
+import { ensureGuestData } from "./guest";
 
 export { kidTrackLabel, sheetLabel };
 
@@ -48,7 +50,10 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  ensureDemoData();
+  // Each mode layers its own data: the demo dataset in demo mode, the
+  // guest account and its assigned packets in guest mode.
+  if (getActiveMode() === "guest") ensureGuestData();
+  else ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));
@@ -201,6 +206,9 @@ export interface CheckItem {
   prompt: string;
   correctAnswer: string;
   readAnswer: string | null;
+  /** The submission's uploaded photos — the parent checks the read
+   *  against the real sheet, not a rendering of it. */
+  photoKeys: string[];
 }
 
 /** Every unanswered "unsure" across all kids — one consolidated queue. */
@@ -220,6 +228,7 @@ export function pendingChecks(snap: Snapshot): CheckItem[] {
         prompt: q?.prompt ?? `Question ${g.questionNumber}`,
         correctAnswer: q?.correctAnswer ?? "",
         readAnswer: g.readAnswer,
+        photoKeys: st.submission?.photoKeys ?? [],
       });
     }
   }

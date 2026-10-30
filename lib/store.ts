@@ -18,7 +18,14 @@
  *   unresolved `unsure` as correct or wrong.
  */
 
-import { SEED_ANSWER_KEYS, SEED_KIDS, SEED_PARENT, SEED_SHEETS } from "./seed";
+import {
+  GUEST_KIDS,
+  GUEST_PARENT,
+  SEED_ANSWER_KEYS,
+  SEED_KIDS,
+  SEED_PARENT,
+  SEED_SHEETS,
+} from "./seed";
 
 /* ------------------------------------------------------------------ types */
 
@@ -138,6 +145,28 @@ export interface CheckResolution {
   resolvedAt: string;
 }
 
+/* ------------------------------------------------------------- app modes */
+
+/**
+ * The app runs in one of two modes, each with its own local database:
+ * "demo" is the seeded Gina/Leo dataset; "guest" is a fresh account
+ * (Amy and Bob, nothing scanned yet) for testing real uploads from
+ * scratch. The active mode is chosen at sign-in and kept in the auth
+ * record; `activateMode` points every read/write below at the active
+ * mode's document.
+ */
+export type AppMode = "demo" | "guest";
+
+let activeMode: AppMode = "demo";
+
+export function activateMode(mode: AppMode): void {
+  activeMode = mode;
+}
+
+export function getActiveMode(): AppMode {
+  return activeMode;
+}
+
 /* ------------------------------------------------------------- db document */
 
 interface Db {
@@ -151,7 +180,12 @@ interface Db {
   checkResolutions: CheckResolution[];
 }
 
-const DB_KEY = "practice-sheets:db:v2";
+const DEMO_DB_KEY = "practice-sheets:db:v2";
+const GUEST_DB_KEY = "practice-sheets:db:guest:v1";
+
+function dbKey(): string {
+  return activeMode === "guest" ? GUEST_DB_KEY : DEMO_DB_KEY;
+}
 
 const EMPTY_DB: Db = {
   version: 2,
@@ -171,7 +205,7 @@ function isBrowser(): boolean {
 function readDb(): Db {
   if (!isBrowser()) return structuredClone(EMPTY_DB);
   try {
-    const raw = window.localStorage.getItem(DB_KEY);
+    const raw = window.localStorage.getItem(dbKey());
     if (!raw) return structuredClone(EMPTY_DB);
     const parsed = JSON.parse(raw) as Db;
     if (parsed.version !== 2) return structuredClone(EMPTY_DB);
@@ -183,7 +217,7 @@ function readDb(): Db {
 
 function writeDb(db: Db): void {
   if (!isBrowser()) return;
-  window.localStorage.setItem(DB_KEY, JSON.stringify(db));
+  window.localStorage.setItem(dbKey(), JSON.stringify(db));
 }
 
 function newId(prefix: string): string {
@@ -201,17 +235,23 @@ function nowIso(): string {
 /* ---------------------------------------------------------------- seeding */
 
 /**
- * Load the seed data (parent, kids, sheets, answer keys) if the local
- * database is still empty. Idempotent — safe to call on every page load.
+ * Load the active mode's seed data if its database is still empty:
+ * the demo dataset in demo mode, just the guest parent and kids (no
+ * sheets at all) in guest mode. Idempotent — safe on every page load.
  */
 export function ensureSeeded(): void {
   if (!isBrowser()) return;
   const db = readDb();
   if (db.parents.length > 0) return;
-  db.parents = structuredClone([SEED_PARENT]);
-  db.kids = structuredClone(SEED_KIDS);
-  db.sheets = structuredClone(SEED_SHEETS);
-  db.answerKeys = structuredClone(SEED_ANSWER_KEYS);
+  if (activeMode === "guest") {
+    db.parents = structuredClone([GUEST_PARENT]);
+    db.kids = structuredClone(GUEST_KIDS);
+  } else {
+    db.parents = structuredClone([SEED_PARENT]);
+    db.kids = structuredClone(SEED_KIDS);
+    db.sheets = structuredClone(SEED_SHEETS);
+    db.answerKeys = structuredClone(SEED_ANSWER_KEYS);
+  }
   writeDb(db);
 }
 
@@ -241,6 +281,8 @@ export interface AuthState {
   signedIn: boolean;
   /** The email the parent used for the sign-in link, when they gave one. */
   email?: string;
+  /** Which dataset this device is running; absent means demo. */
+  mode?: AppMode;
 }
 
 const AUTH_KEY = "practice-sheets:auth:v1";
@@ -251,15 +293,19 @@ export function getAuthState(): AuthState {
     const raw = window.localStorage.getItem(AUTH_KEY);
     if (!raw) return { signedIn: false };
     const parsed = JSON.parse(raw) as AuthState;
-    return { signedIn: parsed.signedIn === true, email: parsed.email };
+    return {
+      signedIn: parsed.signedIn === true,
+      email: parsed.email,
+      mode: parsed.mode === "guest" ? "guest" : "demo",
+    };
   } catch {
     return { signedIn: false };
   }
 }
 
-export function signIn(email?: string): void {
+export function signIn(email?: string, mode: AppMode = "demo"): void {
   if (!isBrowser()) return;
-  const state: AuthState = email ? { signedIn: true, email } : { signedIn: true };
+  const state: AuthState = { signedIn: true, mode, ...(email ? { email } : {}) };
   window.localStorage.setItem(AUTH_KEY, JSON.stringify(state));
 }
 
@@ -283,12 +329,17 @@ export interface PendingGradeJob {
   submittedAt: number;
 }
 
-const JOBS_KEY = "practice-sheets:jobs:v1";
+const DEMO_JOBS_KEY = "practice-sheets:jobs:v1";
+const GUEST_JOBS_KEY = "practice-sheets:jobs:guest:v1";
+
+function jobsKey(): string {
+  return activeMode === "guest" ? GUEST_JOBS_KEY : DEMO_JOBS_KEY;
+}
 
 export function listPendingJobs(): PendingGradeJob[] {
   if (!isBrowser()) return [];
   try {
-    const raw = window.localStorage.getItem(JOBS_KEY);
+    const raw = window.localStorage.getItem(jobsKey());
     if (!raw) return [];
     const parsed = JSON.parse(raw) as PendingGradeJob[];
     return Array.isArray(parsed)
@@ -301,7 +352,7 @@ export function listPendingJobs(): PendingGradeJob[] {
 
 function savePendingJobs(jobs: PendingGradeJob[]): void {
   if (!isBrowser()) return;
-  window.localStorage.setItem(JOBS_KEY, JSON.stringify(jobs));
+  window.localStorage.setItem(jobsKey(), JSON.stringify(jobs));
 }
 
 export function addPendingJob(job: PendingGradeJob): void {

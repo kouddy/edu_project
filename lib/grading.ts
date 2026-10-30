@@ -17,6 +17,7 @@
 
 import {
   addPendingJob,
+  addSheet,
   createSubmission,
   deletePhoto,
   deleteSheetRecords,
@@ -29,11 +30,12 @@ import {
   listPendingJobs,
   removePendingJob,
   saveGradeResult,
+  setAnswerKey,
   sheetLabel,
   updatePendingJob,
   type PendingGradeJob,
 } from "./store";
-import type { GradeJobResult, GradeJobStatus } from "./grade-contract";
+import type { ApiSheetResult, GradeJobResult, GradeJobStatus } from "./grade-contract";
 
 /** Parent-language message for a grading failure, whatever the cause. */
 const FAILED_MESSAGE = "We couldn't mark the sheet just now — please try again in a moment.";
@@ -124,6 +126,31 @@ function sheetResultIsFinal(sheetId: string): boolean {
   );
 }
 
+/**
+ * File a graded sheet this device has no record for, using the
+ * catalogue entry the server sent with the result. The sheet belongs
+ * to the account's kid of the same grade — guest accounts hold no
+ * seeded sheets, so every real scan arrives this way. Returns false
+ * when the account has no kid (or more than one) at that grade.
+ */
+function fileSheetFromSpec(sheet: ApiSheetResult): boolean {
+  const spec = sheet.spec;
+  if (!spec) return false;
+  const matches = listKids().filter((k) => k.grade === spec.kidGrade);
+  if (matches.length !== 1) return false;
+  addSheet({
+    id: sheet.sheetId,
+    kidId: matches[0].id,
+    subject: spec.subject,
+    week: spec.week,
+    ...(spec.setName ? { setName: spec.setName } : {}),
+    printedCode: sheet.printedCode,
+    topic: spec.topic,
+  });
+  setAnswerKey({ sheetId: sheet.sheetId, questions: spec.questions });
+  return true;
+}
+
 async function replaceSheetSubmission(sheetId: string, photoKeys: string[]): Promise<void> {
   const keep = new Set(photoKeys);
   const oldKeys = deleteSheetRecords(sheetId).filter((k) => !keep.has(k));
@@ -162,10 +189,10 @@ async function applyJobResult(
     if (outcome.kind === "graded" && outcome.sheetId) {
       const sheet = sheetsById.get(outcome.sheetId);
       if (!sheet) continue;
-      if (!getSheet(outcome.sheetId)) {
-        // The server marked a sheet this device has no record for (a
-        // book sheet outside the kid's seeded packet). There is nowhere
-        // to file the result, so say so plainly instead of dropping it.
+      if (!getSheet(outcome.sheetId) && !fileSheetFromSpec(sheet)) {
+        // The server marked a sheet this device cannot file — its
+        // grade matches none of the account's kids, so there is no
+        // one to file it under. Say so plainly instead of dropping it.
         batch.lines.push(
           `${progressLabel ?? "That sheet"} isn't in the app yet, so we couldn't file the result.`,
         );

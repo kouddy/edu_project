@@ -93,3 +93,19 @@ body {
   background: rgba(163, 128, 95, 0.45);
   border-radius: 99px;
 }
+
+/* The Scan tray's horizontal scrollbar, in the screen's orange. */
+.tray-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #e8710a transparent;
+}
+.tray-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.tray-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tray-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #f07d12, #e8710a);
+  border-radius: 99px;
+}

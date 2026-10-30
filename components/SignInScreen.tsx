@@ -4,9 +4,13 @@ import { useRef, useState } from "react";
 
 const BTN =
   "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
+const BTN_SECONDARY =
+  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 interface Props {
   onSignedIn: (email?: string) => void;
+  /** Enter guest mode: a fresh testing account, separate from the demo. */
+  onGuest: () => void;
   showToast: (msg: string) => void;
 }
 
@@ -16,7 +20,7 @@ interface Props {
  * and "Skip for demo" both enter the app, and the signed-in flag is a
  * device-local record in lib/store.ts.
  */
-export default function SignInScreen({ onSignedIn, showToast }: Props) {
+export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -86,6 +90,15 @@ export default function SignInScreen({ onSignedIn, showToast }: Props) {
       <p className="mt-3.5 text-center">
         <Linkish onClick={() => onSignedIn()}>Skip for demo</Linkish>
       </p>
+      <div className="mt-5 border-t border-dashed border-linesoft pt-5">
+        <button type="button" className={BTN_SECONDARY} onClick={onGuest}>
+          Guest
+        </button>
+        <p className="mt-2.5 text-center text-[12px] leading-[1.5] text-faint">
+          For testing: a fresh account with Amy (Grade 3) and Bob (Grade 4) —
+          nothing scanned yet.
+        </p>
+      </div>
       <p className="mt-[26px] text-center text-[12px] text-faint">
         No password — we email you a one-tap link.
       </p>
