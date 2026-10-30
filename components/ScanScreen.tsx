@@ -21,6 +21,8 @@ interface Props {
    tile + orange shutter, orange .scan-grade bar, .preview-overlay).
    The wireframe's demo view / bad-photo demo are intentionally not
    carried over — this screen drives the real camera. */
+const BTN =
+  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(90,42,0,0.40)]";
 const BTN_SECONDARY =
   "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const CAMCLOSE =
@@ -236,12 +238,8 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
         )}
 
         {staged.length > 0 && (
-          <div className="-mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-[#c25e05] bg-[linear-gradient(180deg,#f5841a,#e56f04)] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
-            <button
-              type="button"
-              onClick={onGrade}
-              className="block w-full rounded-[12px] border-[1.5px] border-[#fff3df] bg-[#fff8ec] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_3px_8px_rgba(122,58,0,0.35)]"
-            >
+          <div className="-mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-[#9a4a04] bg-[linear-gradient(180deg,#cf6a08,#b35404)] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
+            <button type="button" onClick={onGrade} className={BTN}>
               Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
             </button>
           </div>
