@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { sheetLabel, type CheckItem, type Snapshot } from "@/lib/derive";
-import type { Sheet } from "@/lib/store";
+import { getPhoto, type Sheet } from "@/lib/store";
 import { BackButton, ScreenHeader } from "./ui";
+import PhotoViewer from "./PhotoViewer";
 
 interface Props {
   snap: Snapshot;
@@ -15,8 +16,10 @@ interface Props {
 }
 
 /* Styled directly from the wireframe's Parent check (.card, .btn,
-   .dashedbox crop, .progressdots) — one question at a time, like the
-   wireframe, over the app's consolidated cross-kid queue. */
+   .progressdots) — one question at a time, like the wireframe, over
+   the app's consolidated cross-kid queue. The wireframe's dashed
+   "zoomed answer" box is only the no-photo fallback here: when the
+   submission has the real uploaded photo, that is what shows. */
 const CARD =
   "rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
@@ -31,6 +34,33 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
   >([]);
   const item = items[0];
   const total = items.length + resolved.length;
+
+  /* The real uploaded photo for the current item — the parent checks
+     our read against the actual sheet. Sheets graded from seeds have
+     no photo; those fall back to the wireframe's dashed box. */
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [photoOpen, setPhotoOpen] = useState(false);
+  const photoKeysSig = (item?.photoKeys ?? []).join(",");
+  useEffect(() => {
+    let urls: string[] = [];
+    let live = true;
+    setPhotoOpen(false);
+    if (photoKeysSig) {
+      Promise.all(photoKeysSig.split(",").map((k) => getPhoto(k).catch(() => null)))
+        .then((blobs) => {
+          if (!live) return;
+          urls = blobs.filter((b): b is Blob => !!b).map((b) => URL.createObjectURL(b));
+          setPhotoUrls(urls);
+        })
+        .catch(() => {});
+    } else {
+      setPhotoUrls([]);
+    }
+    return () => {
+      live = false;
+      urls.forEach((u) => URL.revokeObjectURL(u));
+    };
+  }, [photoKeysSig]);
 
   const resolve = (resolution: "correct" | "wrong") => {
     if (!item) return;
@@ -72,14 +102,39 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
               <strong>{item.prompt}</strong> &nbsp;·&nbsp; Correct answer:{" "}
               <strong>{item.correctAnswer}</strong>
             </p>
-            <div className="flex h-[170px] flex-col items-center justify-center gap-2 rounded-[12px] border-[1.5px] border-dashed border-line bg-fill bg-[repeating-linear-gradient(transparent,transparent_23px,rgba(180,110,40,0.10)_24px)] px-[14px] py-[14px] text-center">
-              <span className="text-[14px] text-mid">
-                {item.kid.name}&rsquo;s answer, zoomed from the photo
-              </span>
-              <span className="text-[34px] font-bold leading-none tracking-[0.04em] text-ink">
-                {(item.readAnswer ?? "?").split("").join(" ")}
-              </span>
-            </div>
+            {photoUrls.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setPhotoOpen(true)}
+                aria-label="View the photo full size"
+                className="relative block w-full overflow-hidden rounded-[12px] border-[1.5px] border-line bg-[#fdfcf6]"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photoUrls[0]}
+                  alt={`${item.kid.name}'s sheet, as uploaded`}
+                  className="block h-[210px] w-full object-contain"
+                />
+                <span
+                  className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-[15px] leading-none text-white"
+                  aria-hidden
+                >
+                  ⤢
+                </span>
+              </button>
+            ) : (
+              <div className="flex h-[170px] flex-col items-center justify-center gap-2 rounded-[12px] border-[1.5px] border-dashed border-line bg-fill bg-[repeating-linear-gradient(transparent,transparent_23px,rgba(180,110,40,0.10)_24px)] px-[14px] py-[14px] text-center">
+                <span className="text-[14px] text-mid">
+                  {item.kid.name}&rsquo;s answer, zoomed from the photo
+                </span>
+                <span className="text-[34px] font-bold leading-none tracking-[0.04em] text-ink">
+                  {(item.readAnswer ?? "?").split("").join(" ")}
+                </span>
+              </div>
+            )}
+            {photoOpen && photoUrls.length > 0 && (
+              <PhotoViewer urls={photoUrls} kidName={item.kid.name} onClose={() => setPhotoOpen(false)} />
+            )}
             <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
               {item.readAnswer ? (
                 <>

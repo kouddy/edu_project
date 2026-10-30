@@ -206,6 +206,9 @@ export interface CheckItem {
   prompt: string;
   correctAnswer: string;
   readAnswer: string | null;
+  /** The submission's uploaded photos — the parent checks the read
+   *  against the real sheet, not a rendering of it. */
+  photoKeys: string[];
 }
 
 /** Every unanswered "unsure" across all kids — one consolidated queue. */
@@ -225,6 +228,7 @@ export function pendingChecks(snap: Snapshot): CheckItem[] {
         prompt: q?.prompt ?? `Question ${g.questionNumber}`,
         correctAnswer: q?.correctAnswer ?? "",
         readAnswer: g.readAnswer,
+        photoKeys: st.submission?.photoKeys ?? [],
       });
     }
   }
