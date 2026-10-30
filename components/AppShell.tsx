@@ -241,6 +241,11 @@ export default function AppShell() {
   }
 
   const kid: Kid = snap.kids.find((k) => k.id === kidId) ?? snap.kids[0];
+  /* When the oldest in-flight grading job was submitted — the Marking
+     card's ETA estimate is based on it. */
+  const pendingNow = runningJobs.length > 0 ? listPendingJobs() : [];
+  const markingStartedAt =
+    pendingNow.length > 0 ? Math.min(...pendingNow.map((j) => j.submittedAt)) : null;
   const tabVisible = screen.name !== "scan" && screen.name !== "signin";
   const activeTab =
     screen.name === "profile" ? "profile" : screen.name === "scan" ? "scan" : "home";
@@ -270,13 +275,14 @@ export default function AppShell() {
               marking={
                 runningJobs.length > 0 || settledLines
                   ? {
-                      lines: runningJobs.flatMap((s) =>
+                      photos: runningJobs.flatMap((s) =>
                         (s.photoProgress ?? []).map((p) => ({
-                          label: p.sheetLabel ?? `Photo ${p.index + 1}`,
-                          state: p.state === "marked" ? "marked ✓" : `${p.step ?? "Marking"}…`,
-                          done: p.state !== "marking",
+                          label: p.sheetLabel ?? null,
+                          state: p.state,
+                          step: p.step != null,
                         })),
                       ),
+                      startedAt: markingStartedAt,
                       summary: settledLines,
                       onDismissSummary: () => setSettledLines(null),
                     }

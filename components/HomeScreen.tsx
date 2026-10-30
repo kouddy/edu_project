@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   homeworkGroups,
   historyStates,
@@ -18,8 +19,12 @@ import { Spinner } from "@heroui/react";
 
 /** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
-  /** Live per-photo lines while marking is in flight. */
-  lines: { label: string; state: string; done: boolean }[];
+  /** One entry per photo across all in-flight jobs, in order. `step`
+   *  is true only for the photo being worked on right now — photos
+   *  still queued have no step yet. */
+  photos: { label: string | null; state: "marking" | "marked" | "settled"; step: boolean }[];
+  /** When the oldest in-flight job was submitted (ETA estimate). */
+  startedAt: number | null;
   /** Settled summary lines, shown until dismissed. */
   summary: string[] | null;
   onDismissSummary: () => void;
@@ -72,6 +77,25 @@ export default function HomeScreen({
   const checkKid = checkParts[0] ?? "";
   const checkSheet = checkParts.slice(1).join(" ");
 
+  /* Marking summary: parents need a count and a sense of time, not a
+     per-photo log. The per-sheet list stays one tap away. */
+  const [markingOpen, setMarkingOpen] = useState(false);
+  const mPhotos = marking?.photos ?? [];
+  const mTotal = mPhotos.length;
+  const mDone = mPhotos.filter((p) => p.state !== "marking").length;
+  const mSteppedIdx = mPhotos.findIndex((p) => p.state === "marking" && p.step);
+  const mCurrentIdx =
+    mSteppedIdx >= 0 ? mSteppedIdx : mPhotos.findIndex((p) => p.state === "marking");
+  const mCurrent = mCurrentIdx >= 0 ? mPhotos[mCurrentIdx] : null;
+  let mEta: string | null = null;
+  if (marking?.startedAt && mDone >= 3 && mDone < mTotal) {
+    const remainMs = ((Date.now() - marking.startedAt) / mDone) * (mTotal - mDone);
+    if (remainMs >= 45_000) {
+      const mins = Math.max(1, Math.round(remainMs / 60_000));
+      mEta = `About ${mins} more minute${mins === 1 ? "" : "s"}`;
+    }
+  }
+
   return (
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
@@ -84,23 +108,64 @@ export default function HomeScreen({
       {/* ---- marking card ---- */}
       {marking && (
         <div className={`${CARD} px-[15px] py-[14px]`}>
-          {marking.lines.length > 0 && (
+          {mTotal > 0 && (
             <>
               <div className="flex items-center gap-2">
                 <Spinner size="sm" color="accent" />
                 <h3 className={H3}>Marking your sheets…</h3>
+                <span className="ml-auto text-[13px] font-bold text-tangdeep">
+                  {mDone} of {mTotal} marked
+                </span>
               </div>
-              <div className="mt-2 space-y-1">
-                {marking.lines.map((line, i) => (
-                  <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
-                    <span className="font-semibold text-ink">{line.label}</span> — {line.state}
-                  </p>
-                ))}
+              <div className="mt-2.5 h-[7px] overflow-hidden rounded-full bg-linesoft">
+                <div
+                  className="h-full rounded-full bg-[linear-gradient(90deg,#f07d12,#e8710a)] transition-[width] duration-500"
+                  style={{ width: `${Math.round((mDone / mTotal) * 100)}%` }}
+                />
               </div>
+              <p className="mt-2 text-[13.5px] leading-[1.45] text-mid">
+                {mCurrent
+                  ? mCurrent.label
+                    ? `Now marking: ${mCurrent.label}`
+                    : `Now marking sheet ${mCurrentIdx + 1} of ${mTotal}`
+                  : "Finishing up…"}
+                {mEta && <span className="text-faint"> · {mEta}</span>}
+              </p>
+              <button
+                type="button"
+                onClick={() => setMarkingOpen((o) => !o)}
+                aria-expanded={markingOpen}
+                className="mt-1 text-[13px] font-bold text-tangdeep"
+              >
+                {markingOpen ? "Hide sheets" : `Show all ${mTotal} sheets`}
+              </button>
+              {markingOpen && (
+                <div className="mt-1.5 space-y-1 border-t border-dashed border-linesoft pt-2">
+                  {mPhotos.map((p, i) => (
+                    <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
+                      {p.state === "marking" ? (
+                        p.step ? (
+                          <>
+                            <span className="font-semibold text-ink">{p.label ?? `Sheet ${i + 1}`}</span>
+                            {" — marking…"}
+                          </>
+                        ) : (
+                          <>
+                            <span>{p.label ?? `Sheet ${i + 1}`}</span>
+                            {" — waiting"}
+                          </>
+                        )
+                      ) : (
+                        <span className="font-semibold text-ink">✓ {p.label ?? `Sheet ${i + 1}`}</span>
+                      )}
+                    </p>
+                  ))}
+                </div>
+              )}
             </>
           )}
           {marking.summary && marking.summary.length > 0 && (
-            <div className={marking.lines.length > 0 ? "mt-3 border-t border-dashed border-linesoft pt-3" : ""}>
+            <div className={mTotal > 0 ? "mt-3 border-t border-dashed border-linesoft pt-3" : ""}>
               <div className="space-y-1">
                 {marking.summary.map((line, i) => (
                   <p key={i} className="text-[13.5px] leading-[1.45] text-mid">
