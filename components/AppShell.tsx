@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
 import { activateMode, deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, type AppMode } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
+import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
 import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
@@ -125,8 +126,9 @@ export default function AppShell() {
     const added: StagedPhoto[] = [];
     for (const blob of blobs) {
       try {
-        const key = await savePhoto(blob);
-        added.push({ key, url: URL.createObjectURL(blob) });
+        const stored = await downscalePhoto(blob);
+        const key = await savePhoto(stored);
+        added.push({ key, url: URL.createObjectURL(stored) });
       } catch {
         /* skip photos that fail to save */
       }
