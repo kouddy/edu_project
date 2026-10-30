@@ -1,11 +1,13 @@
 /**
  * lib/server/book-catalogue.ts — registry entries for the printed books.
  *
- * The four book generators freeze each grade's weekly assignment into
+ * The book generators freeze each grade's weekly assignment into
  * weekly_questions.json (every sheet already split, in packet order, with
- * its printed code). Copies live in lib/server/book-data/ next to a topic
- * title map. This module turns them into registry entries so a photo of
- * any real sheet grades against the book's own answer key.
+ * its printed code). Copies live in lib/server/book-data/, organised by
+ * region then subject (book-data/on/math/… — see its README). This
+ * module discovers those folders and turns every frozen file into
+ * registry entries so a photo of any real sheet grades against the
+ * book's own answer key.
  *
  * Book entries are keyed by printed code like the seeded ones. A grade
  * with a seeded kid (Grade 4 → Gina) binds to that kid; other grades stay
@@ -17,11 +19,11 @@
  * during grading remains the real explanation for wrong answers.
  */
 
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { SEED_KIDS } from "../seed";
 import type { AnswerKeyQuestion } from "../store";
-import type { RegistryEntry } from "./registry";
+import type { AgentId, RegistryEntry } from "./registry";
 
 const BOOK_KEY_VERSION = 1;
 
@@ -38,6 +40,8 @@ interface FrozenSheet {
 }
 
 interface FrozenDoc {
+  curriculum: string;
+  subject: string;
   grade: number;
   weeks: {
     week: number;
@@ -50,15 +54,88 @@ interface FrozenDoc {
 
 const DATA_DIR = path.join(process.cwd(), "lib", "server", "book-data");
 
-function loadJson<T>(file: string): T {
-  return JSON.parse(readFileSync(path.join(DATA_DIR, file), "utf8")) as T;
+/** One region/subject folder of frozen books. */
+interface BookFolder {
+  region: string;
+  subject: string;
+  dir: string;
+  files: string[];
+  topics: Record<string, Record<string, string>>;
 }
 
-const TOPIC_TITLES = loadJson<Record<string, Record<string, string>>>("topics.json");
+function sortedDirNames(dir: string): string[] {
+  try {
+    return readdirSync(dir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    return [];
+  }
+}
 
-function topicTitle(grade: number, topic: number | undefined, fallback: string): string {
+/** Discover book-data/<region>/<subject>/ folders at startup, so a new
+ *  region or subject is a new folder, never a code change. */
+function discoverBookFolders(): BookFolder[] {
+  const folders: BookFolder[] = [];
+  for (const region of sortedDirNames(DATA_DIR)) {
+    for (const subject of sortedDirNames(path.join(DATA_DIR, region))) {
+      const dir = path.join(DATA_DIR, region, subject);
+      let names: string[] = [];
+      try {
+        names = readdirSync(dir);
+      } catch {
+        continue;
+      }
+      const files = names.filter((f) => /^weekly-questions-g\d+\.json$/.test(f)).sort();
+      if (files.length === 0) continue;
+      let topics: BookFolder["topics"] = {};
+      try {
+        topics = JSON.parse(readFileSync(path.join(dir, "topics.json"), "utf8")) as BookFolder["topics"];
+      } catch {
+        /* A subject without a topic map falls back to "Topic N" titles. */
+      }
+      folders.push({ region, subject, dir, files, topics });
+    }
+  }
+  return folders;
+}
+
+function loadDoc(folder: BookFolder, file: string): FrozenDoc {
+  const doc = JSON.parse(readFileSync(path.join(folder.dir, file), "utf8")) as FrozenDoc;
+  if (
+    doc.curriculum?.toLowerCase() !== folder.region ||
+    doc.subject?.toLowerCase() !== folder.subject
+  ) {
+    console.warn(
+      `[book-data] ${folder.region}/${folder.subject}/${file} declares ` +
+        `${doc.curriculum}/${doc.subject} — loading it as declared; keep the folder in sync.`,
+    );
+  }
+  return doc;
+}
+
+function topicTitle(
+  topics: BookFolder["topics"],
+  grade: number,
+  topic: number | undefined,
+  fallback: string,
+): string {
   if (topic === undefined) return fallback;
-  return TOPIC_TITLES[String(grade)]?.[String(topic)] ?? fallback;
+  return topics[String(grade)]?.[String(topic)] ?? fallback;
+}
+
+/** "MATH" → "Math" — the display subject used in labels. */
+function displaySubject(subjectCode: string): string {
+  const s = subjectCode.toLowerCase();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/** Which grading agent serves a display subject. Mirrors registry.ts's
+ *  AGENT_BY_SUBJECT (kept local to avoid a circular import); unknown
+ *  subjects fall back to math, as there. */
+function agentForSubject(display: string): AgentId {
+  return display === "English" ? "english" : "math";
 }
 
 /** The printed question as plain text: picture markup removed, tags
@@ -88,6 +165,7 @@ function explain(prompt: string, answer: string): string {
 
 function keyQuestions(
   sheet: FrozenSheet,
+  topics: BookFolder["topics"],
   grade: number,
   sheetTopic: string,
   isReview: boolean,
@@ -101,7 +179,7 @@ function keyQuestions(
       prompt,
       correctAnswer: q.answer,
       explanation: explain(prompt, q.answer),
-      topic: topicTitle(grade, q.topic, sheetTopic),
+      topic: topicTitle(topics, grade, q.topic, sheetTopic),
       isReview,
     };
   });
@@ -116,46 +194,50 @@ const REVIEW_LABELS: Record<string, string> = {
 
 function buildBookRegistry(): RegistryEntry[] {
   const entries: RegistryEntry[] = [];
-  for (const grade of [2, 3, 4, 5]) {
-    const doc = loadJson<FrozenDoc>(`weekly-questions-g${grade}.json`);
-    const kid = SEED_KIDS.find((k) => k.grade === grade);
-    const base = {
-      kidId: kid?.id ?? "",
-      kidName: kid?.name ?? `Grade ${grade}`,
-      kidGrade: grade,
-      subject: "Math",
-      agent: "math" as const,
-      keyVersion: BOOK_KEY_VERSION,
-    };
-    const push = (
-      sheet: FrozenSheet,
-      week: number,
-      topic: string,
-      isReview: boolean,
-      setName?: string,
-    ) => {
-      entries.push({
-        ...base,
-        printedCode: sheet.code,
-        sheetId: `book-${sheet.code.toLowerCase()}`,
-        week,
-        setName,
-        topic,
-        questions: keyQuestions(sheet, grade, topic, isReview),
-      });
-    };
-    for (const week of doc.weeks) {
-      for (const block of week.practice) {
-        const title = topicTitle(grade, block.topic, `Topic ${block.topic}`);
-        for (const sheet of block.sheets) push(sheet, week.week, title, false);
+  for (const folder of discoverBookFolders()) {
+    for (const file of folder.files) {
+      const doc = loadDoc(folder, file);
+      const grade = doc.grade;
+      const kid = SEED_KIDS.find((k) => k.grade === grade);
+      const display = displaySubject(doc.subject);
+      const base = {
+        kidId: kid?.id ?? "",
+        kidName: kid?.name ?? `Grade ${grade}`,
+        kidGrade: grade,
+        subject: display,
+        agent: agentForSubject(display),
+        keyVersion: BOOK_KEY_VERSION,
+      };
+      const push = (
+        sheet: FrozenSheet,
+        week: number,
+        topic: string,
+        isReview: boolean,
+        setName?: string,
+      ) => {
+        entries.push({
+          ...base,
+          printedCode: sheet.code,
+          sheetId: `book-${sheet.code.toLowerCase()}`,
+          week,
+          setName,
+          topic,
+          questions: keyQuestions(sheet, folder.topics, grade, topic, isReview),
+        });
+      };
+      for (const week of doc.weeks) {
+        for (const block of week.practice) {
+          const title = topicTitle(folder.topics, grade, block.topic, `Topic ${block.topic}`);
+          for (const sheet of block.sheets) push(sheet, week.week, title, false);
+        }
+        for (const [kind, review] of Object.entries(week.reviews)) {
+          const label = REVIEW_LABELS[kind] ?? "Review";
+          for (const sheet of review.sheets) push(sheet, week.week, label, true);
+        }
       }
-      for (const [kind, review] of Object.entries(week.reviews)) {
-        const label = REVIEW_LABELS[kind] ?? "Review";
-        for (const sheet of review.sheets) push(sheet, week.week, label, true);
+      for (const sheet of doc.finals.sheets) {
+        push(sheet, 0, "Finals Spot-Check", true, "Finals");
       }
-    }
-    for (const sheet of doc.finals.sheets) {
-      push(sheet, 0, "Finals Spot-Check", true, "Finals");
     }
   }
   return entries;
