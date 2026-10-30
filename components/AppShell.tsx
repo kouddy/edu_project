@@ -6,13 +6,13 @@ import { Spinner } from "@heroui/react";
 import { deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
 import type { GradeJobStatus } from "@/lib/grade-contract";
-import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
+import { homeworkGroups, loadSnapshot, pendingChecks, topicGroups, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
 import ScanScreen, { type StagedPhoto } from "./ScanScreen";
 import ResultsScreen, { NotStartedScreen } from "./ResultsScreen";
 import CheckScreen from "./CheckScreen";
-import PacketScreen from "./PacketScreen";
+import PacketScreen, { TopicScreen } from "./PacketScreen";
 import ProfileScreen from "./ProfileScreen";
 import SignInScreen from "./SignInScreen";
 import { IconHome, IconScan, IconUser } from "./ui";
@@ -22,11 +22,12 @@ type Screen =
   | { name: "signin" }
   | { name: "scan" }
   | { name: "packet"; subject: string; week: number }
+  | { name: "topic"; subject: string; week: number; topic: string }
   | {
       name: "results";
       sheetId: string;
       origin: "homework" | "history" | "packet";
-      packet?: { subject: string; week: number };
+      packet?: { subject: string; week: number; topic?: string };
     }
   | { name: "check"; from: "home" }
   | {
@@ -34,7 +35,7 @@ type Screen =
       from: "results";
       sheetId: string;
       origin: "homework" | "history" | "packet";
-      packet?: { subject: string; week: number };
+      packet?: { subject: string; week: number; topic?: string };
     }
   | { name: "profile" };
 
@@ -95,11 +96,21 @@ export default function AppShell() {
     setScreen({ name: "results", sheetId, origin });
   }, []);
 
-  /** Back from a sheet: to its packet when it was opened from one, else
-   *  Home scrolled to the section it came from. */
+  /** Back from a sheet: to its topic list or packet when it was opened
+   *  from one, else Home scrolled to the section it came from. */
   const backFromSheet = useCallback(
-    (origin: "homework" | "history" | "packet", packet?: { subject: string; week: number }) => {
-      if (origin === "packet" && packet) {
+    (
+      origin: "homework" | "history" | "packet",
+      packet?: { subject: string; week: number; topic?: string },
+    ) => {
+      if (origin === "packet" && packet?.topic) {
+        setScreen({
+          name: "topic",
+          subject: packet.subject,
+          week: packet.week,
+          topic: packet.topic,
+        });
+      } else if (origin === "packet" && packet) {
         setScreen({ name: "packet", subject: packet.subject, week: packet.week });
       } else if (origin === "packet") {
         goHome("homework");
@@ -289,6 +300,43 @@ export default function AppShell() {
                   sheetId,
                   origin: "packet",
                   packet: { subject: screen.subject, week: screen.week },
+                })
+              }
+              onOpenTopic={(topic) =>
+                setScreen({
+                  name: "topic",
+                  subject: screen.subject,
+                  week: screen.week,
+                  topic,
+                })
+              }
+            />
+          )}
+
+          {screen.name === "topic" && kid && (
+            <TopicScreen
+              kid={kid}
+              topic={screen.topic}
+              states={
+                topicGroups(
+                  homeworkGroups(snap, kid).find(
+                    (g) => g.subject === screen.subject && g.week === screen.week,
+                  )?.states ?? [],
+                ).find((g) => g.topic === screen.topic)?.states ?? []
+              }
+              onBack={() =>
+                setScreen({ name: "packet", subject: screen.subject, week: screen.week })
+              }
+              onOpenSheet={(sheetId) =>
+                setScreen({
+                  name: "results",
+                  sheetId,
+                  origin: "packet",
+                  packet: {
+                    subject: screen.subject,
+                    week: screen.week,
+                    topic: screen.topic,
+                  },
                 })
               }
             />

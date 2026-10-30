@@ -127,6 +127,33 @@ export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
   });
 }
 
+/** One topic's sheets inside a packet, in packet order — the practice
+ *  sheets of a topic, or a review kind's sheets, combined into one row. */
+export interface TopicGroup {
+  topic: string;
+  states: SheetState[];
+  doneCount: number;
+  done: boolean;
+}
+
+export function topicGroups(states: SheetState[]): TopicGroup[] {
+  const byTopic = new Map<string, SheetState[]>();
+  for (const st of states) {
+    const list = byTopic.get(st.sheet.topic) ?? [];
+    list.push(st);
+    byTopic.set(st.sheet.topic, list);
+  }
+  return [...byTopic.values()].map((list) => {
+    const doneCount = list.filter(isDone).length;
+    return {
+      topic: list[0].sheet.topic,
+      states: list,
+      doneCount,
+      done: doneCount === list.length,
+    };
+  });
+}
+
 function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
   const rows = homeworkStates(snap, kid);
   return rows.length > 0 && rows.every(isDone);
