@@ -83,7 +83,7 @@ function currentWeek(snap: Snapshot, kid: Kid): number {
 }
 
 /** This week's assigned sheets (the Homework list): weekly packets only. */
-export function homeworkStates(snap: Snapshot, kid: Kid): SheetState[] {
+function homeworkStates(snap: Snapshot, kid: Kid): SheetState[] {
   const week = currentWeek(snap, kid);
   return [...snap.states.values()]
     .filter((st) => st.kid.id === kid.id && st.sheet.week === week && !st.sheet.setName)
@@ -92,6 +92,39 @@ export function homeworkStates(snap: Snapshot, kid: Kid): SheetState[] {
 
 export function isDone(st: SheetState): boolean {
   return !!st.score?.isFinal;
+}
+
+/** Homework grouped the way the packet is handed out: one entry per
+ *  subject + week, holding that group's sheets in packet order. */
+export interface HomeworkGroup {
+  subject: string;
+  week: number;
+  states: SheetState[];
+  doneCount: number;
+  done: boolean;
+}
+
+export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+  const byKey = new Map<string, SheetState[]>();
+  for (const st of homeworkStates(snap, kid)) {
+    const key = `${st.sheet.subject}|${st.sheet.week}`;
+    const list = byKey.get(key) ?? [];
+    list.push(st);
+    byKey.set(key, list);
+  }
+  return [...byKey.values()].map((states) => {
+    const sorted = [...states].sort((a, b) =>
+      a.sheet.printedCode.localeCompare(b.sheet.printedCode),
+    );
+    const doneCount = sorted.filter(isDone).length;
+    return {
+      subject: sorted[0].sheet.subject,
+      week: sorted[0].sheet.week,
+      states: sorted,
+      doneCount,
+      done: doneCount === sorted.length,
+    };
+  });
 }
 
 function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
