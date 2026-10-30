@@ -211,7 +211,6 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
 
         {staged.length > 0 && (
           <div className="grain-surface -mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-linesoft bg-[#fff9ef] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
-          {staged.length > 0 && (
             <div
               className="tray-scroll mb-1 flex w-full items-start gap-3 overflow-x-auto px-0.5 pb-2 pt-2"
               aria-label="Photos ready to grade"
@@ -237,7 +236,6 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
                 </div>
               ))}
             </div>
-          )}
             <button type="button" onClick={onGrade} className={BTN}>
               Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
             </button>
