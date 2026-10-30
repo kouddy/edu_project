@@ -12,7 +12,6 @@ import type { KidContext } from "@/lib/grade-contract";
 import { startGradeJob } from "@/lib/server/run-grade";
 
 
-const MAX_PHOTOS = 6;
 const MAX_TOTAL_PHOTO_CHARS = 30_000_000;
 
 export async function POST(req: Request) {
@@ -29,11 +28,11 @@ export async function POST(req: Request) {
         (p): p is string => typeof p === "string" && p.startsWith("data:image/"),
       )
     : [];
-  if (photos.length === 0 || photos.length > MAX_PHOTOS) {
-    return NextResponse.json(
-      { error: `Send between 1 and ${MAX_PHOTOS} photos.` },
-      { status: 400 },
-    );
+  // No cap on how many photos a batch may hold — a full packet is a
+  // dozen sheets or more, and grading is background work. The total
+  // payload size below is the only guard.
+  if (photos.length === 0) {
+    return NextResponse.json({ error: "Send at least one photo." }, { status: 400 });
   }
   const totalChars = photos.reduce((n, p) => n + p.length, 0);
   if (totalChars > MAX_TOTAL_PHOTO_CHARS) {
