@@ -38,6 +38,8 @@ export interface PhotoAttempt {
 interface PhotoRunInput {
   photo: string;
   photoIndex: number;
+  /** Label for the harness's diagnostic log lines (job / photo / attempt). */
+  tag?: string;
   kidContext: GradeRequestPayload["kidContext"];
   onStep: (step: string) => void;
   onIdentified?: (info: IdentifiedSheet) => void;
@@ -169,11 +171,12 @@ function piProvider(id: string): GradingProvider {
   return {
     id,
     model: def?.models[0]?.id ?? "",
-    async runPhoto({ photo, kidContext, onStep, onIdentified, shouldStopAfterIdentify }) {
+    async runPhoto({ photo, tag, kidContext, onStep, onIdentified, shouldStopAfterIdentify }) {
       const apiKey = resolveProviderApiKey(config, id);
       const { gradePhotoWithPiHarness } = await import("./pi-harness");
       const attempt = await gradePhotoWithPiHarness({
         photo,
+        tag,
         kidContext,
         providerId: id,
         modelId: effectiveModel(config, "math", id),

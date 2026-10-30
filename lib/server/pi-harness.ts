@@ -455,6 +455,8 @@ async function gradeOnePhoto(args: {
   modelId: string;
   photoDataUrl: string;
   kidContext: KidContext[];
+  /** Label for the diagnostic log lines, so concurrent photos stay apart. */
+  tag?: string;
   onStep: (step: string) => void;
   onIdentified?: (info: IdentifiedSheet) => void;
   shouldStopAfterIdentify?: (sheetId: string) => boolean;
@@ -522,6 +524,19 @@ async function gradeOnePhoto(args: {
     }),
   });
 
+  // Diagnostics: the session's events land in the server log with elapsed
+  // times, so a slow photo shows WHERE the time went — a model call that
+  // takes a minute reads differently from the provider throttling us
+  // (auto_retry lines carry the provider's own error and backoff).
+  const tag = args.tag ?? "photo";
+  const startedAt = Date.now();
+  const log = (line: string) =>
+    console.log(`[pi ${tag} +${((Date.now() - startedAt) / 1000).toFixed(1)}s] ${line}`);
+  let modelCall = 0;
+  let modelCallStartedAt = 0;
+  const toolStartedAt = new Map<string, number>();
+  const short = (text: string, max = 200) => (text.length > max ? `${text.slice(0, max)}…` : text);
+
   const unsubscribe = session.subscribe((event) => {
     if (event.type === "tool_execution_start") {
       const label = STEP_BY_TOOL[event.toolName];
@@ -529,11 +544,46 @@ async function gradeOnePhoto(args: {
         if (!steps.includes(label)) steps.push(label);
         args.onStep(label);
       }
+      toolStartedAt.set(event.toolCallId, Date.now());
+      log(`tool start ${event.toolName} args=${short(JSON.stringify(event.args ?? {}))}`);
+    } else if (event.type === "tool_execution_end") {
+      const started = toolStartedAt.get(event.toolCallId);
+      const tookMs = event.durationMs ?? (started ? Date.now() - started : undefined);
+      log(
+        `tool end ${event.toolName}${event.isError ? " ERROR" : ""}${tookMs !== undefined ? ` (${(tookMs / 1000).toFixed(1)}s)` : ""}`,
+      );
+    } else if (event.type === "message_start") {
+      if (event.message.role === "assistant") {
+        modelCall += 1;
+        modelCallStartedAt = Date.now();
+        log(`model call ${modelCall} started`);
+      }
+    } else if (event.type === "message_end") {
+      if (event.message.role === "assistant") {
+        const msg = event.message;
+        const took =
+          modelCallStartedAt > 0 ? ` in ${((Date.now() - modelCallStartedAt) / 1000).toFixed(1)}s` : "";
+        const usage = msg.usage ? `, tokens in ${msg.usage.input} / out ${msg.usage.output}` : "";
+        log(
+          `model call ${modelCall} done${took} — stop: ${msg.stopReason}${usage}${msg.errorMessage ? ` — error: ${msg.errorMessage}` : ""}`,
+        );
+      }
+    } else if (event.type === "auto_retry_start") {
+      log(
+        `provider retry ${event.attempt}/${event.maxAttempts} — backing off ${event.delayMs}ms after: ${event.errorMessage}`,
+      );
+    } else if (event.type === "auto_retry_end") {
+      log(
+        `provider retry ${event.attempt} ${event.success ? "succeeded" : `gave up${event.finalError ? `: ${event.finalError}` : ""}`}`,
+      );
     }
   });
 
   try {
     const { data, mimeType } = parseDataUrl(args.photoDataUrl);
+    log(
+      `grading started — ${providerId}/${modelId}, photo ~${Math.round((args.photoDataUrl.length * 3) / 4 / 1024)} KB`,
+    );
     const kids = args.kidContext.map((k) => `${k.name} (Grade ${k.grade})`).join(", ");
     const promptText = [
       "Grade the worksheet in this photo.",
@@ -552,11 +602,13 @@ async function gradeOnePhoto(args: {
         }),
       ]);
     } catch (err) {
+      log(`grading failed: ${err instanceof Error ? err.message : String(err)}`);
       await session.abort().catch(() => {});
       throw err;
     } finally {
       if (timer) clearTimeout(timer);
     }
+    log("grading finished");
   } finally {
     unsubscribe();
     session.dispose();
@@ -631,6 +683,7 @@ export interface PiPhotoAttempt {
 /** Grade ONE photo with the Pi harness on a models.json provider. */
 export async function gradePhotoWithPiHarness(args: {
   photo: string;
+  tag?: string;
   kidContext: KidContext[];
   providerId: string;
   modelId: string;
@@ -650,6 +703,7 @@ export async function gradePhotoWithPiHarness(args: {
       modelId: args.modelId,
       photoDataUrl: args.photo,
       kidContext: args.kidContext,
+      tag: args.tag,
       onStep: args.onStep,
       onIdentified: args.onIdentified,
       shouldStopAfterIdentify: args.shouldStopAfterIdentify,

@@ -116,6 +116,7 @@ async function runBatch(
         res = await provider.runPhoto({
           photo,
           photoIndex: index,
+          tag: `${jobId.slice(0, 12)} photo ${index + 1} attempt ${attempt}`,
           kidContext: payload.kidContext,
           onStep: (step) => {
             if (!allSteps.includes(step)) allSteps.push(step);
