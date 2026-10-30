@@ -21,6 +21,7 @@ import {
   createSubmission,
   deletePhoto,
   deleteSheetRecords,
+  getActiveMode,
   getGradeResultForSubmission,
   getLatestSubmissionForSheet,
   getPhoto,
@@ -36,6 +37,7 @@ import {
   type PendingGradeJob,
 } from "./store";
 import type { ApiSheetResult, GradeJobResult, GradeJobStatus } from "./grade-contract";
+import { getAccessToken } from "./supabase-client";
 
 /** Parent-language message for a grading failure, whatever the cause. */
 const FAILED_MESSAGE = "We couldn't mark the sheet just now — please try again in a moment.";
@@ -67,9 +69,15 @@ async function postGradeJob(photoKeys: string[]): Promise<string | null> {
   const photos = await photosPayload(photoKeys);
   if (!photos) return null;
   try {
+    // In live mode the batch is graded as the signed-in parent, so the
+    // server can persist the results to their account.
+    const token = getActiveMode() === "live" ? await getAccessToken() : null;
     const res = await fetch("/api/grade", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: {
+        "content-type": "application/json",
+        ...(token ? { authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify({ photos, kidContext: kidContextPayload() }),
     });
     if (!res.ok) return null;

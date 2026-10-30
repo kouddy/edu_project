@@ -50,10 +50,11 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  // Each mode layers its own data: the demo dataset in demo mode, the
-  // guest account and its assigned packets in guest mode.
+  // Each local mode layers its own data: the demo dataset in demo mode,
+  // the guest account and its assigned packets in guest mode. Live mode
+  // seeds nothing — its database mirrors the server (lib/live-sync.ts).
   if (getActiveMode() === "guest") ensureGuestData();
-  else ensureDemoData();
+  else if (getActiveMode() === "demo") ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));

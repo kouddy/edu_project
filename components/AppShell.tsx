@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
-import { activateMode, deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, type AppMode } from "@/lib/store";
+import { activateMode, deletePhoto, getActiveMode, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, signOut, type AppMode } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
+import { postResolution, syncLiveAccount } from "@/lib/live-sync";
+import { getSupabase } from "@/lib/supabase-client";
 import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
 import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
@@ -66,6 +68,43 @@ export default function AppShell() {
     if (!getAuthState().signedIn) setScreen({ name: "signin" });
   }, [refresh]);
 
+  // A live session outranks the local auth record: when one appears —
+  // the parent tapped the link in their email — enter live mode, mirror
+  // the account from the server, and go home. When the record says live
+  // but the session is gone, fall back to the sign-in screen.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase) return;
+    let cancelled = false;
+    const enterLive = async (email?: string) => {
+      activateMode("live");
+      signIn(email, "live");
+      await syncLiveAccount().catch(() => false);
+      if (cancelled) return;
+      const next = refresh();
+      setKidId(next.kids[0]?.id ?? null);
+      setScreen({ name: "home" });
+    };
+    void supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      if (data.session) {
+        void enterLive(data.session.user.email ?? undefined);
+      } else if (getAuthState().mode === "live" && getAuthState().signedIn) {
+        signOut();
+        setScreen({ name: "signin" });
+      }
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        void enterLive(session.user.email ?? undefined);
+      }
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
+  }, [refresh]);
+
   const showToast = useCallback((msg: string) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
     setToast({ id: Date.now(), msg });
@@ -81,6 +120,9 @@ export default function AppShell() {
 
   const handleSignedIn = useCallback(
     (email?: string, mode: AppMode = "demo") => {
+      // Entering a local mode ends any live session, so the next launch
+      // does not get pulled back into the account.
+      if (mode !== "live") void getSupabase()?.auth.signOut();
       activateMode(mode);
       signIn(email, mode);
       const next = refresh();
@@ -185,6 +227,13 @@ export default function AppShell() {
         if (lines.length > 0) setSettledLines((prev) => [...(prev ?? []), ...lines]);
         const marked = settled.reduce((n, b) => n + b.markedSheets, 0);
         refresh();
+        if (getActiveMode() === "live") {
+          // The server persisted the results as the job finished; pull
+          // the account mirror up to date behind the local apply.
+          void syncLiveAccount()
+            .then(() => refresh())
+            .catch(() => {});
+        }
         if (marked > 0) {
           showToast(marked === 1 ? "1 sheet marked" : `${marked} sheets marked`);
         }
@@ -225,8 +274,21 @@ export default function AppShell() {
         resolution,
       });
       refresh();
+      if (getActiveMode() === "live") {
+        // The ruling is the parent's final word — write it through to
+        // the server so it survives the device, then re-sync.
+        void postResolution({
+          kidId: item.kid.id,
+          sheetCode: item.sheet.printedCode,
+          questionNumber: item.questionNumber,
+          resolution,
+        })
+          .then(() => syncLiveAccount())
+          .then(() => refresh())
+          .catch(() => {});
+      }
       if (item.questionNumber === 9 && resolution === "wrong") {
-        showToast("Q9 marked wrong — recorded in Gina's progress");
+        showToast(`Q9 marked wrong — recorded in ${item.kid.name}'s progress`);
       } else {
         showToast(resolution === "correct" ? "Marked correct" : "Marked wrong");
       }
@@ -238,6 +300,37 @@ export default function AppShell() {
     return (
       <div className="flex min-h-dvh items-center justify-center bg-paper">
         <Spinner size="lg" color="accent" />
+      </div>
+    );
+  }
+
+  if (getActiveMode() === "live" && snap.kids.length === 0) {
+    return (
+      <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-paper px-[18px] pb-[26px] pt-[52px]">
+        <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
+          Practice Sheets
+        </p>
+        <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
+          You&rsquo;re signed in
+        </h1>
+        <p className="mb-3.5 text-[13.5px] leading-[1.45] text-mid">
+          No children are on your account yet. Children are added by our team
+          when you pick up your first packet — once that&rsquo;s done, they&rsquo;ll
+          appear here.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void getSupabase()?.auth.signOut();
+            signOut();
+            activateMode("demo");
+            refresh();
+            setScreen({ name: "signin" });
+          }}
+          className="block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+        >
+          Sign out
+        </button>
       </div>
     );
   }

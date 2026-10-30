@@ -1,0 +1,16 @@
+-- Local development seed.
+--
+-- A parent row appears automatically the first time a signed-in parent's
+-- app talks to the server, so there is nothing to seed for sign-in
+-- itself: run the app, request a magic link, and read it in the local
+-- mail catcher (http://127.0.0.1:54324).
+--
+-- Enrolling a kid is a staff action done in SQL for now. After the
+-- parent has signed in once, run something like:
+--
+--   insert into public.kids (parent_id, name, grade, current_week)
+--   select id, 'Amy', 3, 40 from public.parents
+--   where email = 'parent@example.com';
+--
+-- The kid then appears in the parent's app on their next sign-in,
+-- with the packet for their grade and current week.

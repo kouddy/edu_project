@@ -25,6 +25,12 @@ export interface GradeRequestPayload {
   photos: string[];
   /** The account's kids, used only to disambiguate whose sheet this is. */
   kidContext: KidContext[];
+  /**
+   * Set server-side when the request carried a verified parent token:
+   * the graded results are also persisted to that parent's account.
+   * Never accepted from the client body.
+   */
+  accountParentId?: string;
 }
 
 export interface ApiQuestionGrade {

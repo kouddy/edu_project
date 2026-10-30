@@ -1,6 +1,38 @@
 # Production Plan — Railway + Supabase + Dual Build (PWA / Capacitor)
 
-Status: agreed direction (2026-10-30 discussion). Not yet built.
+Status: agreed direction (2026-10-30 discussion). Phase 1 is built and
+verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
+
+## Phase 1 as built (branch `phase-1-supabase`)
+
+- `supabase/` holds the project: `config.toml` (magic-link redirects for
+  localhost dev), one migration (parents, kids, submissions,
+  grade_results, check_resolutions, photo_blobs + RLS), and a seed file
+  documenting SQL enrollment. Local development uses the real local
+  stack — `npm run supabase:start`, then copy the URL and keys it
+  prints into `.env.local` (see `.env.example`). No SQLite anywhere:
+  local and hosted run the same Postgres, Auth, and policies.
+- A third app mode, **live**, sits beside demo and guest with its own
+  local database. Signing in with a real magic link enters it; the
+  database mirrors `GET /api/account` and seeds nothing locally.
+- The server verifies the parent's token on `/api/account`,
+  `/api/account/resolutions`, `/api/account/photos/:blobId`, and on
+  `POST /api/grade` when a token is present (kid ownership enforced,
+  403 otherwise). Graded results and their photos persist to the
+  account as the job finishes; check rulings write through and re-sync.
+- Deviation from the keys rule below, accepted for Phase 1: Results and
+  Parent check render correct answers on the device, so the account
+  payload includes the answer keys for the signed-in parent's own kids'
+  assigned sheets — the same exposure the shipped demo/guest bundles
+  already have. Keys still never sit in database tables. Moving correct
+  answers into the grade-result payload (so keys never leave the
+  server) is the follow-up that removes this.
+- Verified end to end against a real Postgres + Auth + PostgREST
+  stack: migration applies; RLS isolates two parents (and photo blobs
+  have no client-facing policy at all); the magic-link round trip
+  enters live mode; grading persists submissions, results, and photo
+  bytes; a second browser profile sees the same account, including the
+  stored photo and a resolved check; demo and guest modes unaffected.
 
 ## Target architecture
 

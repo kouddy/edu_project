@@ -148,14 +148,15 @@ export interface CheckResolution {
 /* ------------------------------------------------------------- app modes */
 
 /**
- * The app runs in one of two modes, each with its own local database:
+ * The app runs in one of three modes, each with its own local database:
  * "demo" is the seeded Gina/Leo dataset; "guest" is a fresh account
  * (Amy and Bob, nothing scanned yet) for testing real uploads from
- * scratch. The active mode is chosen at sign-in and kept in the auth
- * record; `activateMode` points every read/write below at the active
- * mode's document.
+ * scratch; "live" is a real signed-in account whose database mirrors
+ * the server (see lib/live-sync.ts) and starts empty. The active mode
+ * is chosen at sign-in and kept in the auth record; `activateMode`
+ * points every read/write below at the active mode's document.
  */
-export type AppMode = "demo" | "guest";
+export type AppMode = "demo" | "guest" | "live";
 
 let activeMode: AppMode = "demo";
 
@@ -182,9 +183,12 @@ interface Db {
 
 const DEMO_DB_KEY = "practice-sheets:db:v2";
 const GUEST_DB_KEY = "practice-sheets:db:guest:v1";
+const LIVE_DB_KEY = "practice-sheets:db:live:v1";
 
 function dbKey(): string {
-  return activeMode === "guest" ? GUEST_DB_KEY : DEMO_DB_KEY;
+  if (activeMode === "guest") return GUEST_DB_KEY;
+  if (activeMode === "live") return LIVE_DB_KEY;
+  return DEMO_DB_KEY;
 }
 
 const EMPTY_DB: Db = {
@@ -241,6 +245,9 @@ function nowIso(): string {
  */
 export function ensureSeeded(): void {
   if (!isBrowser()) return;
+  // Live mode never seeds: its database is a mirror of the server's
+  // account state and starts empty until the first sync.
+  if (activeMode === "live") return;
   const db = readDb();
   if (db.parents.length > 0) return;
   if (activeMode === "guest") {
@@ -296,7 +303,7 @@ export function getAuthState(): AuthState {
     return {
       signedIn: parsed.signedIn === true,
       email: parsed.email,
-      mode: parsed.mode === "guest" ? "guest" : "demo",
+      mode: parsed.mode === "guest" || parsed.mode === "live" ? parsed.mode : "demo",
     };
   } catch {
     return { signedIn: false };
@@ -331,9 +338,12 @@ export interface PendingGradeJob {
 
 const DEMO_JOBS_KEY = "practice-sheets:jobs:v1";
 const GUEST_JOBS_KEY = "practice-sheets:jobs:guest:v1";
+const LIVE_JOBS_KEY = "practice-sheets:jobs:live:v1";
 
 function jobsKey(): string {
-  return activeMode === "guest" ? GUEST_JOBS_KEY : DEMO_JOBS_KEY;
+  if (activeMode === "guest") return GUEST_JOBS_KEY;
+  if (activeMode === "live") return LIVE_JOBS_KEY;
+  return DEMO_JOBS_KEY;
 }
 
 export function listPendingJobs(): PendingGradeJob[] {
@@ -605,6 +615,32 @@ export function seedRecords(bundle: {
   writeDb(db);
 }
 
+/**
+ * Replace the live database wholesale with the server's account state.
+ * The live partition is a mirror, never a source of truth, so a sync
+ * simply overwrites it; demo and guest databases are never touched
+ * (they do not call this).
+ */
+export function replaceServerBundle(bundle: {
+  parent: Parent;
+  kids: Kid[];
+  sheets: Sheet[];
+  answerKeys: AnswerKey[];
+  submissions: Submission[];
+  gradeResults: GradeResult[];
+  checkResolutions: CheckResolution[];
+}): void {
+  const db = readDb();
+  db.parents = [structuredClone(bundle.parent)];
+  db.kids = structuredClone(bundle.kids);
+  db.sheets = structuredClone(bundle.sheets);
+  db.answerKeys = structuredClone(bundle.answerKeys);
+  db.submissions = structuredClone(bundle.submissions);
+  db.gradeResults = structuredClone(bundle.gradeResults);
+  db.checkResolutions = structuredClone(bundle.checkResolutions);
+  writeDb(db);
+}
+
 /** The most recent submission for a sheet, or null if it was never sent in. */
 export function getLatestSubmissionForSheet(sheetId: string): Submission | null {
   const subs = readDb().submissions.filter((s) => s.sheetId === sheetId);
@@ -714,13 +750,19 @@ function idbRequest<T>(req: IDBRequest<T>): Promise<T> {
 
 export async function savePhoto(blob: Blob): Promise<string> {
   const key = newId("photo");
+  await savePhotoAs(key, blob);
+  return key;
+}
+
+/** Store a photo under a caller-chosen key — used when mirroring a
+ *  photo the server already named (live account sync). */
+export async function savePhotoAs(key: string, blob: Blob): Promise<void> {
   const db = await openPhotoDb();
   try {
     await idbRequest(db.transaction(PHOTO_STORE, "readwrite").objectStore(PHOTO_STORE).put(blob, key));
   } finally {
     db.close();
   }
-  return key;
 }
 
 export async function getPhoto(key: string): Promise<Blob | null> {

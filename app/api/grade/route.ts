@@ -10,6 +10,7 @@
 import { NextResponse } from "next/server";
 import type { KidContext } from "@/lib/grade-contract";
 import { startGradeJob } from "@/lib/server/run-grade";
+import { bearerToken, parentFromToken, supabaseAdmin, supabaseConfigured } from "@/lib/server/supabase";
 
 
 const MAX_TOTAL_PHOTO_CHARS = 30_000_000;
@@ -52,6 +53,40 @@ export async function POST(req: Request) {
         .map((k) => ({ id: k.id, name: k.name, grade: k.grade }))
     : [];
 
-  const job = startGradeJob({ photos, kidContext });
+  const job = await authorizeAndStart(req, photos, kidContext);
+  if (job instanceof NextResponse) return job;
   return NextResponse.json({ jobId: job.id }, { status: 202 });
+}
+
+/**
+ * When the request carries a parent token, verify it and confirm every
+ * kid it names belongs to that parent; the job is then tagged so its
+ * results persist to the account. Unauthenticated requests (demo and
+ * guest modes) start jobs exactly as before.
+ */
+async function authorizeAndStart(req: Request, photos: string[], kidContext: KidContext[]) {
+  const token = bearerToken(req);
+  if (!token) return startGradeJob({ photos, kidContext });
+  if (!supabaseConfigured()) {
+    return NextResponse.json({ error: "Accounts are not configured on this server." }, { status: 503 });
+  }
+  const parent = await parentFromToken(token);
+  if (!parent) {
+    return NextResponse.json({ error: "Your sign-in has expired — please sign in again." }, { status: 401 });
+  }
+  const admin = supabaseAdmin();
+  if (!admin) {
+    return NextResponse.json({ error: "Account is unavailable just now." }, { status: 503 });
+  }
+  if (kidContext.length > 0) {
+    const { data: owned } = await admin
+      .from("kids")
+      .select("id")
+      .eq("parent_id", parent.id)
+      .in("id", kidContext.map((k) => k.id));
+    if ((owned ?? []).length !== kidContext.length) {
+      return NextResponse.json({ error: "Those children aren't on your account." }, { status: 403 });
+    }
+  }
+  return startGradeJob({ photos, kidContext, accountParentId: parent.id });
 }

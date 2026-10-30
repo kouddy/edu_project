@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
-import { getAuthState, signOut } from "@/lib/store";
+import { getActiveMode, getAuthState, signOut } from "@/lib/store";
+import { getSupabase } from "@/lib/supabase-client";
 import { ScreenHeader } from "./ui";
 
 interface Props {
@@ -97,6 +98,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
       <button
         type="button"
         onClick={() => {
+          if (getActiveMode() === "live") void getSupabase()?.auth.signOut();
           signOut();
           onSignOut();
         }}

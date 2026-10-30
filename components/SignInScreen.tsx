@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { getSupabase } from "@/lib/supabase-client";
 
 const BTN =
   "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
@@ -15,17 +16,21 @@ interface Props {
 }
 
 /**
- * The prototype's sign-in, carried over as-is: an emailed one-tap link, no
- * password. Local-first phase — nothing is actually sent; "Continue (demo)"
- * and "Skip for demo" both enter the app, and the signed-in flag is a
- * device-local record in lib/store.ts.
+ * The prototype's sign-in: an emailed one-tap link, no password. When a
+ * Supabase project is configured (the NEXT_PUBLIC_ vars), the link is
+ * real — tapping it returns to the app with a session, and AppShell
+ * enters the live account. Without one, nothing is sent: "Continue
+ * (demo)" and "Skip for demo" enter the device-local demo, recorded in
+ * lib/store.ts.
  */
 export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const live = getSupabase() !== null;
 
-  const sendLink = () => {
+  const sendLink = async () => {
     const v = email.trim();
     if (!v || !v.includes("@")) {
       showToast("Enter an email address first");
@@ -33,6 +38,21 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
       return;
     }
     setEmail(v);
+    const supabase = getSupabase();
+    if (!supabase) {
+      setSent(true);
+      return;
+    }
+    setSending(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: v,
+      options: { emailRedirectTo: window.location.origin },
+    });
+    setSending(false);
+    if (error) {
+      showToast("We couldn't send the link just now — please try again in a moment.");
+      return;
+    }
     setSent(true);
   };
 
@@ -46,12 +66,28 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
           <br />
           Tap it on this phone to continue.
         </p>
-        <button type="button" className={BTN} onClick={() => onSignedIn(email)}>
-          Continue (demo)
-        </button>
+        {live ? (
+          <p className="mx-auto mb-3.5 max-w-[320px] text-[13.5px] leading-[1.45] text-mid">
+            This page will sign you in once you tap the link.
+          </p>
+        ) : (
+          <button type="button" className={BTN} onClick={() => onSignedIn(email)}>
+            Continue (demo)
+          </button>
+        )}
         <div className="mt-2.5 flex items-center justify-center">
           <Linkish onClick={() => setSent(false)}>Use a different email</Linkish>
-          <Linkish onClick={() => showToast("New sign-in link sent (demo)")}>Resend link</Linkish>
+          <Linkish
+            onClick={() => {
+              if (live) {
+                void sendLink();
+              } else {
+                showToast("New sign-in link sent (demo)");
+              }
+            }}
+          >
+            Resend link
+          </Linkish>
         </div>
       </div>
     );
@@ -80,12 +116,12 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter") sendLink();
+          if (e.key === "Enter") void sendLink();
         }}
         className="mb-3.5 w-full rounded-[11px] border-[1.5px] border-line bg-card px-[13px] py-3 text-[15px] text-ink outline-none placeholder:text-faint focus:border-tang focus:shadow-[0_0_0_3px_#fdebd0]"
       />
-      <button type="button" className={BTN} onClick={sendLink}>
-        Email me a sign-in link
+      <button type="button" className={BTN} onClick={() => void sendLink()} disabled={sending}>
+        {sending ? "Sending…" : "Email me a sign-in link"}
       </button>
       <p className="mt-3.5 text-center">
         <Linkish onClick={() => onSignedIn()}>Skip for demo</Linkish>
