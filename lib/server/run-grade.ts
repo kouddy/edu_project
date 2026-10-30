@@ -7,12 +7,15 @@
  * only active subject today (English is not active yet); the agent is chosen
  * here, before identification, from the subjects the seeded sheets use.
  *
- * Photos are processed sequentially,
+ * Photos are processed in parallel, up to GRADE_CONCURRENCY at a time,
  * one provider call per attempt. Failed/read-rejected photos retry inside
  * the job (up to 3 attempts total; deterministic rejections are
  * terminal on first occurrence; graded results and successes are
  * never re-run). A photo that identifies to a sheet already graded in
- * this job short-circuits to a `duplicate` outcome, and every photo ends
+ * this job short-circuits to a `duplicate` outcome; one that identifies
+ * to a sheet another photo is still grading is parked and settled once
+ * that photo finishes — duplicate if it graded, its own grading turn
+ * if it did not. Every photo ends
  * with its own outcome — the job completes with partial success rather
  * than failing wholesale on the first bad photo.
  */
@@ -30,6 +33,11 @@ import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, valida
 import { resolveProvider, type GradingProvider, type PhotoAttempt } from "./providers";
 
 const MAX_ATTEMPTS = 3;
+
+/** How many photos grade at once. Each photo is a multi-call provider
+ *  session, so the cap keeps a big batch from flooding the provider —
+ *  a finished photo frees its slot immediately (no fixed batches). */
+const GRADE_CONCURRENCY = 5;
 
 export function startGradeJob(payload: GradeRequestPayload): GradeJob {
   const job = createJob(payload.photos.length);
@@ -72,39 +80,62 @@ async function runBatch(
   payload: GradeRequestPayload,
 ): Promise<GradeJobResult> {
   const sheets: ApiSheetResult[] = [];
-  const photoOutcomes: PhotoOutcome[] = [];
+  const outcomes: PhotoOutcome[] = new Array(payload.photos.length);
   const gradedSheetIds = new Set<string>();
-  const seenPayloads = new Map<string, string>(); // photo payload → sheetId
+  // sheetId → the photo index grading it right now. Identification is
+  // where a duplicate is decided, so the claim is taken there: a second
+  // photo of the same sheet stops right after identifying instead of
+  // grading in parallel and racing the first photo's result.
+  const sheetClaims = new Map<string, number>();
   const allSteps: string[] = [];
   const allNotes: string[] = [];
 
+  // A photo whose duplicate verdict came from a live claim rather than
+  // a finished grade is parked here and settled after the pool drains:
+  // if the claiming photo failed to grade, this photo gets its own turn
+  // (the sequential behaviour), instead of losing its sheet to a claim
+  // that never produced a result.
+  const deferred: { index: number; sheetId: string; attempts: number }[] = [];
+
   async function runPhotoWithAttempts(
-    jobIdInner: string,
-    providerInner: GradingProvider,
-    payloadInner: GradeRequestPayload,
     index: number,
     photo: string,
-    gradedInner: Set<string>,
-    stepsSink: string[],
-    notesSink: string[],
-  ): Promise<PhotoOutcome> {
+  ): Promise<{ outcome: PhotoOutcome; blockedBySheetId?: string }> {
+    const myClaims = new Set<string>();
+    const releaseClaims = () => {
+      for (const sheetId of myClaims) {
+        if (sheetClaims.get(sheetId) === index) sheetClaims.delete(sheetId);
+      }
+      myClaims.clear();
+    };
     let lastReason: string | undefined;
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+      let blockedBy: string | undefined;
       let res: PhotoAttempt;
       try {
-        res = await providerInner.runPhoto({
+        res = await provider.runPhoto({
           photo,
           photoIndex: index,
-          kidContext: payloadInner.kidContext,
+          kidContext: payload.kidContext,
           onStep: (step) => {
-            if (!stepsSink.includes(step)) stepsSink.push(step);
-            updateJob(jobIdInner, { step });
-            updatePhotoProgress(jobIdInner, index, { step });
+            if (!allSteps.includes(step)) allSteps.push(step);
+            updateJob(jobId, { step });
+            updatePhotoProgress(jobId, index, { step });
           },
           onIdentified: (info) => {
-            updatePhotoProgress(jobIdInner, index, { sheetLabel: info.sheetLabel });
+            updatePhotoProgress(jobId, index, { sheetLabel: info.sheetLabel });
           },
-          shouldStopAfterIdentify: (sheetId) => gradedInner.has(sheetId),
+          shouldStopAfterIdentify: (sheetId) => {
+            if (gradedSheetIds.has(sheetId)) return true;
+            const owner = sheetClaims.get(sheetId);
+            if (owner === undefined) {
+              sheetClaims.set(sheetId, index);
+              myClaims.add(sheetId);
+              return false;
+            }
+            if (owner !== index) blockedBy = sheetId;
+            return owner !== index;
+          },
         });
       } catch (err) {
         res = {
@@ -114,8 +145,8 @@ async function runBatch(
           notes: [],
         };
       }
-      for (const s of res.steps) if (!stepsSink.includes(s)) stepsSink.push(s);
-      notesSink.push(...res.notes);
+      for (const s of res.steps) if (!allSteps.includes(s)) allSteps.push(s);
+      allNotes.push(...res.notes);
 
       if (res.kind === "graded" && res.sheet) {
         // Attach the catalogue entry so a device with no local record
@@ -134,11 +165,15 @@ async function runBatch(
           res.sheet.spec = spec;
         }
         sheets.push(res.sheet);
-        updatePhotoProgress(jobIdInner, index, { state: "marked" });
-        return { photoIndex: index, kind: "graded", sheetId: res.sheet.sheetId, attempts: attempt };
+        updatePhotoProgress(jobId, index, { state: "marked" });
+        return { outcome: { photoIndex: index, kind: "graded", sheetId: res.sheet.sheetId, attempts: attempt } };
       }
       if (res.kind === "duplicate") {
-        return { photoIndex: index, kind: "duplicate", sheetId: res.identified?.sheetId, attempts: attempt };
+        releaseClaims();
+        return {
+          outcome: { photoIndex: index, kind: "duplicate", sheetId: res.identified?.sheetId, attempts: attempt },
+          ...(blockedBy ? { blockedBySheetId: blockedBy } : {}),
+        };
       }
       if (res.kind === "rejected-deterministic") {
         // Terminal on first occurrence. The identification step already
@@ -148,40 +183,94 @@ async function runBatch(
         // code to a real sheet — e.g. "correcting" a sheet printed
         // G9-MATH-W99-Z to G4-MATH-W12-A and grading it against the
         // wrong key.
-        return { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt };
+        releaseClaims();
+        return { outcome: { photoIndex: index, kind: "rejected-deterministic", reason: res.reason, attempts: attempt } };
       }
       // rejected-read / failed: use the remaining attempts.
       lastReason = res.reason;
       if (attempt === MAX_ATTEMPTS) {
-        return { photoIndex: index, kind: res.kind, reason: res.reason, attempts: attempt };
+        releaseClaims();
+        return { outcome: { photoIndex: index, kind: res.kind, reason: res.reason, attempts: attempt } };
       }
     }
-    return { photoIndex: index, kind: "failed", reason: lastReason, attempts: MAX_ATTEMPTS };
+    releaseClaims();
+    return { outcome: { photoIndex: index, kind: "failed", reason: lastReason, attempts: MAX_ATTEMPTS } };
   }
 
-  for (const [index, photo] of payload.photos.entries()) {
-    // Byte-identical photos in one batch are the same sheet photographed
-    // twice — never spend a grading call on the copy.
-    const earlierSheetId = seenPayloads.get(photo);
-    if (earlierSheetId) {
-      photoOutcomes.push({ photoIndex: index, kind: "duplicate", sheetId: earlierSheetId, attempts: 0 });
+  // Byte-identical photos in one batch are the same sheet photographed
+  // twice — never spend a grading call on the copy. Copies form a chain
+  // behind their original: a copy short-circuits to `duplicate` once any
+  // earlier member of the chain has graded; if the earlier members all
+  // fail, the copy gets its own chance, exactly as in sequence.
+  const chains = new Map<string, number[]>();
+  payload.photos.forEach((photo, index) => {
+    const chain = chains.get(photo);
+    if (chain) chain.push(index);
+    else chains.set(photo, [index]);
+  });
+
+  async function runChain(indices: number[]): Promise<void> {
+    let chainSheetId: string | undefined;
+    for (const index of indices) {
+      if (chainSheetId) {
+        outcomes[index] = { photoIndex: index, kind: "duplicate", sheetId: chainSheetId, attempts: 0 };
+        updatePhotoProgress(jobId, index, { state: "settled" });
+        continue;
+      }
+      const { outcome, blockedBySheetId } = await runPhotoWithAttempts(index, payload.photos[index]);
+      if (blockedBySheetId && outcome.kind === "duplicate") {
+        // Parked, not settled: the sheet was still being graded by
+        // another photo. Settled after the pool drains, below.
+        deferred.push({ index, sheetId: blockedBySheetId, attempts: outcome.attempts });
+        continue;
+      }
+      outcomes[index] = outcome;
+      if (outcome.kind === "graded" && outcome.sheetId) {
+        gradedSheetIds.add(outcome.sheetId);
+        chainSheetId = outcome.sheetId;
+      }
       updatePhotoProgress(jobId, index, { state: "settled" });
-      continue;
     }
-
-    const outcome = await runPhotoWithAttempts(jobId, provider, payload, index, photo, gradedSheetIds, allSteps, allNotes);
-    photoOutcomes.push(outcome);
-    if (outcome.kind === "graded" && outcome.sheetId) {
-      gradedSheetIds.add(outcome.sheetId);
-      seenPayloads.set(photo, outcome.sheetId);
-    }
-    updatePhotoProgress(jobId, index, { state: "settled" });
   }
+
+  const chainList = [...chains.values()];
+  let nextChain = 0;
+  async function worker(): Promise<void> {
+    while (nextChain < chainList.length) {
+      const chain = chainList[nextChain++];
+      await runChain(chain);
+    }
+  }
+  await Promise.all(
+    Array.from({ length: Math.min(GRADE_CONCURRENCY, chainList.length) }, () => worker()),
+  );
+
+  // Settle parked photos now that every claim has resolved: duplicate
+  // if their sheet did get graded, a fresh grading turn if it did not.
+  for (const parked of deferred) {
+    if (gradedSheetIds.has(parked.sheetId)) {
+      outcomes[parked.index] = {
+        photoIndex: parked.index,
+        kind: "duplicate",
+        sheetId: parked.sheetId,
+        attempts: parked.attempts,
+      };
+    } else {
+      const { outcome } = await runPhotoWithAttempts(parked.index, payload.photos[parked.index]);
+      outcomes[parked.index] = outcome;
+      if (outcome.kind === "graded" && outcome.sheetId) gradedSheetIds.add(outcome.sheetId);
+    }
+    updatePhotoProgress(jobId, parked.index, { state: "settled" });
+  }
+
+  // Results come back in photo order regardless of finishing order.
+  const photoOrder = new Map(outcomes.map((o) => [o.sheetId, o.photoIndex]));
+  sheets.sort((a, b) => (photoOrder.get(a.sheetId) ?? 0) - (photoOrder.get(b.sheetId) ?? 0));
 
   return {
     outcome: "completed",
     sheets,
-    photoOutcomes,
+    photoOutcomes: outcomes,
     trace: {
       provider: provider.id,
       model: provider.model,
