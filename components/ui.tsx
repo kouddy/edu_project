@@ -51,16 +51,6 @@ export function IconUser({ size = 24, className }: IconProps) {
   );
 }
 
-export function IconDownload({ size = 20, className }: IconProps) {
-  return (
-    <svg {...base(size)} className={className}>
-      <path d="M12 3v11" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M4 19h16" />
-    </svg>
-  );
-}
-
 /**
  * The two live grading pills: a green "correct/graded graded" pill and an
  * amber "N need your check" pill, collapsing to one "X/Y final" pill once

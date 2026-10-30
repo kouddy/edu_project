@@ -16,6 +16,7 @@
  */
 
 import type { AnswerKey, GradeResult, Kid, Parent, Sheet, Submission } from "./store";
+import { BOOK_W12_KEYS, BOOK_W12_SHEETS } from "./book-gina-w12";
 
 export const SEED_PARENT: Parent = {
   id: "parent-david",
@@ -94,6 +95,9 @@ export const SEED_SHEETS: Sheet[] = [
     printedCode: "G1-MATH-W12-A",
     topic: "Counting and adding to 20",
   },
+  // Gina's real Week 12 book packet (lib/book-gina-w12.ts) is part of the
+  // seed so her homework is the actual packet the hub hands out.
+  ...BOOK_W12_SHEETS,
 ];
 
 const W12_KEY: AnswerKey = {
@@ -380,7 +384,7 @@ const LEO_W12_KEY: AnswerKey = {
   ],
 };
 
-export const SEED_ANSWER_KEYS: AnswerKey[] = [W12_KEY, W11_KEY, W10_KEY, SETB_KEY, WP12_KEY, SETC_KEY, LEO_W12_KEY];
+export const SEED_ANSWER_KEYS: AnswerKey[] = [W12_KEY, W11_KEY, W10_KEY, SETB_KEY, WP12_KEY, SETC_KEY, LEO_W12_KEY, ...BOOK_W12_KEYS];
 
 /* ------------------------------------------------------- demo submissions
  * The prototype's opening state, as records:

@@ -6,12 +6,13 @@ import { Spinner } from "@heroui/react";
 import { deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
 import type { GradeJobStatus } from "@/lib/grade-contract";
-import { loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
+import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
 import ScanScreen, { type StagedPhoto } from "./ScanScreen";
 import ResultsScreen, { NotStartedScreen } from "./ResultsScreen";
 import CheckScreen from "./CheckScreen";
+import PacketScreen from "./PacketScreen";
 import ProfileScreen from "./ProfileScreen";
 import SignInScreen from "./SignInScreen";
 import { IconHome, IconScan, IconUser } from "./ui";
@@ -20,9 +21,21 @@ type Screen =
   | { name: "home" }
   | { name: "signin" }
   | { name: "scan" }
-  | { name: "results"; sheetId: string; origin: "homework" | "history" }
-  | { name: "check"; from: "home" } 
-  | { name: "check"; from: "results"; sheetId: string; origin: "homework" | "history" }
+  | { name: "packet"; subject: string; week: number }
+  | {
+      name: "results";
+      sheetId: string;
+      origin: "homework" | "history" | "packet";
+      packet?: { subject: string; week: number };
+    }
+  | { name: "check"; from: "home" }
+  | {
+      name: "check";
+      from: "results";
+      sheetId: string;
+      origin: "homework" | "history" | "packet";
+      packet?: { subject: string; week: number };
+    }
   | { name: "profile" };
 
 export default function AppShell() {
@@ -81,6 +94,21 @@ export default function AppShell() {
   const openSheet = useCallback((sheetId: string, origin: "homework" | "history") => {
     setScreen({ name: "results", sheetId, origin });
   }, []);
+
+  /** Back from a sheet: to its packet when it was opened from one, else
+   *  Home scrolled to the section it came from. */
+  const backFromSheet = useCallback(
+    (origin: "homework" | "history" | "packet", packet?: { subject: string; week: number }) => {
+      if (origin === "packet" && packet) {
+        setScreen({ name: "packet", subject: packet.subject, week: packet.week });
+      } else if (origin === "packet") {
+        goHome("homework");
+      } else {
+        goHome(origin);
+      }
+    },
+    [goHome],
+  );
 
   /* ------------------------------------------------------------ staged photos */
 
@@ -223,8 +251,8 @@ export default function AppShell() {
               kid={kid}
               onSelectKid={(k) => setKidId(k.id)}
               onOpenSheet={openSheet}
+              onOpenGroup={(subject, week) => setScreen({ name: "packet", subject, week })}
               onOpenCheck={() => setScreen({ name: "check", from: "home" })}
-              showToast={showToast}
               scrollSection={scrollSection}
               marking={
                 runningJobs.length > 0 || settledLines
@@ -244,6 +272,28 @@ export default function AppShell() {
             />
           )}
 
+          {screen.name === "packet" && kid && (
+            <PacketScreen
+              kid={kid}
+              subject={screen.subject}
+              week={screen.week}
+              states={
+                homeworkGroups(snap, kid).find(
+                  (g) => g.subject === screen.subject && g.week === screen.week,
+                )?.states ?? []
+              }
+              onBack={() => goHome("homework")}
+              onOpenSheet={(sheetId) =>
+                setScreen({
+                  name: "results",
+                  sheetId,
+                  origin: "packet",
+                  packet: { subject: screen.subject, week: screen.week },
+                })
+              }
+            />
+          )}
+
           {screen.name === "results" &&
             (() => {
               const st = snap.states.get(screen.sheetId);
@@ -252,27 +302,27 @@ export default function AppShell() {
                 return (
                   <NotStartedScreen
                     st={st}
-                    onBack={() => goHome(screen.origin)}
+                    onBack={() => backFromSheet(screen.origin, screen.packet)}
                     onScan={() => setScreen({ name: "scan" })}
-                    showToast={showToast}
                   />
                 );
               }
               return (
                 <ResultsScreen
                   st={st}
-                  onBack={() => goHome(screen.origin)}
+                  onBack={() => backFromSheet(screen.origin, screen.packet)}
                   onOpenCheck={() =>
                     setScreen({
                       name: "check",
                       from: "results",
                       sheetId: screen.sheetId,
                       origin: screen.origin,
+                      packet: screen.packet,
                     })
                   }
                   onRemoved={() => {
                     refresh();
-                    goHome(screen.origin);
+                    backFromSheet(screen.origin, screen.packet);
                   }}
                   showToast={showToast}
                 />
@@ -291,6 +341,7 @@ export default function AppShell() {
                       name: "results",
                       sheetId: screen.sheetId,
                       origin: screen.origin,
+                      packet: screen.packet,
                     })
                   : goHome()
               }

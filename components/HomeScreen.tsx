@@ -1,9 +1,8 @@
 "use client";
 
 import {
-  homeworkStates,
+  homeworkGroups,
   historyStates,
-  isDone,
   kidHasGradedSheet,
   reviewRetentionText,
   scannedText,
@@ -11,12 +10,11 @@ import {
   shortDate,
   statusSlot,
   streakFor,
-  type SheetState,
+  type HomeworkGroup,
   type Snapshot,
 } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { Spinner } from "@heroui/react";
-import { IconDownload } from "./ui";
 
 /** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
@@ -32,8 +30,8 @@ interface Props {
   kid: Kid;
   onSelectKid: (kid: Kid) => void;
   onOpenSheet: (sheetId: string, origin: "homework" | "history") => void;
+  onOpenGroup: (subject: string, week: number) => void;
   onOpenCheck: () => void;
-  showToast: (msg: string) => void;
   scrollSection: "homework" | "history" | null;
   marking: MarkingCardData | null;
 }
@@ -53,17 +51,16 @@ export default function HomeScreen({
   kid,
   onSelectKid,
   onOpenSheet,
+  onOpenGroup,
   onOpenCheck,
-  showToast,
   marking,
 }: Props) {
   const status = statusSlot(snap, kid);
-  const homework = homeworkStates(snap, kid);
-  /* The wireframe lists Word Problems ahead of Math in the Homework card. */
-  const homeworkRows = [...homework].sort(
+  /* Homework is grouped by subject + week: one row per packet. The
+     wireframe lists Word Problems ahead of Math in the Homework card. */
+  const homeworkRows = [...homeworkGroups(snap, kid)].sort(
     (a, b) =>
-      (a.sheet.subject === "Word Problems" ? 0 : 1) -
-      (b.sheet.subject === "Word Problems" ? 0 : 1),
+      (a.subject === "Word Problems" ? 0 : 1) - (b.subject === "Word Problems" ? 0 : 1),
   );
   const history = historyStates(snap, kid);
   const showProgress = kidHasGradedSheet(snap, kid);
@@ -186,14 +183,15 @@ export default function HomeScreen({
       <section id="section-homework" className="scroll-mt-4">
         <div className={CARD}>
           <h3 className={`${H3} px-[15px] pb-2 pt-[14px]`}>Homework</h3>
-          {homeworkRows.map((st, i) => (
+          {homeworkRows.map((group, i) => (
             <HomeworkRow
-              key={st.sheet.id}
-              st={st}
+              key={`${group.subject}|${group.week}`}
+              group={group}
               last={i === homeworkRows.length - 1}
-              onOpen={() => onOpenSheet(st.sheet.id, "homework")}
-              onDownload={() =>
-                showToast(`Saved: Grade ${kid.grade} · ${sheetLabel(st.sheet)} sheets (PDF)`)
+              onOpen={() =>
+                group.states.length === 1
+                  ? onOpenSheet(group.states[0].sheet.id, "homework")
+                  : onOpenGroup(group.subject, group.week)
               }
             />
           ))}
@@ -277,17 +275,22 @@ function capitalize(s: string): string {
 }
 
 function HomeworkRow({
-  st,
+  group,
   last,
   onOpen,
-  onDownload,
 }: {
-  st: SheetState;
+  group: HomeworkGroup;
   last: boolean;
   onOpen: () => void;
-  onDownload: () => void;
 }) {
-  const done = isDone(st);
+  const single = group.states.length === 1 ? group.states[0].sheet : null;
+  const subtitle = single
+    ? `${single.topic} · ${single.printedCode}`
+    : group.done
+      ? `All ${group.states.length} sheets done`
+      : group.doneCount > 0
+        ? `${group.doneCount} of ${group.states.length} sheets done`
+        : `${group.states.length} sheets`;
   return (
     <div
       className={`flex w-full items-center gap-1.5 px-[17px] py-[11px] ${
@@ -296,24 +299,17 @@ function HomeworkRow({
     >
       <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
         <span className="block truncate text-[14.5px] font-semibold text-ink">
-          {sheetLabel(st.sheet)}
+          {group.subject} · Week {group.week}
         </span>
+        <span className="block truncate text-[12px] text-mid">{subtitle}</span>
       </button>
       <span
         className={`${PILL} ${
-          done ? "border-leaf bg-leaf text-[#fff8ec]" : "border-linesoft bg-fill text-mid"
+          group.done ? "border-leaf bg-leaf text-[#fff8ec]" : "border-linesoft bg-fill text-mid"
         }`}
       >
-        {done ? "Done" : "Not done"}
+        {group.done ? "Done" : "Not done"}
       </span>
-      <button
-        type="button"
-        aria-label={`Download ${sheetLabel(st.sheet)} sheets (PDF)`}
-        onClick={onDownload}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-tangdeep"
-      >
-        <IconDownload size={22} />
-      </button>
     </div>
   );
 }
