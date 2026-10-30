@@ -3,14 +3,16 @@
 /**
  * PacketScreen — one Homework group (subject + week).
  *
- * The catalogue already says which topic each sheet belongs to, so the
- * packet shows its sheets grouped under topic headers — no extra level
- * to tap through. A topic's sheets get the labels the printed pages
- * carry (Practice A, B, C… for practice; Part 1, 2… for a review kind),
- * with the printed code underneath. A single-sheet topic renders as a
- * plain sheet row. Every sheet opens directly from here.
+ * One row per section: the catalogue already says which topic each
+ * sheet belongs to, so a week's packet is its topics and review kinds,
+ * one row each. Tapping a section unfolds its sheets in place — they
+ * carry the labels the printed pages use (Practice A, B, C… for
+ * practice; Part 1, 2… for a review kind), with the printed code
+ * underneath — and tapping a sheet opens it. A single-sheet section
+ * is a plain sheet row.
  */
 
+import { useState } from "react";
 import { isDone, topicGroups, type SheetState } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { BackButton, ScreenHeader } from "./ui";
@@ -44,6 +46,23 @@ function DonePill({ done }: { done: boolean }) {
     >
       {done ? "Done" : "Not done"}
     </span>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 12 12"
+      className={`h-3 w-3 shrink-0 text-mid transition-transform ${open ? "rotate-90" : ""}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 2.5 7.5 6 4 9.5" />
+    </svg>
   );
 }
 
@@ -93,6 +112,15 @@ export default function PacketScreen({
   onOpenSheet: (sheetId: string) => void;
 }) {
   const groups = topicGroups(states);
+  const [openTopics, setOpenTopics] = useState<ReadonlySet<string>>(new Set());
+  const toggle = (topic: string) =>
+    setOpenTopics((prev) => {
+      const next = new Set(prev);
+      if (next.has(topic)) next.delete(topic);
+      else next.add(topic);
+      return next;
+    });
+
   return (
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
@@ -116,28 +144,43 @@ export default function PacketScreen({
               />
             );
           }
+          const open = openTopics.has(group.topic);
           return (
-            <div key={group.topic} className={lastGroup ? "" : "border-b border-dashed border-linesoft"}>
-              <div className="flex items-baseline justify-between gap-2 px-[17px] pb-0.5 pt-[11px]">
-                <span className="min-w-0 truncate text-[14.5px] font-semibold text-ink">
+            <div
+              key={group.topic}
+              className={lastGroup ? "" : "border-b border-dashed border-linesoft"}
+            >
+              <button
+                type="button"
+                onClick={() => toggle(group.topic)}
+                aria-expanded={open}
+                className={`flex w-full items-center gap-2 px-[17px] py-[11px] text-left ${
+                  open ? "border-b border-dashed border-linesoft" : ""
+                }`}
+              >
+                <span className="min-w-0 flex-1 truncate text-[14.5px] font-semibold text-ink">
                   {group.topic}
                 </span>
-                <span className="shrink-0 text-[12px] text-mid">
-                  {group.done
-                    ? `All ${group.states.length} done`
-                    : `${group.doneCount} of ${group.states.length} done`}
-                </span>
-              </div>
-              {group.states.map((st, si) => (
-                <SheetRow
-                  key={st.sheet.id}
-                  title={partLabel(group.topic, si)}
-                  code={st.sheet.printedCode}
-                  done={isDone(st)}
-                  last={si === group.states.length - 1}
-                  onOpen={() => onOpenSheet(st.sheet.id)}
-                />
-              ))}
+                {group.done ? (
+                  <DonePill done />
+                ) : (
+                  <span className="shrink-0 text-[12px] text-mid">
+                    {group.doneCount} of {group.states.length} done
+                  </span>
+                )}
+                <Chevron open={open} />
+              </button>
+              {open &&
+                group.states.map((st, si) => (
+                  <SheetRow
+                    key={st.sheet.id}
+                    title={partLabel(group.topic, si)}
+                    code={st.sheet.printedCode}
+                    done={isDone(st)}
+                    last={si === group.states.length - 1}
+                    onOpen={() => onOpenSheet(st.sheet.id)}
+                  />
+                ))}
             </div>
           );
         })}
