@@ -13,7 +13,7 @@
  */
 
 /** Longest edge a staged photo may keep, in pixels. */
-export const MAX_PHOTO_EDGE = 2000;
+const MAX_PHOTO_EDGE = 2000;
 
 export async function downscalePhoto(blob: Blob): Promise<Blob> {
   if (!blob.type.startsWith("image/")) return blob;
