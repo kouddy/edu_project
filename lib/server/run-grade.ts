@@ -37,7 +37,7 @@ const MAX_ATTEMPTS = 3;
 /** How many photos grade at once. Each photo is a multi-call provider
  *  session, so the cap keeps a big batch from flooding the provider —
  *  a finished photo frees its slot immediately (no fixed batches). */
-const GRADE_CONCURRENCY = 3;
+const GRADE_CONCURRENCY = 2;
 
 export function startGradeJob(payload: GradeRequestPayload): GradeJob {
   const job = createJob(payload.photos.length);

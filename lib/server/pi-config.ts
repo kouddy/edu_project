@@ -18,6 +18,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { AgentId } from "./registry";
+import { Modal } from "@heroui/react";
 
 interface PiSettings {
   defaultProvider: string;
@@ -111,6 +112,7 @@ export function providerDef(config: PiConfig, providerId: string): PiProviderDef
 /** Extra env names accepted for a provider's key (Meta's docs call theirs MODEL_API_KEY). */
 const KEY_ENV_ALIASES: Record<string, string[]> = {
   meta: ["MODEL_API_KEY"],
+  modal: ["MODAL_API_KEY", "MODAL_API_KEY"],
 };
 
 /** The env var a provider's "$ENV" apiKey points at, if any. */
