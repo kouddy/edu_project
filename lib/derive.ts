@@ -7,7 +7,6 @@
  */
 
 import {
-  ensureSeeded,
   getActiveMode,
   getAnswerKey,
   getCurrentParent,
@@ -29,6 +28,7 @@ import {
   type Submission,
 } from "./store";
 import { ensureDemoData } from "./demo";
+import { ensureGuestData } from "./guest";
 
 export { kidTrackLabel, sheetLabel };
 
@@ -50,9 +50,9 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  // Demo mode layers its dataset; guest mode seeds only its account —
-  // sheets arrive there by scanning, never from the demo data.
-  if (getActiveMode() === "guest") ensureSeeded();
+  // Each mode layers its own data: the demo dataset in demo mode, the
+  // guest account and its assigned packets in guest mode.
+  if (getActiveMode() === "guest") ensureGuestData();
   else ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
