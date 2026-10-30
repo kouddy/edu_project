@@ -19,11 +19,13 @@
 
 import type {
   ApiSheetResult,
+  ApiSheetSpec,
   GradeJobResult,
   GradeRequestPayload,
   PhotoOutcome,
 } from "../grade-contract";
 import { createJob, updateJob, updatePhotoProgress, type GradeJob } from "./jobs";
+import { findBySheetId } from "./registry";
 import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, validatePiConfig } from "./pi-config";
 import { resolveProvider, type GradingProvider, type PhotoAttempt } from "./providers";
 
@@ -116,6 +118,21 @@ async function runBatch(
       notesSink.push(...res.notes);
 
       if (res.kind === "graded" && res.sheet) {
+        // Attach the catalogue entry so a device with no local record
+        // for this sheet can still file the result (guest accounts
+        // scanning from scratch have no seeded sheets at all).
+        const entry = findBySheetId(res.sheet.sheetId);
+        if (entry && !res.sheet.spec) {
+          const spec: ApiSheetSpec = {
+            kidGrade: entry.kidGrade,
+            subject: entry.subject,
+            week: entry.week,
+            ...(entry.setName ? { setName: entry.setName } : {}),
+            topic: entry.topic,
+            questions: entry.questions,
+          };
+          res.sheet.spec = spec;
+        }
         sheets.push(res.sheet);
         updatePhotoProgress(jobIdInner, index, { state: "marked" });
         return { photoIndex: index, kind: "graded", sheetId: res.sheet.sheetId, attempts: attempt };

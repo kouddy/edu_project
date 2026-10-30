@@ -25,6 +25,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [email] = useState<string | undefined>(() => getAuthState().email);
+  const [mode] = useState(() => getAuthState().mode);
 
   useEffect(() => {
     if (!parent) return;
@@ -51,7 +52,9 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
           {parent.name}
         </p>
         <p className="mt-[3px] text-[13px] text-mid">
-          {email ?? "Signed in with an emailed link"}
+          {mode === "guest"
+            ? "Guest mode — a fresh account for testing"
+            : (email ?? "Signed in with an emailed link")}
         </p>
       </div>
 

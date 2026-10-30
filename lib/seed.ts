@@ -28,6 +28,21 @@ export const SEED_KIDS: Kid[] = [
   { id: "kid-leo", parentId: SEED_PARENT.id, name: "Leo", grade: 1, subject: "Math" },
 ];
 
+/**
+ * Guest mode's account: a fresh parent with two kids and nothing else —
+ * no sheets, no history — so a tester scans real sheets into an empty
+ * account, exactly like a new parent would.
+ */
+export const GUEST_PARENT: Parent = {
+  id: "parent-guest",
+  name: "Guest",
+};
+
+export const GUEST_KIDS: Kid[] = [
+  { id: "kid-amy", parentId: GUEST_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
+  { id: "kid-bob", parentId: GUEST_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
+];
+
 export const GINA_MATH_W12 = "sheet-gina-math-w12";
 const GINA_MATH_W11 = "sheet-gina-math-w11";
 const GINA_MATH_W10 = "sheet-gina-math-w10";

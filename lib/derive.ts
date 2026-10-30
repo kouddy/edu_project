@@ -7,6 +7,8 @@
  */
 
 import {
+  ensureSeeded,
+  getActiveMode,
   getAnswerKey,
   getCurrentParent,
   getGradeResultForSubmission,
@@ -48,7 +50,10 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  ensureDemoData();
+  // Demo mode layers its dataset; guest mode seeds only its account —
+  // sheets arrive there by scanning, never from the demo data.
+  if (getActiveMode() === "guest") ensureSeeded();
+  else ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));

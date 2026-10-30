@@ -12,7 +12,7 @@
  * question can be marked "no answer" (blank) as its own signal.
  */
 
-import type { QuestionGradeMeta, Verdict } from "./store";
+import type { AnswerKeyQuestion, QuestionGradeMeta, Verdict } from "./store";
 
 export interface KidContext {
   id: string;
@@ -35,6 +35,20 @@ export interface ApiQuestionGrade {
   meta?: QuestionGradeMeta;
 }
 
+/**
+ * The sheet's catalogue entry, sent with a graded result so a device
+ * that has never seen this sheet (a guest account scanning from
+ * scratch) can file it locally under its own kid of the same grade.
+ */
+export interface ApiSheetSpec {
+  kidGrade: number;
+  subject: string;
+  week: number;
+  setName?: string;
+  topic: string;
+  questions: AnswerKeyQuestion[];
+}
+
 export interface ApiSheetResult {
   sheetId: string;
   kidId: string;
@@ -42,6 +56,7 @@ export interface ApiSheetResult {
   /** Registry version of the answer key this was graded against. */
   keyVersion: number;
   perQuestion: ApiQuestionGrade[];
+  spec?: ApiSheetSpec;
 }
 
 interface GradeTrace {

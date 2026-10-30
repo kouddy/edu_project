@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
-import { deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn } from "@/lib/store";
+import { activateMode, deletePhoto, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, type AppMode } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
 import type { GradeJobStatus } from "@/lib/grade-contract";
 import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
@@ -57,6 +57,9 @@ export default function AppShell() {
   }, []);
 
   useEffect(() => {
+    // Point the data layer at the signed-in mode's database before the
+    // first read; the mode lives in the auth record.
+    activateMode(getAuthState().mode ?? "demo");
     const next = refresh();
     setKidId((prev) => prev ?? next.kids[0]?.id ?? null);
     if (!getAuthState().signedIn) setScreen({ name: "signin" });
@@ -75,10 +78,16 @@ export default function AppShell() {
     if (section) setScrollSection(section);
   }, []);
 
-  const handleSignedIn = useCallback((email?: string) => {
-    signIn(email);
-    setScreen({ name: "home" });
-  }, []);
+  const handleSignedIn = useCallback(
+    (email?: string, mode: AppMode = "demo") => {
+      activateMode(mode);
+      signIn(email, mode);
+      const next = refresh();
+      setKidId(next.kids[0]?.id ?? null);
+      setScreen({ name: "home" });
+    },
+    [refresh],
+  );
 
   useEffect(() => {
     if (screen.name !== "home" || !scrollSection) return;
@@ -242,7 +251,11 @@ export default function AppShell() {
         {/* ------------------------------------------------------ screens */}
         <div ref={scrollRef} className="screen-scroll min-h-0 flex-1 overflow-y-auto">
           {screen.name === "signin" && (
-            <SignInScreen onSignedIn={handleSignedIn} showToast={showToast} />
+            <SignInScreen
+              onSignedIn={handleSignedIn}
+              onGuest={() => handleSignedIn(undefined, "guest")}
+              showToast={showToast}
+            />
           )}
 
           {screen.name === "home" && kid && (
@@ -350,7 +363,17 @@ export default function AppShell() {
           )}
 
           {screen.name === "profile" && (
-            <ProfileScreen snap={snap} onSignOut={() => setScreen({ name: "signin" })} />
+            <ProfileScreen
+              snap={snap}
+              onSignOut={() => {
+                // Back to the demo dataset behind the sign-in screen;
+                // the guest account's data stays in its own database.
+                activateMode("demo");
+                const next = refresh();
+                setKidId(next.kids[0]?.id ?? null);
+                setScreen({ name: "signin" });
+              }}
+            />
           )}
 
         </div>
