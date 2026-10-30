@@ -164,7 +164,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
         </button>
       )}
 
-      {/* bottom stack: controls → hint → tray → grade bar */}
+      {/* bottom stack: controls → hint → grade bar (tray inside the bar, above the button) */}
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2 bg-[linear-gradient(to_top,rgba(18,10,4,0.72)_0%,rgba(18,10,4,0.46)_62%,transparent_100%)] px-4 pb-4 pt-2.5">
         <div className="grid w-full max-w-[360px] grid-cols-[1fr_auto_1fr] items-start">
           <button
@@ -210,35 +210,34 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
         </span>
 
         {staged.length > 0 && (
-          <div
-            className="tray-scroll flex w-full items-start gap-3 overflow-x-auto px-2 pb-1 pt-1"
-            aria-label="Photos ready to grade"
-          >
-            {staged.map((p, i) => (
-              <div key={p.key} className="relative shrink-0">
-                <button type="button" onClick={() => setPreview(i)} className="block">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={p.url}
-                    alt={`Staged sheet photo ${i + 1}`}
-                    className="h-14 w-14 rounded-[12px] border-[1.5px] border-line bg-[#fff8ec] object-cover shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
-                  />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Remove photo ${i + 1}`}
-                  onClick={() => onRemoveAt(i)}
-                  className="absolute -right-[7px] -top-[7px] z-[2] flex h-[22px] w-[22px] items-center justify-center rounded-full border-[1.5px] border-card bg-ink pb-px text-[15px] font-extrabold leading-none text-[#fff9ef] shadow-[0_2px_6px_rgba(61,43,31,0.35)]"
-                >
-                  ×
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {staged.length > 0 && (
           <div className="grain-surface -mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-linesoft bg-[#fff9ef] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
+          {staged.length > 0 && (
+            <div
+              className="tray-scroll mb-1 flex w-full items-start gap-3 overflow-x-auto px-0.5 pb-2 pt-2"
+              aria-label="Photos ready to grade"
+            >
+              {staged.map((p, i) => (
+                <div key={p.key} className="relative shrink-0">
+                  <button type="button" onClick={() => setPreview(i)} className="block">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={p.url}
+                      alt={`Staged sheet photo ${i + 1}`}
+                      className="h-14 w-14 rounded-[12px] border-[1.5px] border-line bg-[#fff8ec] object-cover shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Remove photo ${i + 1}`}
+                    onClick={() => onRemoveAt(i)}
+                    className="absolute -right-[7px] -top-[7px] z-[2] flex h-[22px] w-[22px] items-center justify-center rounded-full border-[1.5px] border-card bg-ink pb-px text-[15px] font-extrabold leading-none text-[#fff9ef] shadow-[0_2px_6px_rgba(61,43,31,0.35)]"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
             <button type="button" onClick={onGrade} className={BTN}>
               Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
             </button>
