@@ -13,6 +13,7 @@
 
 import { SEED_ANSWER_KEYS, SEED_KIDS, SEED_SHEETS } from "../seed";
 import type { AnswerKeyQuestion } from "../store";
+import { BOOK_REGISTRY } from "./book-catalogue";
 
 export type AgentId = "math" | "english";
 
@@ -64,7 +65,14 @@ function buildRegistry(): RegistryEntry[] {
   });
 }
 
-export const REGISTRY: RegistryEntry[] = buildRegistry();
+export const REGISTRY: RegistryEntry[] = (() => {
+  const seeded = buildRegistry();
+  const seededCodes = new Set(seeded.map((e) => e.printedCode));
+  // Book-catalogue entries fill in every real sheet the seed does not
+  // already cover (the seeded Grade 4 Week 12 packet wins on its codes —
+  // same key, richer seed metadata).
+  return [...seeded, ...BOOK_REGISTRY.filter((e) => !seededCodes.has(e.printedCode))];
+})();
 
 /**
  * "Gina · Math · Set C" / "Gina · Math · Week 12" — the display label for

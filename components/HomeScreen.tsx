@@ -16,7 +16,6 @@ import {
 } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { Spinner } from "@heroui/react";
-import { IconDownload } from "./ui";
 
 /** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
@@ -33,7 +32,6 @@ interface Props {
   onSelectKid: (kid: Kid) => void;
   onOpenSheet: (sheetId: string, origin: "homework" | "history") => void;
   onOpenCheck: () => void;
-  showToast: (msg: string) => void;
   scrollSection: "homework" | "history" | null;
   marking: MarkingCardData | null;
 }
@@ -54,7 +52,6 @@ export default function HomeScreen({
   onSelectKid,
   onOpenSheet,
   onOpenCheck,
-  showToast,
   marking,
 }: Props) {
   const status = statusSlot(snap, kid);
@@ -192,9 +189,6 @@ export default function HomeScreen({
               st={st}
               last={i === homeworkRows.length - 1}
               onOpen={() => onOpenSheet(st.sheet.id, "homework")}
-              onDownload={() =>
-                showToast(`Saved: Grade ${kid.grade} · ${sheetLabel(st.sheet)} sheets (PDF)`)
-              }
             />
           ))}
           {homeworkRows.length === 0 && (
@@ -280,12 +274,10 @@ function HomeworkRow({
   st,
   last,
   onOpen,
-  onDownload,
 }: {
   st: SheetState;
   last: boolean;
   onOpen: () => void;
-  onDownload: () => void;
 }) {
   const done = isDone(st);
   return (
@@ -298,6 +290,9 @@ function HomeworkRow({
         <span className="block truncate text-[14.5px] font-semibold text-ink">
           {sheetLabel(st.sheet)}
         </span>
+        <span className="block truncate text-[12px] text-mid">
+          {st.sheet.topic} · {st.sheet.printedCode}
+        </span>
       </button>
       <span
         className={`${PILL} ${
@@ -306,14 +301,6 @@ function HomeworkRow({
       >
         {done ? "Done" : "Not done"}
       </span>
-      <button
-        type="button"
-        aria-label={`Download ${sheetLabel(st.sheet)} sheets (PDF)`}
-        onClick={onDownload}
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] text-tangdeep"
-      >
-        <IconDownload size={22} />
-      </button>
     </div>
   );
 }

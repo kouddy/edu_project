@@ -388,12 +388,10 @@ export function NotStartedScreen({
   st,
   onBack,
   onScan,
-  showToast,
 }: {
   st: SheetState;
   onBack: () => void;
   onScan: () => void;
-  showToast: (msg: string) => void;
 }) {
   const { sheet, kid } = st;
   return (
@@ -410,13 +408,6 @@ export function NotStartedScreen({
       </div>
       <button type="button" onClick={onScan} className={`${BTN} mt-3`}>
         Scan
-      </button>
-      <button
-        type="button"
-        onClick={() => showToast(`Saved: Grade ${kid.grade} · ${sheetLabel(sheet)} sheets (PDF)`)}
-        className={`${BTN_SECONDARY} mt-2.5`}
-      >
-        Download sheet (PDF)
       </button>
     </div>
   );

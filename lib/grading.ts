@@ -162,6 +162,16 @@ async function applyJobResult(
     if (outcome.kind === "graded" && outcome.sheetId) {
       const sheet = sheetsById.get(outcome.sheetId);
       if (!sheet) continue;
+      if (!getSheet(outcome.sheetId)) {
+        // The server marked a sheet this device has no record for (a
+        // book sheet outside the kid's seeded packet). There is nowhere
+        // to file the result, so say so plainly instead of dropping it.
+        batch.lines.push(
+          `${progressLabel ?? "That sheet"} isn't in the app yet, so we couldn't file the result.`,
+        );
+        await deletePhoto(photoKey).catch(() => {});
+        continue;
+      }
       if (sheetResultIsFinal(outcome.sheetId)) {
         batch.lines.push(
           `${kidSheetLabel(outcome.sheetId)} already has its finished result, so we kept it as is.`,

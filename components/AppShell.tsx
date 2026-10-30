@@ -224,7 +224,6 @@ export default function AppShell() {
               onSelectKid={(k) => setKidId(k.id)}
               onOpenSheet={openSheet}
               onOpenCheck={() => setScreen({ name: "check", from: "home" })}
-              showToast={showToast}
               scrollSection={scrollSection}
               marking={
                 runningJobs.length > 0 || settledLines
@@ -254,7 +253,6 @@ export default function AppShell() {
                     st={st}
                     onBack={() => goHome(screen.origin)}
                     onScan={() => setScreen({ name: "scan" })}
-                    showToast={showToast}
                   />
                 );
               }
