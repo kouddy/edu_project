@@ -1,0 +1,326 @@
+[
+ {
+  "code": "ON-MATH-G3-W40-S01",
+  "title": "Time: Analog & Digital Clocks \u2014 Practice A",
+  "questions": 5,
+  "wrong": {
+   "question": 1,
+   "written": "4:45",
+   "correct": "1:45"
+  },
+  "expectedScore": "4/5",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 582,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s01-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S02",
+  "title": "Time: Analog & Digital Clocks \u2014 Practice B",
+  "questions": 5,
+  "wrong": {
+   "question": 2,
+   "written": "C",
+   "correct": "B"
+  },
+  "expectedScore": "4/5",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 583,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s02-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S03",
+  "title": "Time: Analog & Digital Clocks \u2014 Practice C",
+  "questions": 4,
+  "wrong": {
+   "question": 3,
+   "written": "PM",
+   "correct": "AM"
+  },
+  "expectedScore": "3/4",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 584,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s03-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S04",
+  "title": "Time: Analog & Digital Clocks \u2014 Practice D",
+  "questions": 4,
+  "wrong": {
+   "question": 1,
+   "written": "4",
+   "correct": "1"
+  },
+  "expectedScore": "3/4",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 585,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s04-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S05",
+  "title": "Area of Rectangles \u2014 Practice A",
+  "questions": 3,
+  "wrong": {
+   "question": 2,
+   "written": "72",
+   "correct": "42"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 587,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s05-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S06",
+  "title": "Area of Rectangles \u2014 Practice B",
+  "questions": 3,
+  "wrong": {
+   "question": 3,
+   "written": "50",
+   "correct": "20"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 588,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s06-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S07",
+  "title": "Area of Rectangles \u2014 Practice C",
+  "questions": 3,
+  "wrong": {
+   "question": 1,
+   "written": "78",
+   "correct": "48"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 589,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s07-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S08",
+  "title": "Area of Rectangles \u2014 Practice D",
+  "questions": 3,
+  "wrong": {
+   "question": 2,
+   "written": "42",
+   "correct": "12"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 590,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s08-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S09",
+  "title": "Area of Rectangles \u2014 Practice E",
+  "questions": 3,
+  "wrong": {
+   "question": 3,
+   "written": "C",
+   "correct": "B"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 591,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s09-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S10",
+  "title": "Area of Rectangles \u2014 Practice F",
+  "questions": 3,
+  "wrong": {
+   "question": 1,
+   "written": "B",
+   "correct": "A"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 592,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s10-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S11",
+  "title": "Area of Rectangles \u2014 Practice G",
+  "questions": 2,
+  "wrong": {
+   "question": 1,
+   "written": "2 by 2, 6 by 3",
+   "correct": "9 by 2, 6 by 3",
+   "note": "Circled \"6 by 3\" (correct) and \"5 by 4\" (wrong); \"9 by 2\" left uncircled."
+  },
+  "expectedScore": "1/2",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 593,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s11-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S12",
+  "title": "Making Change \u2014 Practice A",
+  "questions": 9,
+  "wrong": {
+   "question": 3,
+   "written": "$4.95",
+   "correct": "$1.95"
+  },
+  "expectedScore": "8/9",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 595,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s12-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S13",
+  "title": "Making Change \u2014 Practice B",
+  "questions": 9,
+  "wrong": {
+   "question": 4,
+   "written": "B",
+   "correct": "A"
+  },
+  "expectedScore": "8/9",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 596,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s13-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S14",
+  "title": "Making Change \u2014 Practice C",
+  "questions": 7,
+  "wrong": {
+   "question": 7,
+   "written": "43\u00a2",
+   "correct": "13\u00a2"
+  },
+  "expectedScore": "6/7",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 597,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s14-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S15",
+  "title": "Making Change \u2014 Practice D",
+  "questions": 7,
+  "wrong": {
+   "question": 1,
+   "written": "$4.16",
+   "correct": "$1.16"
+  },
+  "expectedScore": "6/7",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 598,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s15-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S16",
+  "title": "Anchor Review (1 of 2)",
+  "questions": 1,
+  "wrong": {
+   "question": 1,
+   "written": "40",
+   "correct": "10"
+  },
+  "expectedScore": "0/1",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 599,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s16-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S17",
+  "title": "Anchor Review (2 of 2)",
+  "questions": 7,
+  "wrong": {
+   "question": 4,
+   "written": "50",
+   "correct": "20"
+  },
+  "expectedScore": "6/7",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 600,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s17-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S18",
+  "title": "Consolidation Review (1 of 3)",
+  "questions": 4,
+  "wrong": {
+   "question": 2,
+   "written": "56",
+   "correct": "26"
+  },
+  "expectedScore": "3/4",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 601,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s18-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S19",
+  "title": "Consolidation Review (2 of 3)",
+  "questions": 3,
+  "wrong": {
+   "question": 1,
+   "written": "50",
+   "correct": "20"
+  },
+  "expectedScore": "2/3",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 602,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s19-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S20",
+  "title": "Consolidation Review (3 of 3)",
+  "questions": 5,
+  "wrong": {
+   "question": 5,
+   "written": "A",
+   "correct": "C",
+   "note": "Circled A on paper (the question has only A-C options; the HTML set wrote D as text)."
+  },
+  "expectedScore": "4/5",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 603,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s20-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S21",
+  "title": "Spiral Review (1 of 3)",
+  "questions": 5,
+  "wrong": {
+   "question": 1,
+   "written": "4070",
+   "correct": "1070"
+  },
+  "expectedScore": "4/5",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 604,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s21-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S22",
+  "title": "Spiral Review (2 of 3)",
+  "questions": 5,
+  "wrong": {
+   "question": 2,
+   "written": "636",
+   "correct": "336"
+  },
+  "expectedScore": "4/5",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 605,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s22-pdf.jpg"
+ },
+ {
+  "code": "ON-MATH-G3-W40-S23",
+  "title": "Spiral Review (3 of 3)",
+  "questions": 6,
+  "wrong": {
+   "question": 2,
+   "written": "700 + 50 + 8",
+   "correct": "400 + 50 + 8"
+  },
+  "expectedScore": "5/6",
+  "source": "Real Grade 3 book PDF page (handwriting overlaid)",
+  "pdfPage": 606,
+  "file": "amy-week40-pdf/test-sheet-on-math-g3-w40-s23-pdf.jpg"
+ }
+]
