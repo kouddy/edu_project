@@ -26,15 +26,9 @@ const HAND = '"Segoe Print", "Comic Sans MS", cursive';
 
 type Kind = "correct" | "wrong" | "unsure";
 
-/* The question line reads "prompt = answer" over the display prompt
-   (choice questions show their stem, not the printed options). Book
-   prompts whose blank came last keep the punctuation that preceded it
-   ("1/4 of 8 =", "Estimate 477 + 591:"), so for those the answer
-   follows directly — appending another " = " would print it twice. */
-function questionLine(prompt: string, correctAnswer: string): string {
-  const p = promptForDisplay(prompt, correctAnswer).trimEnd();
-  return /[=:]$/.test(p) ? `${p} ${correctAnswer}` : `${p} = ${correctAnswer}`;
-}
+/* The question line is the display prompt alone (choice questions
+   show their stem, not the printed options); the correct answer gets
+   its own line under what the kid wrote. */
 
 /* ------------------------------------------------------------- results */
 
@@ -192,7 +186,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
               <Badge kind={kind} />
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-semibold leading-snug text-ink">
-                  {questionLine(q.prompt, q.correctAnswer)}
+                  {promptForDisplay(q.prompt, q.correctAnswer)}
                 </div>
                 <div className="mt-[1px] text-[13px] text-mid">
                   {kind === "unsure"
@@ -201,6 +195,10 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                       ? "No answer written."
                       : `${kid.name} wrote ${g.readAnswer}`}
                 </div>
+                <div className="mt-[1px] text-[13px] text-mid">
+                  Correct answer:{" "}
+                  <span className="font-semibold text-ink">{q.correctAnswer}</span>
+                </div>
                 {g.verdict === "wrong" && (
                   <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
                     {g.meta?.guidance ?? q.explanation}
@@ -208,8 +206,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                 )}
                 {resolution?.resolution === "wrong" && (
                   <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                    You marked this wrong. Correct answer: {q.correctAnswer}. Recorded in{" "}
-                    {kid.name}&rsquo;s progress.
+                    You marked this wrong. Recorded in {kid.name}&rsquo;s progress.
                   </div>
                 )}
                 {resolution?.resolution === "correct" && (

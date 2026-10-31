@@ -99,8 +99,9 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
               {item.kid.name} · {shortLabel(item.sheet)} · Q{item.questionNumber}
             </h3>
             <p className="mb-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
-              <strong>{promptForDisplay(item.prompt, item.correctAnswer)}</strong> &nbsp;·&nbsp; Correct answer:{" "}
-              <strong>{item.correctAnswer}</strong>
+              <strong>{promptForDisplay(item.prompt, item.correctAnswer)}</strong>
+              <br />
+              Correct answer: <strong>{item.correctAnswer}</strong>
             </p>
             {photoUrls.length > 0 ? (
               <button
