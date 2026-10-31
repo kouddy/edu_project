@@ -31,9 +31,9 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
   useEffect(() => {
     if (!parent) return;
     // The member code carries the parent's email as well as their id
-    // when the sign-in email is known, so staff scanning it can match
-    // the account by either. Without an email (demo Skip, guest mode)
-    // it stays the bare id form.
+    // when the sign-in record has one, so staff scanning it can match
+    // the account by either. Without an email it stays the bare id
+    // form.
     const payload = email
       ? `practice-sheets:member:${parent.id}?email=${encodeURIComponent(email)}`
       : `practice-sheets:member:${parent.id}`;
@@ -61,7 +61,9 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
         </p>
         <p className="mt-[3px] text-[13px] text-mid">
           {mode === "guest"
-            ? "Guest mode — a fresh account for testing"
+            ? email
+              ? `Guest account · ${email}`
+              : "Guest account — for testing"
             : (email ?? "Signed in with an emailed link")}
         </p>
       </div>

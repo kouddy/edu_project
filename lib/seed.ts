@@ -1,9 +1,12 @@
 /**
- * Seed data for the local-first MVP.
+ * Seed data, with two consumers:
  *
- * Loaded through lib/store.ts on first run (see `ensureSeeded`), with the
- * demo dataset (extra sheets, past submissions and their results)
- * layered on by lib/demo.ts via `seedRecords`.
+ * - The server registry (lib/server/registry.ts), which grades the
+ *   seeded sheets below — Gina's Week 12 set and friends — alongside
+ *   the book catalogue, so a photo of one grades the same way wherever
+ *   it is filed.
+ * - The guest account constants (GUEST_PARENT / GUEST_KIDS /
+ *   GUEST_EMAIL) that lib/store.ts seeds the guest database from.
  *
  * Gina's Math · Week 12 answer key is the interactive prototype's demo sheet,
  * extracted verbatim from the interactive prototype
@@ -15,23 +18,18 @@
  * Grade 4 math sets in the same spirit, each with a full 10-question key.
  */
 
-import type { AnswerKey, GradeResult, Kid, Parent, Sheet, Submission } from "./store";
+import type { AnswerKey, Kid, Parent, Sheet } from "./store";
 import { BOOK_W12_KEYS, BOOK_W12_SHEETS } from "./book-gina-w12";
 
-export const SEED_PARENT: Parent = {
-  id: "parent-david",
-  name: "David G.",
-};
-
 export const SEED_KIDS: Kid[] = [
-  { id: "kid-gina", parentId: SEED_PARENT.id, name: "Gina", grade: 4, subject: "Math" },
-  { id: "kid-leo", parentId: SEED_PARENT.id, name: "Leo", grade: 1, subject: "Math" },
+  { id: "kid-gina", parentId: "parent-david", name: "Gina", grade: 4, subject: "Math" },
+  { id: "kid-leo", parentId: "parent-david", name: "Leo", grade: 1, subject: "Math" },
 ];
 
 /**
- * Guest mode's account: a fresh parent with two kids and nothing else —
- * no sheets, no history — so a tester scans real sheets into an empty
- * account, exactly like a new parent would.
+ * Guest mode's account: a parent with two kids whose packets and
+ * marking history lib/guest.ts layers on, so the app opens the way a
+ * real account looks mid-term.
  */
 export const GUEST_PARENT: Parent = {
   id: "parent-guest",
@@ -42,6 +40,9 @@ export const GUEST_KIDS: Kid[] = [
   { id: "kid-amy", parentId: GUEST_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
   { id: "kid-bob", parentId: GUEST_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
 ];
+
+/** The guest account's sign-in email — a fake address for a fake account. */
+export const GUEST_EMAIL = "guest@example.com";
 
 export const GINA_MATH_W12 = "sheet-gina-math-w12";
 const GINA_MATH_W11 = "sheet-gina-math-w11";
@@ -401,13 +402,12 @@ const LEO_W12_KEY: AnswerKey = {
 
 export const SEED_ANSWER_KEYS: AnswerKey[] = [W12_KEY, W11_KEY, W10_KEY, SETB_KEY, WP12_KEY, SETC_KEY, LEO_W12_KEY, ...BOOK_W12_KEYS];
 
-/* ------------------------------------------------------- demo submissions
- * The prototype's opening state, as records:
- * - Gina's Math · Week 12 is marked, with Q6 and Q9 waiting for a parent
- *   check (the demo pattern — lib/grading.ts reproduces it on a re-scan).
- * - Word Problems · Week 12 and the three past sheets are final.
- * For confident verdicts the read answer is what Gina wrote; the wrong ones
- * are plausible slips, each matched by the key's explanation.
+/* ------------------------------------------------- demo grade patterns
+ * The scripted grading provider's verdict patterns for the seeded
+ * sheets: when a photo of one is "marked" without a real provider,
+ * these are the results it produces. For confident verdicts the read
+ * answer is what the child wrote; the wrong ones are plausible slips,
+ * each matched by the key's explanation.
  */
 
 type ConfidentGrade = {
@@ -442,84 +442,3 @@ export const W12_DEMO_GRADES = [
 
 /** Set C's pattern when it is scanned in: 9 correct, Q7 wrong, nothing unsure. */
 export const SETC_DEMO_GRADES = grades(SETC_KEY, { 7: "238" });
-
-export const SEED_SUBMISSIONS: Submission[] = [
-  {
-    id: "sub-gina-math-w12",
-    sheetId: GINA_MATH_W12,
-    photoKeys: [],
-    status: "graded",
-    createdAt: "2026-10-27T19:02:00.000Z",
-    gradedAt: "2026-10-27T19:02:30.000Z",
-  },
-  {
-    id: "sub-gina-wp-w12",
-    sheetId: GINA_WP_W12,
-    photoKeys: [],
-    status: "graded",
-    createdAt: "2026-10-26T16:20:00.000Z",
-    gradedAt: "2026-10-26T16:20:30.000Z",
-  },
-  {
-    id: "sub-gina-math-w11",
-    sheetId: GINA_MATH_W11,
-    photoKeys: [],
-    status: "graded",
-    createdAt: "2026-10-19T17:40:00.000Z",
-    gradedAt: "2026-10-19T17:40:30.000Z",
-  },
-  {
-    id: "sub-gina-math-w10",
-    sheetId: GINA_MATH_W10,
-    photoKeys: [],
-    status: "graded",
-    createdAt: "2026-10-12T17:15:00.000Z",
-    gradedAt: "2026-10-12T17:15:30.000Z",
-  },
-  {
-    id: "sub-gina-wp-setb",
-    sheetId: GINA_WP_SETB,
-    photoKeys: [],
-    status: "graded",
-    createdAt: "2026-10-05T17:05:00.000Z",
-    gradedAt: "2026-10-05T17:05:30.000Z",
-  },
-];
-
-export const SEED_GRADE_RESULTS: GradeResult[] = [
-  {
-    id: "grade-gina-math-w12",
-    submissionId: "sub-gina-math-w12",
-    sheetId: GINA_MATH_W12,
-    perQuestion: W12_DEMO_GRADES,
-    gradedAt: "2026-10-27T19:02:30.000Z",
-  },
-  {
-    id: "grade-gina-wp-w12",
-    submissionId: "sub-gina-wp-w12",
-    sheetId: GINA_WP_W12,
-    perQuestion: grades(WP12_KEY, { 6: "24" }),
-    gradedAt: "2026-10-26T16:20:30.000Z",
-  },
-  {
-    id: "grade-gina-math-w11",
-    submissionId: "sub-gina-math-w11",
-    sheetId: GINA_MATH_W11,
-    perQuestion: grades(W11_KEY, { 6: "60" }),
-    gradedAt: "2026-10-19T17:40:30.000Z",
-  },
-  {
-    id: "grade-gina-math-w10",
-    submissionId: "sub-gina-math-w10",
-    sheetId: GINA_MATH_W10,
-    perQuestion: grades(W10_KEY, { 3: "671", 7: "643" }),
-    gradedAt: "2026-10-12T17:15:30.000Z",
-  },
-  {
-    id: "grade-gina-wp-setb",
-    submissionId: "sub-gina-wp-setb",
-    sheetId: GINA_WP_SETB,
-    perQuestion: grades(SETB_KEY, {}),
-    gradedAt: "2026-10-05T17:05:30.000Z",
-  },
-];

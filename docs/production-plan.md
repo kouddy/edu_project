@@ -15,6 +15,9 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
 - A third app mode, **live**, sits beside demo and guest with its own
   local database. Signing in with a real magic link enters it; the
   database mirrors `GET /api/account` and seeds nothing locally.
+  (Follow-up, later the same day: demo mode was removed. Guest — now
+  seeded with packets and two weeks of marking history — is the only
+  local mode beside live.)
 - The server verifies the parent's token on `/api/account`,
   `/api/account/resolutions`, `/api/account/photos/:blobId`, and on
   `POST /api/grade` when a token is present (kid ownership enforced,
@@ -42,7 +45,7 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
   submissions); the magic-link round trip enters live mode; grading
   persists submissions, results, and photo bytes; a second browser
   profile sees the same account, including the stored photo and a
-  resolved check; demo and guest modes unaffected.
+  resolved check; demo and guest modes unaffected at the time.
 
 ## Target architecture
 
@@ -52,7 +55,7 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
   usage: ~$10–15/mo (Hobby plan is usage-metered; no sleep on any plan).
 - **Supabase** provides Auth and Postgres.
   - Auth: magic link by email — the same flow the sign-in screen already
-    presents, made real. Demo and guest modes stay local-only beside it.
+    presents, made real. Guest mode stays local-only beside it.
   - Postgres tables: parent accounts, kids and enrollment, each kid's
     current week / assignments, grade results and history, check
     resolutions. Row-level security enforces that a parent reads only
@@ -81,7 +84,7 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
    production.)
 2. **Data layer points at the server.** All client data access already
    flows through `lib/store.ts`; for signed-in accounts it becomes an API
-   client instead of localStorage/IndexedDB. Demo/guest keep the local
+   client instead of localStorage/IndexedDB. Guest keeps the local
    behaviour.
 3. **CORS on the API routes** (`/api/grade`, `/api/grade/:jobId`,
    `/api/config`), so the Capacitor shell's origin is accepted.

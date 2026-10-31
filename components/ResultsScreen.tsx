@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getPhoto } from "@/lib/store";
-import { removeSetCDemo, resetWeek12Demo } from "@/lib/demo";
-import { GINA_MATH_SETC, GINA_MATH_W12 } from "@/lib/seed";
+import { deletePhoto, deleteSheetRecords, getActiveMode, getPhoto } from "@/lib/store";
 import {
   scannedText,
   sheetLabel,
@@ -71,8 +69,12 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
 
   if (!result || !score || !key) return null;
 
-  const removable = sheet.id === GINA_MATH_W12 || sheet.id === GINA_MATH_SETC;
-  const live = removable;
+  // Removing a marked sheet is the deliberate undo for a mistaken
+  // scan: the result goes away and the sheet is homework again. In
+  // live mode the server owns the record, so there is nothing to
+  // remove here — the button only exists in the local guest account.
+  const removable = getActiveMode() !== "live";
+  const doneLabel = removable;
 
   const handleRemove = async () => {
     if (!armed) {
@@ -81,8 +83,14 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
       return;
     }
     if (armTimer.current) clearTimeout(armTimer.current);
-    if (sheet.id === GINA_MATH_W12) await resetWeek12Demo();
-    else await removeSetCDemo();
+    const photoKeys = deleteSheetRecords(sheet.id);
+    for (const key of photoKeys) {
+      try {
+        await deletePhoto(key);
+      } catch {
+        /* photo already gone — nothing to clean up */
+      }
+    }
     showToast("Sheet removed");
     onRemoved();
   };
@@ -138,7 +146,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
           </span>
         </button>
       ) : (
-        sheet.id !== GINA_MATH_W12 && <MockPhoto st={st} kindFor={kindFor} />
+        <MockPhoto st={st} kindFor={kindFor} />
       )}
 
       {photoOpen && photoUrls.length > 0 && (
@@ -210,7 +218,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
         </button>
       )}
       <button type="button" onClick={onBack} className={`${BTN_SECONDARY} mt-2.5`}>
-        {live ? "Done" : "Back"}
+        {doneLabel ? "Done" : "Back"}
       </button>
 
       {removable &&
@@ -258,8 +266,7 @@ function Badge({ kind }: { kind: Kind }) {
 
 /* The wireframe's .mockphoto: a paper rendering of the finished sheet,
    shown for graded sheets that have no real photo (the seeded past
-   sheets). The live Week 12 demo sheet follows vResults instead — no
-   photo until one is scanned. */
+   sheets). */
 function MockPhoto({ st, kindFor }: { st: SheetState; kindFor: (n: number) => Kind }) {
   const { sheet, kid, key, result } = st;
   if (!key || !result) return null;

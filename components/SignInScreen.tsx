@@ -9,21 +9,19 @@ const BTN_SECONDARY =
   "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 interface Props {
-  onSignedIn: (email?: string) => void;
-  /** Enter guest mode: a fresh testing account, separate from the demo. */
+  /** Enter guest mode: the seeded test account (Amy and Bob). */
   onGuest: () => void;
   showToast: (msg: string) => void;
 }
 
 /**
- * The prototype's sign-in: an emailed one-tap link, no password. When a
- * Supabase project is configured (the NEXT_PUBLIC_ vars), the link is
- * real — tapping it returns to the app with a session, and AppShell
- * enters the live account. Without one, nothing is sent: "Continue
- * (demo)" and "Skip for demo" enter the device-local demo, recorded in
- * lib/store.ts.
+ * Sign-in: an emailed one-tap link, no password. The link is real —
+ * tapping it returns to the app with a session, and AppShell enters
+ * the live account. When no Supabase project is configured there is
+ * no account to sign in to, so the screen offers the guest account
+ * only.
  */
-export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) {
+export default function SignInScreen({ onGuest, showToast }: Props) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -39,10 +37,7 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
     }
     setEmail(v);
     const supabase = getSupabase();
-    if (!supabase) {
-      setSent(true);
-      return;
-    }
+    if (!supabase) return;
     setSending(true);
     const { error } = await supabase.auth.signInWithOtp({
       email: v,
@@ -56,6 +51,36 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
     setSent(true);
   };
 
+  const guestBlock = (
+    <div className={live ? "mt-5 border-t border-dashed border-linesoft pt-5" : ""}>
+      <button type="button" className={BTN_SECONDARY} onClick={onGuest}>
+        Guest
+      </button>
+      <p className="mt-2.5 text-center text-[12px] leading-[1.5] text-faint">
+        For testing: Amy (Grade 3) and Bob (Grade 4), with their packets and
+        two weeks of marked history.
+      </p>
+    </div>
+  );
+
+  if (!live) {
+    return (
+      <div className="px-[18px] pb-[26px] pt-[52px]">
+        <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
+          Practice Sheets
+        </p>
+        <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
+          Welcome
+        </h1>
+        <p className="mb-5 text-[13.5px] leading-[1.45] text-mid">
+          Account sign-in isn’t set up on this build yet. You can explore the
+          whole app with the guest account.
+        </p>
+        {guestBlock}
+      </div>
+    );
+  }
+
   if (sent) {
     return (
       <div className="px-[18px] pb-[26px] pt-[44px] text-center">
@@ -66,28 +91,12 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
           <br />
           Tap it on this phone to continue.
         </p>
-        {live ? (
-          <p className="mx-auto mb-3.5 max-w-[320px] text-[13.5px] leading-[1.45] text-mid">
-            This page will sign you in once you tap the link.
-          </p>
-        ) : (
-          <button type="button" className={BTN} onClick={() => onSignedIn(email)}>
-            Continue (demo)
-          </button>
-        )}
+        <p className="mx-auto mb-3.5 max-w-[320px] text-[13.5px] leading-[1.45] text-mid">
+          This page will sign you in once you tap the link.
+        </p>
         <div className="mt-2.5 flex items-center justify-center">
           <Linkish onClick={() => setSent(false)}>Use a different email</Linkish>
-          <Linkish
-            onClick={() => {
-              if (live) {
-                void sendLink();
-              } else {
-                showToast("New sign-in link sent (demo)");
-              }
-            }}
-          >
-            Resend link
-          </Linkish>
+          <Linkish onClick={() => void sendLink()}>Resend link</Linkish>
         </div>
       </div>
     );
@@ -123,18 +132,7 @@ export default function SignInScreen({ onSignedIn, onGuest, showToast }: Props) 
       <button type="button" className={BTN} onClick={() => void sendLink()} disabled={sending}>
         {sending ? "Sending…" : "Email me a sign-in link"}
       </button>
-      <p className="mt-3.5 text-center">
-        <Linkish onClick={() => onSignedIn()}>Skip for demo</Linkish>
-      </p>
-      <div className="mt-5 border-t border-dashed border-linesoft pt-5">
-        <button type="button" className={BTN_SECONDARY} onClick={onGuest}>
-          Guest
-        </button>
-        <p className="mt-2.5 text-center text-[12px] leading-[1.5] text-faint">
-          For testing: a fresh account with Amy (Grade 3) and Bob (Grade 4) —
-          nothing scanned yet.
-        </p>
-      </div>
+      {guestBlock}
       <p className="mt-[26px] text-center text-[12px] text-faint">
         No password — we email you a one-tap link.
       </p>

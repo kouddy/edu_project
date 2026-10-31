@@ -66,8 +66,8 @@ export async function POST(req: Request) {
 /**
  * When the request carries a parent token, verify it and confirm every
  * kid it names belongs to that parent; the job is then tagged so its
- * results persist to the account. Unauthenticated requests (demo and
- * guest modes) start jobs exactly as before.
+ * results persist to the account. Unauthenticated requests (guest
+ * mode) start jobs exactly as before.
  */
 async function authorizeAndStart(req: Request, photos: string[], kidContext: KidContext[]) {
   const token = bearerToken(req);

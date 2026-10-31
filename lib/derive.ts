@@ -27,7 +27,6 @@ import {
   type Sheet,
   type Submission,
 } from "./store";
-import { ensureDemoData } from "./demo";
 import { ensureGuestData } from "./guest";
 
 export { kidTrackLabel, sheetLabel };
@@ -50,11 +49,10 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  // Each local mode layers its own data: the demo dataset in demo mode,
-  // the guest account and its assigned packets in guest mode. Live mode
-  // seeds nothing — its database mirrors the server (lib/live-sync.ts).
+  // Guest mode layers its own data: the guest account, its assigned
+  // packets and its seeded history. Live mode seeds nothing — its
+  // database mirrors the server (lib/live-sync.ts).
   if (getActiveMode() === "guest") ensureGuestData();
-  else if (getActiveMode() === "demo") ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));
@@ -167,9 +165,8 @@ function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
 
 /**
  * History: finished records only — final results that are not part of this
- * week's homework. The live Week 12 sheet never appears here, so nothing in
- * History can change. (Math · Set C lands here once scanned in, already
- * final.)
+ * week's homework. A sheet still being marked, or still waiting on a
+ * parent check, never appears here, so nothing in History can change.
  */
 export function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
   const homeworkIds = new Set(homeworkStates(snap, kid).map((st) => st.sheet.id));
@@ -185,16 +182,55 @@ export function kidHasGradedSheet(snap: Snapshot, kid: Kid): boolean {
   return [...snap.states.values()].some((st) => st.kid.id === kid.id && st.result);
 }
 
-/** Weekly streak: Gina's seeded run is 6, +1 once this week is finished. */
-const STREAK_BASE: Record<string, number> = { "kid-gina": 6 };
+/**
+ * Weekly streak: consecutive finished weeks, counted back from the
+ * most recent finished week. A week is finished when every one of its
+ * sheets is final; the current week joins the streak once it is
+ * finished, and an unfinished current week does not break a run of
+ * finished weeks behind it.
+ */
 export function streakFor(snap: Snapshot, kid: Kid): number {
-  return (STREAK_BASE[kid.id] ?? 0) + (kidWeekDone(snap, kid) ? 1 : 0);
+  const byWeek = new Map<number, SheetState[]>();
+  for (const st of snap.states.values()) {
+    if (st.kid.id !== kid.id) continue;
+    const rows = byWeek.get(st.sheet.week) ?? [];
+    rows.push(st);
+    byWeek.set(st.sheet.week, rows);
+  }
+  const finished = (week: number): boolean => {
+    const rows = byWeek.get(week);
+    return !!rows && rows.length > 0 && rows.every(isDone);
+  };
+  const start = [...byWeek.keys()].sort((a, b) => b - a).find(finished);
+  if (start === undefined) return 0;
+  let streak = 0;
+  for (let week = start; finished(week); week--) streak++;
+  return streak;
 }
 
-/** Share of month-old review questions still answered correctly. */
+/**
+ * Share of past weeks' review questions still answered correctly —
+ * the review sheets from earlier packets, marked final. Null when the
+ * kid has no finished review questions yet.
+ */
 export function reviewRetentionText(snap: Snapshot, kid: Kid): string | null {
   if (!kidHasGradedSheet(snap, kid)) return null;
-  return kid.id === "kid-gina" ? "8/10 still correct" : null;
+  const current = currentWeek(snap, kid);
+  let total = 0;
+  let correct = 0;
+  for (const st of snap.states.values()) {
+    if (st.kid.id !== kid.id || !st.result || !st.key || !st.score?.isFinal) continue;
+    if (st.sheet.week >= current) continue;
+    const resolved = new Map(st.resolutions.map((r) => [r.questionNumber, r.resolution]));
+    for (const g of st.result.perQuestion) {
+      const q = st.key.questions.find((x) => x.number === g.questionNumber);
+      if (!q?.isReview) continue;
+      total++;
+      const effective = g.verdict === "unsure" ? resolved.get(g.questionNumber) : g.verdict;
+      if (effective === "correct") correct++;
+    }
+  }
+  return total > 0 ? `${correct}/${total} still correct` : null;
 }
 
 /* ----------------------------------------------------------- pending checks */

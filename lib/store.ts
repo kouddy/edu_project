@@ -18,14 +18,7 @@
  *   unresolved `unsure` as correct or wrong.
  */
 
-import {
-  GUEST_KIDS,
-  GUEST_PARENT,
-  SEED_ANSWER_KEYS,
-  SEED_KIDS,
-  SEED_PARENT,
-  SEED_SHEETS,
-} from "./seed";
+import { GUEST_KIDS, GUEST_PARENT } from "./seed";
 
 /* ------------------------------------------------------------------ types */
 
@@ -148,17 +141,17 @@ export interface CheckResolution {
 /* ------------------------------------------------------------- app modes */
 
 /**
- * The app runs in one of three modes, each with its own local database:
- * "demo" is the seeded Gina/Leo dataset; "guest" is a fresh account
- * (Amy and Bob, nothing scanned yet) for testing real uploads from
- * scratch; "live" is a real signed-in account whose database mirrors
- * the server (see lib/live-sync.ts) and starts empty. The active mode
- * is chosen at sign-in and kept in the auth record; `activateMode`
- * points every read/write below at the active mode's document.
+ * The app runs in one of two modes, each with its own local database:
+ * "guest" is a seeded test account (Amy and Bob, with packets and a
+ * marking history) that lives entirely on the device; "live" is a real
+ * signed-in account whose database mirrors the server (see
+ * lib/live-sync.ts) and starts empty. The active mode is chosen at
+ * sign-in and kept in the auth record; `activateMode` points every
+ * read/write below at the active mode's document.
  */
-export type AppMode = "demo" | "guest" | "live";
+export type AppMode = "guest" | "live";
 
-let activeMode: AppMode = "demo";
+let activeMode: AppMode = "guest";
 
 export function activateMode(mode: AppMode): void {
   activeMode = mode;
@@ -181,14 +174,11 @@ interface Db {
   checkResolutions: CheckResolution[];
 }
 
-const DEMO_DB_KEY = "practice-sheets:db:v2";
 const GUEST_DB_KEY = "practice-sheets:db:guest:v1";
 const LIVE_DB_KEY = "practice-sheets:db:live:v1";
 
 function dbKey(): string {
-  if (activeMode === "guest") return GUEST_DB_KEY;
-  if (activeMode === "live") return LIVE_DB_KEY;
-  return DEMO_DB_KEY;
+  return activeMode === "live" ? LIVE_DB_KEY : GUEST_DB_KEY;
 }
 
 const EMPTY_DB: Db = {
@@ -239,9 +229,9 @@ function nowIso(): string {
 /* ---------------------------------------------------------------- seeding */
 
 /**
- * Load the active mode's seed data if its database is still empty:
- * the demo dataset in demo mode, just the guest parent and kids (no
- * sheets at all) in guest mode. Idempotent — safe on every page load.
+ * Load the guest account's base records if its database is still
+ * empty: the guest parent and kids. lib/guest.ts layers the packets
+ * and history on top. Idempotent — safe on every page load.
  */
 export function ensureSeeded(): void {
   if (!isBrowser()) return;
@@ -250,15 +240,8 @@ export function ensureSeeded(): void {
   if (activeMode === "live") return;
   const db = readDb();
   if (db.parents.length > 0) return;
-  if (activeMode === "guest") {
-    db.parents = structuredClone([GUEST_PARENT]);
-    db.kids = structuredClone(GUEST_KIDS);
-  } else {
-    db.parents = structuredClone([SEED_PARENT]);
-    db.kids = structuredClone(SEED_KIDS);
-    db.sheets = structuredClone(SEED_SHEETS);
-    db.answerKeys = structuredClone(SEED_ANSWER_KEYS);
-  }
+  db.parents = structuredClone([GUEST_PARENT]);
+  db.kids = structuredClone(GUEST_KIDS);
   writeDb(db);
 }
 
@@ -288,7 +271,7 @@ export interface AuthState {
   signedIn: boolean;
   /** The email the parent used for the sign-in link, when they gave one. */
   email?: string;
-  /** Which dataset this device is running; absent means demo. */
+  /** Which dataset this device is running; absent means guest. */
   mode?: AppMode;
 }
 
@@ -303,14 +286,14 @@ export function getAuthState(): AuthState {
     return {
       signedIn: parsed.signedIn === true,
       email: parsed.email,
-      mode: parsed.mode === "guest" || parsed.mode === "live" ? parsed.mode : "demo",
+      mode: parsed.mode === "live" ? "live" : "guest",
     };
   } catch {
     return { signedIn: false };
   }
 }
 
-export function signIn(email?: string, mode: AppMode = "demo"): void {
+export function signIn(email?: string, mode: AppMode = "guest"): void {
   if (!isBrowser()) return;
   const state: AuthState = { signedIn: true, mode, ...(email ? { email } : {}) };
   window.localStorage.setItem(AUTH_KEY, JSON.stringify(state));
@@ -319,6 +302,26 @@ export function signIn(email?: string, mode: AppMode = "demo"): void {
 export function signOut(): void {
   if (!isBrowser()) return;
   window.localStorage.removeItem(AUTH_KEY);
+}
+
+/* ------------------------------------------------- guest history marker */
+
+/**
+ * The guest account's seeded marking history is layered in exactly
+ * once (see lib/guest.ts). This device-local flag records that it
+ * happened, so a sheet the parent later removes is not resurrected
+ * by the next seed pass.
+ */
+const GUEST_HISTORY_KEY = "practice-sheets:guest-history:v1";
+
+export function isGuestHistorySeeded(): boolean {
+  if (!isBrowser()) return false;
+  return window.localStorage.getItem(GUEST_HISTORY_KEY) === "1";
+}
+
+export function markGuestHistorySeeded(): void {
+  if (!isBrowser()) return;
+  window.localStorage.setItem(GUEST_HISTORY_KEY, "1");
 }
 
 /* -------------------------------------------------- pending grade jobs */
@@ -336,14 +339,11 @@ export interface PendingGradeJob {
   submittedAt: number;
 }
 
-const DEMO_JOBS_KEY = "practice-sheets:jobs:v1";
 const GUEST_JOBS_KEY = "practice-sheets:jobs:guest:v1";
 const LIVE_JOBS_KEY = "practice-sheets:jobs:live:v1";
 
 function jobsKey(): string {
-  if (activeMode === "guest") return GUEST_JOBS_KEY;
-  if (activeMode === "live") return LIVE_JOBS_KEY;
-  return DEMO_JOBS_KEY;
+  return activeMode === "live" ? LIVE_JOBS_KEY : GUEST_JOBS_KEY;
 }
 
 export function listPendingJobs(): PendingGradeJob[] {
@@ -586,8 +586,8 @@ export function getCheckResolution(
 /* -------------------------------------------- bulk seeding / demo records */
 
 /**
- * Insert records whose ids are not already present. Used to layer the demo
- * dataset (extra sheets, past submissions, …) onto the base seed without
+ * Insert records whose ids are not already present. Used to layer the
+ * guest dataset (packets, seeded history, …) onto the base seed without
  * duplicating anything on repeat loads.
  */
 export function seedRecords(bundle: {
@@ -618,8 +618,8 @@ export function seedRecords(bundle: {
 /**
  * Replace the live database wholesale with the server's account state.
  * The live partition is a mirror, never a source of truth, so a sync
- * simply overwrites it; demo and guest databases are never touched
- * (they do not call this).
+ * simply overwrites it; the guest database is never touched
+ * (it does not call this).
  */
 export function replaceServerBundle(bundle: {
   parent: Parent;

@@ -2,8 +2,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 // The browser Supabase client for real (live) accounts. Configured by
 // NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY; when those
-// are unset there is no live mode — sign-in stays the device-local demo
-// and the app behaves exactly as it did before accounts existed.
+// are unset there is no live mode and the sign-in screen offers the
+// device-local guest account only.
 let cached: SupabaseClient | null | undefined;
 
 export function getSupabase(): SupabaseClient | null {
