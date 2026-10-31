@@ -3,6 +3,6 @@
     "defaultProvider": "meta",
     "maxRetries": 1,
     "maxStepsPerSheet": 24,
-    "thinkingLevel": "medium",
+    "thinkingLevel": "low",
     "tokenBudgetPerSheet": 60000
 }

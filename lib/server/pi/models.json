@@ -2,7 +2,7 @@
     "$schema": "https://pi.dev/schemas/models.schema.json",
     "providers": {
         "baseten": {
-            "api": "openai-completions",
+            "api": "openai-responses",
             "apiKey": "$BASETEN_API_KEY",
             "baseUrl": "https://inference.baseten.co/v1",
             "models": [
@@ -14,13 +14,14 @@
                         "image"
                     ],
                     "maxTokens": 8192,
-                    "name": "Muse Spark Open (via Baseten)"
+                    "name": "Muse Spark Open (via Baseten)",
+                    "reasoning": true
                 }
             ],
             "name": "Baseten"
         },
         "modal": {
-            "api": "openai-completions",
+            "api": "openai-responses",
             "apiKey": "$MODAL_API_KEY",
             "baseUrl": "https://jtgao20--ep-deepseek-v4-1-flash-1017-server.us-west.modal.direct/v1",
             "models": [
@@ -32,13 +33,20 @@
                         "image"
                     ],
                     "maxTokens": 8192,
-                    "name": "DeepSeek V4.1 Flash"
+                    "name": "DeepSeek V4.1 Flash",
+                    "reasoning": true,
+                    "thinkingLevelMap": {
+                        "minimal": "low",
+                        "low": "low",
+                        "medium": "high",
+                        "high": "high"
+                    }
                 }
             ],
             "name": "Modal"
         },
         "meta": {
-            "api": "openai-completions",
+            "api": "openai-responses",
             "apiKey": "$META_API_KEY",
             "baseUrl": "https://api.meta.ai/v1",
             "models": [
@@ -75,7 +83,8 @@
                         "image"
                     ],
                     "maxTokens": 8192,
-                    "name": "Gemini 3.8 Flash"
+                    "name": "Gemini 3.8 Flash",
+                    "reasoning": true
                 }
             ],
             "name": "Google Gemini"
