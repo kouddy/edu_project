@@ -18,7 +18,7 @@
  *   unresolved `unsure` as correct or wrong.
  */
 
-import { DEMO_KIDS, DEMO_PARENT } from "./seed";
+
 
 /* ------------------------------------------------------------------ types */
 
@@ -227,6 +227,23 @@ function nowIso(): string {
 }
 
 /* ---------------------------------------------------------------- seeding */
+
+/**
+ * The demo account's base records: a parent with two kids. lib/demo.ts
+ * layers their packets and marking history on top.
+ */
+const DEMO_PARENT: Parent = {
+  id: "parent-demo",
+  name: "Demo",
+};
+
+const DEMO_KIDS: Kid[] = [
+  { id: "kid-amy", parentId: DEMO_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
+  { id: "kid-bob", parentId: DEMO_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
+];
+
+/** The demo account's sign-in email — a fake address for a fake account. */
+export const DEMO_EMAIL = "demo@example.com";
 
 /**
  * Load the demo account's base records if its database is still

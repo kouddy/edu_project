@@ -9,10 +9,9 @@
  * registry entries so a photo of any real sheet grades against the
  * book's own answer key.
  *
- * Book entries are keyed by printed code like the seeded ones. A grade
- * with a seeded kid (Grade 4 → Gina) binds to that kid; other grades stay
- * unbound until a kid of that grade exists — the sheet still grades, the
- * client just has no record to file the result under yet.
+ * Book entries are keyed by printed code. They are unbound — no kid is
+ * attached at this layer; the client files each result under its own
+ * kid of the sheet's grade.
  *
  * The books carry no per-question explanations, so a plain one is
  * synthesised from the prompt and answer; the generated guidance produced
@@ -21,7 +20,6 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
-import { SEED_KIDS } from "../seed";
 import type { AnswerKeyQuestion } from "../store";
 import type { AgentId, RegistryEntry } from "./registry";
 
@@ -198,11 +196,10 @@ function buildBookRegistry(): RegistryEntry[] {
     for (const file of folder.files) {
       const doc = loadDoc(folder, file);
       const grade = doc.grade;
-      const kid = SEED_KIDS.find((k) => k.grade === grade);
       const display = displaySubject(doc.subject);
       const base = {
-        kidId: kid?.id ?? "",
-        kidName: kid?.name ?? `Grade ${grade}`,
+        kidId: "",
+        kidName: `Grade ${grade}`,
         kidGrade: grade,
         subject: display,
         agent: agentForSubject(display),

@@ -71,7 +71,7 @@ export default function HomeScreen({
   const retention = reviewRetentionText(snap, kid);
 
   /* The check card's copy, in the wireframe's words: the label arrives as
-     "Gina · Math · Week 12" and reads "Gina · Math Week 12" / "Math Week 12". */
+     "Amy · Math · Week 40" and reads "Amy · Math Week 40" / "Math Week 40". */
   const checkParts = status?.type === "check" ? status.label.split(" · ") : [];
   const checkKid = checkParts[0] ?? "";
   const checkSheet = checkParts.slice(1).join(" ");

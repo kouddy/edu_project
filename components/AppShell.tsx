@@ -3,11 +3,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Spinner } from "@heroui/react";
-import { activateMode, deletePhoto, getActiveMode, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, signOut, type AppMode } from "@/lib/store";
+import { activateMode, deletePhoto, DEMO_EMAIL, getActiveMode, getAuthState, getPhoto, listPendingJobs, resolveCheck, savePhoto, signIn, signOut, type AppMode } from "@/lib/store";
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
 import { postResolution, syncLiveAccount } from "@/lib/live-sync";
 import { getSupabase } from "@/lib/supabase-client";
-import { DEMO_EMAIL } from "@/lib/seed";
 import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
 import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";

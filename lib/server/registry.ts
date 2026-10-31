@@ -1,30 +1,21 @@
 /**
  * lib/server/registry.ts — the server-side answer-key registry.
  *
- * The server is the source of truth for answer keys: printed code → sheet,
- * assigned kid, and the versioned key. The client never sends keys with its
- * photos (see lib/grade-contract.ts).
+ * The server is the source of truth for answer keys: printed code → sheet
+ * and the versioned key. The client never sends keys with its photos
+ * (see lib/grade-contract.ts).
  *
- * The registry is seeded from the same data the local-first app uses
- * (lib/seed.ts), but this module is imported ONLY by server code (route
- * handlers and lib/server/*) so keys stay out of the client flow. Later the
+ * The registry is exactly the frozen book catalogues
+ * (lib/server/book-catalogue.ts): every printed sheet in the books, with
+ * its key. This module is imported ONLY by server code (route handlers
+ * and lib/server/*) so keys stay out of the client flow. Later the
  * registry moves to a database; the lookup functions are the seam.
  */
 
-import { SEED_ANSWER_KEYS, SEED_KIDS, SEED_SHEETS } from "../seed";
 import type { AnswerKeyQuestion } from "../store";
 import { BOOK_REGISTRY } from "./book-catalogue";
 
 export type AgentId = "math" | "english";
-
-const AGENT_BY_SUBJECT: Record<string, AgentId> = {
-  Math: "math",
-  "Word Problems": "math",
-  English: "english",
-};
-
-/** Registry key version for every seeded sheet. Bump when a key changes. */
-const SEEDED_KEY_VERSION = 2;
 
 export interface RegistryEntry {
   printedCode: string;
@@ -42,41 +33,11 @@ export interface RegistryEntry {
   questions: AnswerKeyQuestion[];
 }
 
-function buildRegistry(): RegistryEntry[] {
-  const kidById = new Map(SEED_KIDS.map((k) => [k.id, k]));
-  const keyBySheetId = new Map(SEED_ANSWER_KEYS.map((k) => [k.sheetId, k]));
-  return SEED_SHEETS.map((sheet) => {
-    const kid = kidById.get(sheet.kidId);
-    const key = keyBySheetId.get(sheet.id);
-    return {
-      printedCode: sheet.printedCode,
-      sheetId: sheet.id,
-      kidId: sheet.kidId,
-      kidName: kid?.name ?? "",
-      kidGrade: kid?.grade ?? 0,
-      subject: sheet.subject,
-      agent: AGENT_BY_SUBJECT[sheet.subject] ?? "math",
-      week: sheet.week,
-      setName: sheet.setName,
-      topic: sheet.topic,
-      keyVersion: SEEDED_KEY_VERSION,
-      questions: key?.questions ?? [],
-    };
-  });
-}
-
-export const REGISTRY: RegistryEntry[] = (() => {
-  const seeded = buildRegistry();
-  const seededCodes = new Set(seeded.map((e) => e.printedCode));
-  // Book-catalogue entries fill in every real sheet the seed does not
-  // already cover (the seeded Grade 4 Week 12 packet wins on its codes —
-  // same key, richer seed metadata).
-  return [...seeded, ...BOOK_REGISTRY.filter((e) => !seededCodes.has(e.printedCode))];
-})();
+export const REGISTRY: RegistryEntry[] = BOOK_REGISTRY;
 
 /**
- * "Gina · Math · Set C" / "Gina · Math · Week 12" — the display label for
- * an identified sheet (progress lines, summaries). The one server-side
+ * "Grade 4 · Math · Week 40" — the display label for an identified
+ * sheet (progress lines, summaries). The one server-side
  * implementation; mirrors lib/store.ts's sheetLabel for local records.
  */
 export function sheetLabelForEntry(entry: RegistryEntry): string {

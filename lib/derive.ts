@@ -296,7 +296,10 @@ export function statusSlot(snap: Snapshot, viewedKid: Kid | null): StatusSlot {
 /* ------------------------------------------------------------------ display */
 
 function pronounFor(kid: Kid): string {
-  return kid.name === "Gina" ? "her" : kid.name === "Leo" ? "his" : "their";
+  // One neutral pronoun for every kid — the summaries never need a
+  // name-specific form.
+  void kid;
+  return "their";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

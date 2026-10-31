@@ -88,7 +88,7 @@ async function postGradeJob(photoKeys: string[]): Promise<string | null> {
   }
 }
 
-/** "Gina · Math · Set C" / "Gina · Math · Week 12" for a sheet, from the
+/** "Amy · Math · Week 40" / "Bob · Math · Week 40" for a sheet, from the
  *  local store (base label is lib/store.ts's sheetLabel). */
 function kidSheetLabel(sheetId: string): string {
   const sheet = getSheet(sheetId);

@@ -3,17 +3,16 @@
  * interface (the job runner in lib/server/run-grade.ts owns
  * attempts, dedupe, and aggregation; a provider grades ONE photo per call).
  *
- * The scripted demo provider reproduces the prototype's demo verdict
- * patterns from the server registry, with no model call — the same
- * per-photo shape the real providers return. It is a development tool
- * only, selected explicitly with GRADING_PROVIDER=demo; it is never a
- * fallback. Real providers are defined in lib/server/pi/models.json
+ * The scripted demo provider returns canned verdict patterns built
+ * from real book keys in the server registry, with no model call — the
+ * same per-photo shape the real providers return. It is a development
+ * tool only, selected explicitly with GRADING_PROVIDER=demo; it is
+ * never a fallback. Real providers are defined in lib/server/pi/models.json
  * (Pi's native provider/model format) and all run through the one Pi
  * harness — adding a provider is a file edit.
  */
 
 import type { ApiSheetResult, GradeRequestPayload, PhotoOutcomeKind } from "../grade-contract";
-import { GINA_MATH_SETC, GINA_MATH_W12, SETC_DEMO_GRADES, W12_DEMO_GRADES } from "../seed";
 import {
   effectiveModel,
   loadPiConfig,
@@ -55,11 +54,6 @@ export interface GradingProvider {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-/** Plausible demo error categories, keyed `${sheetId}:${questionNumber}`. */
-const DEMO_ERROR_CATEGORIES: Record<string, string> = {
-  [`${GINA_MATH_W12}:4`]: "borrowing-slip",
-};
-
 function identifiedFor(entry: RegistryEntry): IdentifiedSheet {
   return {
     sheetId: entry.sheetId,
@@ -69,55 +63,74 @@ function identifiedFor(entry: RegistryEntry): IdentifiedSheet {
   };
 }
 
-function demoSheetResult(
-  sheetId: string,
-  pattern: readonly { questionNumber: number; verdict: "correct" | "wrong" | "unsure"; confidence: number; readAnswer: string }[],
-): ApiSheetResult {
+/** The scripted provider's anchors: real book sheets from the registry. */
+const DEMO_ANCHOR_FIRST = "book-on-math-g3-w40-s01";
+const DEMO_ANCHOR_REST = "book-on-math-g4-w40-s01";
+
+/** Bump an answer's last digit — a plausible misread of it. */
+function misread(answer: string): string {
+  const chars = [...answer];
+  for (let i = chars.length - 1; i >= 0; i--) {
+    if (/\d/.test(chars[i])) {
+      chars[i] = String((Number(chars[i]) + 1) % 10);
+      return chars.join("");
+    }
+  }
+  return answer;
+}
+
+function demoSheetResult(sheetId: string, first: boolean): ApiSheetResult {
   const entry = findBySheetId(sheetId);
   if (!entry) throw new Error(`Demo provider: no registry entry for ${sheetId}`);
-  const keyByNumber = new Map(entry.questions.map((q) => [q.number, q]));
+  const qs = entry.questions;
+  // The canned pattern, built from the anchor's own key: the first
+  // digit-bearing answer after Q1 is wrong (a misread digit); on the
+  // first photo the second-to-last answer is unsure and the last one
+  // is blank, so the parent-check and no-answer flows are exercisable
+  // without a model call too.
+  const wrongIdx = qs.findIndex((q, i) => i >= 1 && /\d/.test(q.correctAnswer));
+  const perQuestion = qs.map((q, i) => {
+    if (first && i === qs.length - 1) {
+      return {
+        questionNumber: q.number,
+        verdict: "wrong" as const,
+        confidence: 1,
+        readAnswer: null,
+        meta: { topic: q.topic, noAnswer: true, guidance: q.explanation },
+      };
+    }
+    if (first && i === qs.length - 2) {
+      return {
+        questionNumber: q.number,
+        verdict: "unsure" as const,
+        confidence: 0.55,
+        readAnswer: q.correctAnswer,
+        meta: { topic: q.topic },
+      };
+    }
+    if (i === wrongIdx) {
+      return {
+        questionNumber: q.number,
+        verdict: "wrong" as const,
+        confidence: 0.94,
+        readAnswer: misread(q.correctAnswer),
+        meta: { topic: q.topic, errorCategory: "unexplained", guidance: q.explanation },
+      };
+    }
+    return {
+      questionNumber: q.number,
+      verdict: "correct" as const,
+      confidence: 0.98,
+      readAnswer: q.correctAnswer,
+      meta: { topic: q.topic },
+    };
+  });
   return {
     sheetId: entry.sheetId,
     kidId: entry.kidId,
     printedCode: entry.printedCode,
     keyVersion: entry.keyVersion,
-    perQuestion: pattern.map((g) => {
-      const keyQ = keyByNumber.get(g.questionNumber);
-      // The demo pattern's Q10 on Week 12 is a BLANK answer, so
-      // the no-answer flow is exercisable without a model call. (The seed's
-      // shared W12_DEMO_GRADES is untouched — the pre-graded seed record
-      // keeps its original pattern.)
-      if (sheetId === GINA_MATH_W12 && g.questionNumber === 10) {
-        return {
-          questionNumber: 10,
-          verdict: "wrong" as const,
-          confidence: 1,
-          readAnswer: null,
-          meta: {
-            ...(keyQ ? { topic: keyQ.topic } : {}),
-            noAnswer: true,
-            ...(keyQ ? { guidance: keyQ.explanation } : {}),
-          },
-        };
-      }
-      return {
-        questionNumber: g.questionNumber,
-        verdict: g.verdict,
-        confidence: g.confidence,
-        readAnswer: g.readAnswer,
-        meta: keyQ
-          ? {
-              topic: keyQ.topic,
-              ...(g.verdict === "wrong"
-                ? {
-                    errorCategory: DEMO_ERROR_CATEGORIES[`${sheetId}:${g.questionNumber}`] ?? "unexplained",
-                    guidance: keyQ.explanation,
-                  }
-                : {}),
-            }
-          : undefined,
-      };
-    }),
+    perQuestion,
   };
 }
 
@@ -133,9 +146,9 @@ const demoProvider: GradingProvider = {
     };
 
     await step("Reading the sheet", 350);
-    // Demo identification: the first staged photo is Gina's Math · Week 12;
-    // any further photo is Math · Set C.
-    const sheetId = photoIndex === 0 ? GINA_MATH_W12 : GINA_MATH_SETC;
+    // Demo identification: the first staged photo is Amy's Week 40
+    // opener (Grade 3); any further photo is Bob's (Grade 4).
+    const sheetId = photoIndex === 0 ? DEMO_ANCHOR_FIRST : DEMO_ANCHOR_REST;
     const entry = findBySheetId(sheetId);
     if (!entry) throw new Error(`Demo provider: no registry entry for ${sheetId}`);
     const identified = identifiedFor(entry);
@@ -145,10 +158,7 @@ const demoProvider: GradingProvider = {
     }
 
     await step("Marking answers", 350);
-    const sheet = demoSheetResult(
-      sheetId,
-      sheetId === GINA_MATH_SETC ? SETC_DEMO_GRADES : W12_DEMO_GRADES,
-    );
+    const sheet = demoSheetResult(sheetId, photoIndex === 0);
 
     if (sheet.perQuestion.some((q) => q.verdict === "wrong")) {
       await step("Writing guidance for the tricky ones", 250);

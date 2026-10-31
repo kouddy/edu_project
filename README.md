@@ -156,10 +156,12 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
   (full-screen camera or Upload Photo; photos stage in a tray and grading
   starts only on **Grade**), **Results**, **Parent check** (one consolidated
   queue across kids), **Profile** (member QR).
-- Seed data (`lib/seed.ts`): parent "David G."; kids Gina (Grade 4 · Math)
-  and Leo (Grade 1 · Math); seven sheets. A fresh profile opens with Gina's
-  Math · Week 12 already marked and two answers awaiting check, so the
-  Parent check flow is visible immediately.
+- Demo data (`lib/demo.ts`): one file holds the whole demo dataset —
+  the account (parent "Demo"; kids Amy, Grade 3, and Bob, Grade 4),
+  their Weeks 38–40 packets, and the seeded marking history. A fresh
+  profile opens with two weeks of History, one of Amy's Week 40 sheets
+  already marked, and one answer awaiting check, so the Parent check
+  flow is visible immediately.
 
 ### Grading (server)
 
@@ -196,7 +198,8 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
   provider is defined but its multimodal tool-calling path currently
   hangs, so it is not usable for grading.
 - Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
-  versioned key, seeded from `lib/seed.ts`. All 7 sheets have keys.
+  versioned key. The registry is exactly the frozen book catalogues —
+  2,019 sheets, all with keys.
 
 ## Repo map
 
@@ -204,8 +207,8 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
 app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config,
                 api/account (+ resolutions, photos)
 components/     AppShell + screens (Home, Scan, Results, Check, Profile, SignIn), ui.tsx
-lib/            store.ts (data layer), derive.ts, seed.ts, grading.ts (client),
-                grade-contract.ts (wire types), demo.ts (seeded demo lifecycle),
+lib/            store.ts (data layer), derive.ts, grading.ts (client),
+                grade-contract.ts (wire types), demo.ts (the demo dataset),
                 live-sync.ts + supabase-client.ts (live mode), account-contract.ts
 lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
                 pi-harness.ts, pi/ (models.json, subjects.json, settings.json,

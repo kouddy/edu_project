@@ -117,7 +117,7 @@ export type GradeJobStatusValue = "running" | "done" | "failed";
 export interface PhotoProgress {
   index: number;
   state: "marking" | "marked" | "settled";
-  /** "Gina · Math · Week 12" once the photo has been identified. */
+  /** "Amy · Math · Week 40" once the photo has been identified. */
   sheetLabel?: string;
   /** Current parent-language step for this photo, while marking. */
   step?: string;
