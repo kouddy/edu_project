@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * PacketScreen — one Homework group (subject + week).
+ * PacketScreen — one packet (subject + week), from Homework or History.
  *
  * One row per section: the catalogue already says which topic each
  * sheet belongs to, so a week's packet is its topics and review kinds,
@@ -71,12 +71,15 @@ function SheetRow({
   title,
   code,
   done,
+  score,
   last,
   onOpen,
 }: {
   title: string;
   code: string;
   done: boolean;
+  /** A finished sheet's score, shown instead of the Done pill in History. */
+  score?: { finalCorrect: number; total: number } | null;
   last: boolean;
   onOpen: () => void;
 }) {
@@ -92,7 +95,13 @@ function SheetRow({
         <span className="block truncate text-[14.5px] font-semibold text-ink">{title}</span>
         <span className="block truncate text-[12px] text-mid">{code}</span>
       </span>
-      <DonePill done={done} />
+      {score ? (
+        <span className={`${PILL} border-linesoft bg-fill text-mid`}>
+          {score.finalCorrect}/{score.total} final
+        </span>
+      ) : (
+        <DonePill done={done} />
+      )}
     </button>
   );
 }
@@ -102,6 +111,7 @@ export default function PacketScreen({
   subject,
   week,
   states,
+  variant = "homework",
   onBack,
   onOpenSheet,
 }: {
@@ -109,6 +119,9 @@ export default function PacketScreen({
   subject: string;
   week: number;
   states: SheetState[];
+  /** History packets are finished: their sheet rows carry scores
+   *  instead of Done pills. */
+  variant?: "homework" | "history";
   onBack: () => void;
   onOpenSheet: (sheetId: string) => void;
 }) {
@@ -166,6 +179,7 @@ export default function PacketScreen({
                     title={partLabel(group.topic, si)}
                     code={st.sheet.printedCode}
                     done={isDone(st)}
+                    score={variant === "history" ? st.score : undefined}
                     last={si === group.states.length - 1}
                     onOpen={() => onOpenSheet(st.sheet.id)}
                   />
@@ -186,6 +200,7 @@ export default function PacketScreen({
             title={st.sheet.topic}
             code={st.sheet.printedCode}
             done={isDone(st)}
+            score={variant === "history" ? st.score : undefined}
             last
             onOpen={() => onOpenSheet(st.sheet.id)}
           />

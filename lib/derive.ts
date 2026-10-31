@@ -98,7 +98,7 @@ export function isDone(st: SheetState): boolean {
   return !!st.score?.isFinal;
 }
 
-/** Homework grouped the way the packet is handed out: one entry per
+/** Sheets grouped the way packets are handed out: one entry per
  *  subject + week, holding that group's sheets in packet order. */
 export interface HomeworkGroup {
   subject: string;
@@ -106,29 +106,40 @@ export interface HomeworkGroup {
   states: SheetState[];
   doneCount: number;
   done: boolean;
+  /** The most recent grading time inside the group, if any. */
+  lastGradedAt: string | null;
 }
 
-export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+function groupByWeek(states: SheetState[]): HomeworkGroup[] {
   const byKey = new Map<string, SheetState[]>();
-  for (const st of homeworkStates(snap, kid)) {
+  for (const st of states) {
     const key = `${st.sheet.subject}|${st.sheet.week}`;
     const list = byKey.get(key) ?? [];
     list.push(st);
     byKey.set(key, list);
   }
-  return [...byKey.values()].map((states) => {
-    const sorted = [...states].sort((a, b) =>
+  return [...byKey.values()].map((list) => {
+    const sorted = [...list].sort((a, b) =>
       a.sheet.printedCode.localeCompare(b.sheet.printedCode),
     );
     const doneCount = sorted.filter(isDone).length;
+    const graded = sorted
+      .map((st) => st.result?.gradedAt)
+      .filter((d): d is string => !!d)
+      .sort();
     return {
       subject: sorted[0].sheet.subject,
       week: sorted[0].sheet.week,
       states: sorted,
       doneCount,
       done: doneCount === sorted.length,
+      lastGradedAt: graded[graded.length - 1] ?? null,
     };
   });
+}
+
+export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+  return groupByWeek(homeworkStates(snap, kid));
 }
 
 /** One topic's sheets inside a packet, in packet order — the practice
@@ -168,7 +179,7 @@ function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
  * week's homework. A sheet still being marked, or still waiting on a
  * parent check, never appears here, so nothing in History can change.
  */
-export function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
+function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
   const homeworkIds = new Set(homeworkStates(snap, kid).map((st) => st.sheet.id));
   return [...snap.states.values()]
     .filter(
@@ -176,6 +187,14 @@ export function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
         st.kid.id === kid.id && st.score?.isFinal && !homeworkIds.has(st.sheet.id),
     )
     .sort((a, b) => (b.result?.gradedAt ?? "").localeCompare(a.result?.gradedAt ?? ""));
+}
+
+/** History grouped like Homework: one entry per subject + week,
+ *  newest week first. */
+export function historyGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+  return groupByWeek(historyStates(snap, kid)).sort(
+    (a, b) => b.week - a.week || a.subject.localeCompare(b.subject),
+  );
 }
 
 export function kidHasGradedSheet(snap: Snapshot, kid: Kid): boolean {

@@ -9,7 +9,7 @@ import { postResolution, syncLiveAccount } from "@/lib/live-sync";
 import { getSupabase } from "@/lib/supabase-client";
 import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
-import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
+import { historyGroups, homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
 import ScanScreen, { type StagedPhoto } from "./ScanScreen";
@@ -24,12 +24,12 @@ type Screen =
   | { name: "home" }
   | { name: "signin" }
   | { name: "scan" }
-  | { name: "packet"; subject: string; week: number }
+  | { name: "packet"; subject: string; week: number; from: "homework" | "history" }
   | {
       name: "results";
       sheetId: string;
       origin: "homework" | "history" | "packet";
-      packet?: { subject: string; week: number };
+      packet?: { subject: string; week: number; from: "homework" | "history" };
     }
   | { name: "check"; from: "home" }
   | {
@@ -37,7 +37,7 @@ type Screen =
       from: "results";
       sheetId: string;
       origin: "homework" | "history" | "packet";
-      packet?: { subject: string; week: number };
+      packet?: { subject: string; week: number; from: "homework" | "history" };
     }
   | { name: "profile" };
 
@@ -150,9 +150,12 @@ export default function AppShell() {
   /** Back from a sheet: to its packet when it was opened from one, else
    *  Home scrolled to the section it came from. */
   const backFromSheet = useCallback(
-    (origin: "homework" | "history" | "packet", packet?: { subject: string; week: number }) => {
+    (
+      origin: "homework" | "history" | "packet",
+      packet?: { subject: string; week: number; from: "homework" | "history" },
+    ) => {
       if (origin === "packet" && packet) {
-        setScreen({ name: "packet", subject: packet.subject, week: packet.week });
+        setScreen({ name: "packet", subject: packet.subject, week: packet.week, from: packet.from });
       } else if (origin === "packet") {
         goHome("homework");
       } else {
@@ -363,7 +366,8 @@ export default function AppShell() {
               kid={kid}
               onSelectKid={(k) => setKidId(k.id)}
               onOpenSheet={openSheet}
-              onOpenGroup={(subject, week) => setScreen({ name: "packet", subject, week })}
+              onOpenGroup={(subject, week) => setScreen({ name: "packet", subject, week, from: "homework" })}
+              onOpenHistoryGroup={(subject, week) => setScreen({ name: "packet", subject, week, from: "history" })}
               onOpenCheck={() => setScreen({ name: "check", from: "home" })}
               scrollSection={scrollSection}
               marking={
@@ -390,18 +394,19 @@ export default function AppShell() {
               kid={kid}
               subject={screen.subject}
               week={screen.week}
+              variant={screen.from}
               states={
-                homeworkGroups(snap, kid).find(
+                (screen.from === "history" ? historyGroups(snap, kid) : homeworkGroups(snap, kid)).find(
                   (g) => g.subject === screen.subject && g.week === screen.week,
                 )?.states ?? []
               }
-              onBack={() => goHome("homework")}
+              onBack={() => goHome(screen.from)}
               onOpenSheet={(sheetId) =>
                 setScreen({
                   name: "results",
                   sheetId,
                   origin: "packet",
-                  packet: { subject: screen.subject, week: screen.week },
+                  packet: { subject: screen.subject, week: screen.week, from: screen.from },
                 })
               }
             />
