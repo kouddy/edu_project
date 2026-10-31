@@ -379,12 +379,11 @@ export function summaryText(st: SheetState): string {
 export function promptForDisplay(prompt: string, correctAnswer: string): string {
   // Registry text already tightens the spaces a removed picture
   // strands before punctuation; the stacked-fraction slash ("5 ⁄ 10")
-  // is tightened here. "?" is deliberately not tightened: in registry
-  // text a standalone "?" is the printed blank, and its space is the
-  // separation ("1/4 of 8 = ?").
+  // is tightened here as well. (The printed blank is "_" in registry
+  // text, never "?", so tightening "?" is safe.)
   const p = prompt
     .trimEnd()
-    .replace(/\s+([.:,;!])/g, "$1")
+    .replace(/\s+([?.:,;!])/g, "$1")
     .replace(/\s*⁄\s*/g, "/");
   if (correctAnswer === "True" || correctAnswer === "False") {
     return p.replace(/ T True F False$/, "");

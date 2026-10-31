@@ -1202,7 +1202,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A mirror image is called a ?",
+        "prompt": "A mirror image is called a _",
         "correctAnswer": "flip",
         "explanation": "The correct answer is flip.",
         "topic": "Congruent Shapes & Transformations",
@@ -1279,7 +1279,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Shapes that are the same shape AND the same size are called ?",
+        "prompt": "Shapes that are the same shape AND the same size are called _",
         "correctAnswer": "congruent",
         "explanation": "The correct answer is congruent.",
         "topic": "Congruent Shapes & Transformations",
@@ -1316,7 +1316,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "700 + 70 + 9 = ?",
+        "prompt": "700 + 70 + 9 = _",
         "correctAnswer": "779",
         "explanation": "The correct answer is 779.",
         "topic": "Expanded Form",
@@ -1345,7 +1345,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Write one hundred ninety as a number: ?",
+        "prompt": "Write one hundred ninety as a number: _",
         "correctAnswer": "190",
         "explanation": "The correct answer is 190.",
         "topic": "Read & Write Numbers to 1000",
@@ -1353,7 +1353,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the total of all four bars? Trees planted 7 4 2 6 Oak Pine Maple Birch ?",
+        "prompt": "What is the total of all four bars? Trees planted 7 4 2 6 Oak Pine Maple Birch _",
         "correctAnswer": "19",
         "explanation": "The correct answer is 19.",
         "topic": "Bar Graphs",
@@ -1366,7 +1366,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Estimate 854 − 695 (round to the nearest 10): ?",
+        "prompt": "Estimate 854 − 695 (round to the nearest 10): _",
         "correctAnswer": "150",
         "explanation": "The correct answer is 150.",
         "topic": "Estimate Sums & Differences to 1000",
@@ -1406,7 +1406,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Round 457 to the nearest 100: ?",
+        "prompt": "Round 457 to the nearest 100: _",
         "correctAnswer": "500",
         "explanation": "The correct answer is 500.",
         "topic": "Round to the Nearest 10 or 100",
@@ -2121,7 +2121,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A mirror image is called a ?",
+        "prompt": "A mirror image is called a _",
         "correctAnswer": "flip",
         "explanation": "The correct answer is flip.",
         "topic": "Congruent Shapes & Transformations",
@@ -2195,7 +2195,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Round 535 to the nearest 10: ?",
+        "prompt": "Round 535 to the nearest 10: _",
         "correctAnswer": "540",
         "explanation": "The correct answer is 540.",
         "topic": "Round to the Nearest 10 or 100",
@@ -2211,7 +2211,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "600 + 40 + 1 = ?",
+        "prompt": "600 + 40 + 1 = _",
         "correctAnswer": "641",
         "explanation": "The correct answer is 641.",
         "topic": "Expanded Form",
@@ -2256,7 +2256,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Least to greatest: 834, 404, 946 ?",
+        "prompt": "Least to greatest: 834, 404, 946 _",
         "correctAnswer": "404, 834, 946",
         "explanation": "The correct answer is 404, 834, 946.",
         "topic": "Order Numbers to 1000",
@@ -2285,7 +2285,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many toys are round altogether? Toy box sort Round Not round Red 2 5 Not red 5 1 ?",
+        "prompt": "How many toys are round altogether? Toy box sort Round Not round Red 2 5 Not red 5 1 _",
         "correctAnswer": "7",
         "explanation": "The correct answer is 7.",
         "topic": "Venn & Carroll Diagrams",
@@ -2301,7 +2301,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "8 × 5 = ?",
+        "prompt": "8 × 5 = _",
         "correctAnswer": "40",
         "explanation": "The correct answer is 40.",
         "topic": "Multiply by 2, 5 & 10",
@@ -2317,7 +2317,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "15, 18, 21, 24, ?",
+        "prompt": "15, 18, 21, 24, _",
         "correctAnswer": "27",
         "explanation": "The correct answer is 27.",
         "topic": "Growing Patterns",
@@ -2420,7 +2420,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "School starts at 8:00 ?",
+        "prompt": "School starts at 8:00 _",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2428,7 +2428,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Dinner is at 6:00 ?",
+        "prompt": "Dinner is at 6:00 _",
         "correctAnswer": "PM",
         "explanation": "The correct answer is PM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2436,7 +2436,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The sun rises at 6:30 ?",
+        "prompt": "The sun rises at 6:30 _",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2444,7 +2444,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Hockey practice is at 5:30 ?",
+        "prompt": "Hockey practice is at 5:30 _",
         "correctAnswer": "PM",
         "explanation": "The correct answer is PM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2978,7 +2978,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "School starts at 8:00 ?",
+        "prompt": "School starts at 8:00 _",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -3150,7 +3150,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Estimate 477 + 591 (round to the nearest 10): ?",
+        "prompt": "Estimate 477 + 591 (round to the nearest 10): _",
         "correctAnswer": "1070",
         "explanation": "The correct answer is 1070.",
         "topic": "Estimate Sums & Differences to 1000",
@@ -3158,7 +3158,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "1/4 of 8 = ?",
+        "prompt": "1/4 of 8 = _",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Fractions of a Group",
@@ -3195,7 +3195,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "The least of 464, 843, 197, 707 is ?",
+        "prompt": "The least of 464, 843, 197, 707 is _",
         "correctAnswer": "197",
         "explanation": "The correct answer is 197.",
         "topic": "Order Numbers to 1000",
@@ -3203,7 +3203,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write three hundred thirty-six as a number: ?",
+        "prompt": "Write three hundred thirty-six as a number: _",
         "correctAnswer": "336",
         "explanation": "The correct answer is 336.",
         "topic": "Read & Write Numbers to 1000",
@@ -3227,7 +3227,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "5 × 5 = 25, so 25 ÷ 5 = ?",
+        "prompt": "5 × 5 = 25, so 25 ÷ 5 = _",
         "correctAnswer": "5",
         "explanation": "The correct answer is 5.",
         "topic": "Relate Multiplication & Division",
@@ -3248,7 +3248,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "458 = ? + ? + ?",
+        "prompt": "458 = _ + _ + _",
         "correctAnswer": "400 + 50 + 8",
         "explanation": "The correct answer is 400 + 50 + 8.",
         "topic": "Expanded Form",
@@ -3272,7 +3272,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which was the most popular? Favourite sport ⚽ — class votes Choice Tally Frequency Soccer 11 Swimming 3 Hockey 10 Tennis 4 ?",
+        "prompt": "Which was the most popular? Favourite sport ⚽ — class votes Choice Tally Frequency Soccer 11 Swimming 3 Hockey 10 Tennis 4 _",
         "correctAnswer": "Soccer",
         "explanation": "The correct answer is Soccer.",
         "topic": "Frequency Tables",
@@ -3436,7 +3436,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A straight angle measures ? degrees.",
+        "prompt": "A straight angle measures _ degrees.",
         "correctAnswer": "180",
         "explanation": "The correct answer is 180.",
         "topic": "Classify Angles",
@@ -3444,7 +3444,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A right angle measures ? degrees.",
+        "prompt": "A right angle measures _ degrees.",
         "correctAnswer": "90",
         "explanation": "The correct answer is 90.",
         "topic": "Classify Angles",
@@ -3553,7 +3553,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "The tip of a slice of pizza is an ? angle.",
+        "prompt": "The tip of a slice of pizza is an _ angle.",
         "correctAnswer": "acute",
         "explanation": "The correct answer is acute.",
         "topic": "Classify Angles",
@@ -3561,7 +3561,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 10,
-        "prompt": "The hands of a clock at 3:00 make a ? angle.",
+        "prompt": "The hands of a clock at 3:00 make a _ angle.",
         "correctAnswer": "right",
         "explanation": "The correct answer is right.",
         "topic": "Classify Angles",
@@ -3598,7 +3598,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "The tip of a slice of pizza is an ? angle.",
+        "prompt": "The tip of a slice of pizza is an _ angle.",
         "correctAnswer": "acute",
         "explanation": "The correct answer is acute.",
         "topic": "Classify Angles",
@@ -3635,7 +3635,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A right angle measures ? degrees.",
+        "prompt": "A right angle measures _ degrees.",
         "correctAnswer": "90",
         "explanation": "The correct answer is 90.",
         "topic": "Classify Angles",
@@ -3648,7 +3648,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "3 L ? 3,000 mL",
+        "prompt": "3 L _ 3,000 mL",
         "correctAnswer": "=",
         "explanation": "The correct answer is =.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -3664,7 +3664,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at ?",
+        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at _",
         "correctAnswer": "1:40",
         "explanation": "The correct answer is 1:40.",
         "topic": "Elapsed Time",
@@ -3680,7 +3680,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A bus ride to Ottawa ends at 5:05 and lasted 1 hour 45 minutes. It started at ?",
+        "prompt": "A bus ride to Ottawa ends at 5:05 and lasted 1 hour 45 minutes. It started at _",
         "correctAnswer": "3:20",
         "explanation": "The correct answer is 3:20.",
         "topic": "Elapsed Time",
@@ -3693,7 +3693,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at ?",
+        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at _",
         "correctAnswer": "5:25",
         "explanation": "The correct answer is 5:25.",
         "topic": "Elapsed Time",
@@ -3709,7 +3709,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "3 kg ? 3,000 g",
+        "prompt": "3 kg _ 3,000 g",
         "correctAnswer": "=",
         "explanation": "The correct answer is =.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -3770,7 +3770,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "3000 + 800 + 20 + 2 = ?",
+        "prompt": "3000 + 800 + 20 + 2 = _",
         "correctAnswer": "3822",
         "explanation": "The correct answer is 3822.",
         "topic": "Place Value to 10,000",
@@ -3807,7 +3807,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "5 × 5 = ?",
+        "prompt": "5 × 5 = _",
         "correctAnswer": "25",
         "explanation": "The correct answer is 25.",
         "topic": "Multiplication Facts to 10 × 10",
@@ -3823,7 +3823,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "3/6 = 1 / ?",
+        "prompt": "3/6 = 1 / _",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Equivalent Fractions",
@@ -3844,7 +3844,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write from least to greatest: 0.0, 0.8, 0.2 ?",
+        "prompt": "Write from least to greatest: 0.0, 0.8, 0.2 _",
         "correctAnswer": "0.0, 0.2, 0.8",
         "explanation": "The correct answer is 0.0, 0.2, 0.8.",
         "topic": "Decimals to Tenths",
@@ -3852,7 +3852,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Solve: 708 ÷ 9 ?",
+        "prompt": "Solve: 708 ÷ 9 _",
         "correctAnswer": "78 R 6",
         "explanation": "The correct answer is 78 R 6.",
         "topic": "Divide 3-Digit by 1-Digit",
@@ -3876,7 +3876,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Greatest to least: 6175, 3542, 1661 ?",
+        "prompt": "Greatest to least: 6175, 3542, 1661 _",
         "correctAnswer": "6175, 3542, 1661",
         "explanation": "The correct answer is 6175, 3542, 1661.",
         "topic": "Compare & Order to 10,000",
@@ -3897,7 +3897,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Area of Rectangles",
@@ -3905,7 +3905,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "63",
         "explanation": "The correct answer is 63.",
         "topic": "Area of Rectangles",
@@ -3913,7 +3913,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "42",
         "explanation": "The correct answer is 42.",
         "topic": "Area of Rectangles",
@@ -3921,7 +3921,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Area of Rectangles",
@@ -3934,7 +3934,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "35",
         "explanation": "The correct answer is 35.",
         "topic": "Area of Rectangles",
@@ -3942,7 +3942,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -3950,7 +3950,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "24",
         "explanation": "The correct answer is 24.",
         "topic": "Area of Rectangles",
@@ -3958,7 +3958,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "27",
         "explanation": "The correct answer is 27.",
         "topic": "Area of Rectangles",
@@ -3971,7 +3971,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 4 cm by 8 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 4 cm by 8 cm. Its area is _ square centimetres.",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Area of Rectangles",
@@ -3979,7 +3979,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 9 cm by 4 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 9 cm by 4 cm. Its area is _ square centimetres.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -3987,7 +3987,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 5 cm by 9 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 5 cm by 9 cm. Its area is _ square centimetres.",
         "correctAnswer": "45",
         "explanation": "The correct answer is 45.",
         "topic": "Area of Rectangles",
@@ -3995,7 +3995,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 4 cm by 7 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 4 cm by 7 cm. Its area is _ square centimetres.",
         "correctAnswer": "28",
         "explanation": "The correct answer is 28.",
         "topic": "Area of Rectangles",
@@ -4003,7 +4003,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is _ square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4011,7 +4011,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A rectangle is 8 cm by 10 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 8 cm by 10 cm. Its area is _ square centimetres.",
         "correctAnswer": "80",
         "explanation": "The correct answer is 80.",
         "topic": "Area of Rectangles",
@@ -4019,7 +4019,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A rectangle is 10 cm by 5 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 10 cm by 5 cm. Its area is _ square centimetres.",
         "correctAnswer": "50",
         "explanation": "The correct answer is 50.",
         "topic": "Area of Rectangles",
@@ -4027,7 +4027,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is _ square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4136,7 +4136,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A desk top is 9 dm by 6 dm. Its area is ? square decimetres.",
+        "prompt": "A desk top is 9 dm by 6 dm. Its area is _ square decimetres.",
         "correctAnswer": "54",
         "explanation": "The correct answer is 54.",
         "topic": "Area of Rectangles",
@@ -4144,7 +4144,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "A garden is 8 m long and 5 m wide. Its area is ? square metres.",
+        "prompt": "A garden is 8 m long and 5 m wide. Its area is _ square metres.",
         "correctAnswer": "40",
         "explanation": "The correct answer is 40.",
         "topic": "Area of Rectangles",
@@ -4152,7 +4152,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 10,
-        "prompt": "A classroom rug is 6 m by 4 m. Its area is ? square metres.",
+        "prompt": "A classroom rug is 6 m by 4 m. Its area is _ square metres.",
         "correctAnswer": "24",
         "explanation": "The correct answer is 24.",
         "topic": "Area of Rectangles",
@@ -4160,7 +4160,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 11,
-        "prompt": "A hockey rink is 60 m by 30 m. Its area is ? square metres.",
+        "prompt": "A hockey rink is 60 m by 30 m. Its area is _ square metres.",
         "correctAnswer": "1,800",
         "explanation": "The correct answer is 1,800.",
         "topic": "Area of Rectangles",
@@ -4173,7 +4173,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is _ square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4181,7 +4181,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 10 cm by 5 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 10 cm by 5 cm. Its area is _ square centimetres.",
         "correctAnswer": "50",
         "explanation": "The correct answer is 50.",
         "topic": "Area of Rectangles",
@@ -4197,7 +4197,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is _ square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4205,7 +4205,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Count the unit squares. The area is ? square units.",
+        "prompt": "Count the unit squares. The area is _ square units.",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Area of Rectangles",
@@ -4221,7 +4221,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A rectangle is 4 cm by 7 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 4 cm by 7 cm. Its area is _ square centimetres.",
         "correctAnswer": "28",
         "explanation": "The correct answer is 28.",
         "topic": "Area of Rectangles",
@@ -4250,7 +4250,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at ?",
+        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at _",
         "correctAnswer": "1:40",
         "explanation": "The correct answer is 1:40.",
         "topic": "Elapsed Time",
@@ -4258,7 +4258,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A pencil is about 15 ? long.",
+        "prompt": "A pencil is about 15 _ long.",
         "correctAnswer": "cm",
         "explanation": "The correct answer is cm.",
         "topic": "Choose the Right Metric Unit",
@@ -4274,7 +4274,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at ?",
+        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at _",
         "correctAnswer": "5:25",
         "explanation": "The correct answer is 5:25.",
         "topic": "Elapsed Time",
@@ -4282,7 +4282,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A birthday party ends at 5:00 and lasted 1 hour. It started at ?",
+        "prompt": "A birthday party ends at 5:00 and lasted 1 hour. It started at _",
         "correctAnswer": "4:00",
         "explanation": "The correct answer is 4:00.",
         "topic": "Elapsed Time",
@@ -4327,7 +4327,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A birthday party starts at 2:55 and lasts 1 hour 30 minutes. It ends at ?",
+        "prompt": "A birthday party starts at 2:55 and lasts 1 hour 30 minutes. It ends at _",
         "correctAnswer": "4:25",
         "explanation": "The correct answer is 4:25.",
         "topic": "Elapsed Time",
@@ -4348,7 +4348,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "92 × 5 ?",
+        "prompt": "92 × 5 _",
         "correctAnswer": "460",
         "explanation": "The correct answer is 460.",
         "topic": "Multiply 1-Digit × 2-Digit",
@@ -4364,7 +4364,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The rule is ×4. IN 27? 8 14 OUT 108 68 32 56 Write the missing IN value: ?",
+        "prompt": "The rule is ×4. IN 27? 8 14 OUT 108 68 32 56 Write the missing IN value: _",
         "correctAnswer": "17",
         "explanation": "The correct answer is 17.",
         "topic": "Input/Output Tables",
@@ -4377,7 +4377,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "0.1 + 0.4 = ?",
+        "prompt": "0.1 + 0.4 = _",
         "correctAnswer": "0.5",
         "explanation": "The correct answer is 0.5.",
         "topic": "Add & Subtract Decimal Tenths",
@@ -4409,7 +4409,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Round 1,677 to the nearest 10: ?",
+        "prompt": "Round 1,677 to the nearest 10: _",
         "correctAnswer": "1680",
         "explanation": "The correct answer is 1680.",
         "topic": "Round to the Nearest 10, 100 or 1000",
@@ -4430,7 +4430,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "4000 + 900 + 90 + 6 = ?",
+        "prompt": "4000 + 900 + 90 + 6 = _",
         "correctAnswer": "4996",
         "explanation": "The correct answer is 4996.",
         "topic": "Place Value to 10,000",
@@ -4454,7 +4454,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Start Columns and rows are numbered 1 to 6. The square slides 1 square right and 1 square up. It is now in column ? and row .",
+        "prompt": "Start Columns and rows are numbered 1 to 6. The square slides 1 square right and 1 square up. It is now in column _ and row .",
         "correctAnswer": "5, 1",
         "explanation": "The correct answer is 5, 1.",
         "topic": "Translations & Reflections",
@@ -4467,7 +4467,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "9,743 ? 6,779",
+        "prompt": "9,743 _ 6,779",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Compare & Order to 10,000",
@@ -4764,7 +4764,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Mia saved $15. She spends $6.25 on a book. She has ? left.",
+        "prompt": "Mia saved $15. She spends $6.25 on a book. She has _ left.",
         "correctAnswer": "$8.75",
         "explanation": "The correct answer is $8.75.",
         "topic": "Making Change & Money Choices",
@@ -4851,7 +4851,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 9 cm by 4 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 9 cm by 4 cm. Its area is _ square centimetres.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -4867,7 +4867,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 8 cm by 10 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 8 cm by 10 cm. Its area is _ square centimetres.",
         "correctAnswer": "80",
         "explanation": "The correct answer is 80.",
         "topic": "Area of Rectangles",
@@ -4891,7 +4891,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is _ square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4936,7 +4936,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is _ square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4965,7 +4965,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write 5,636 in words: ?",
+        "prompt": "Write 5,636 in words: _",
         "correctAnswer": "five thousand six hundred thirty-six",
         "explanation": "The correct answer is five thousand six hundred thirty-six.",
         "topic": "Place Value to 10,000",
@@ -4973,7 +4973,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "2 L ? 1,800 mL",
+        "prompt": "2 L _ 1,800 mL",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -5002,7 +5002,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "7,165 ? 3,422",
+        "prompt": "7,165 _ 3,422",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Compare & Order to 10,000",
@@ -5018,7 +5018,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The least of 8/10, 3/10, 6/10 is ?",
+        "prompt": "The least of 8/10, 3/10, 6/10 is _",
         "correctAnswer": "3/10",
         "explanation": "The correct answer is 3/10.",
         "topic": "Order Fractions",
@@ -5063,7 +5063,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Round 7,609 to the nearest 10: ?",
+        "prompt": "Round 7,609 to the nearest 10: _",
         "correctAnswer": "7610",
         "explanation": "The correct answer is 7610.",
         "topic": "Round to the Nearest 10, 100 or 1000",
@@ -5071,7 +5071,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "719 × 7 ?",
+        "prompt": "719 × 7 _",
         "correctAnswer": "5033",
         "explanation": "The correct answer is 5033.",
         "topic": "Multiply 1-Digit × 3-Digit",

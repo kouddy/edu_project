@@ -290,7 +290,7 @@ function stackedText(table: string): string {
  *  the question, so drop it when it directly follows another blank or
  *  a closed sentence, or follows a hint when the question already has
  *  a blank of its own. Blanks travel through promptText as private
- *  placeholders and become "?" only at the end. */
+ *  placeholders and become "_" only at the end. */
 function dropTrailingBlank(s: string): string {
   // One drop can expose another appended blank ("get? ___ ___"), so
   // repeat until the end of the text is a blank the rules keep.
@@ -311,7 +311,7 @@ function dropTrailingBlank(s: string): string {
 /** The printed question as plain text: picture markup removed, tags
  *  stripped, whitespace collapsed. Empty for purely visual questions —
  *  the photo is the ground truth there. A printed blank (the line the
- *  kid writes on) reads as "?" — the value the parent is looking for —
+ *  kid writes on) reads as "_" — the value the parent is looking for —
  *  except right before sentence punctuation, where the punctuation
  *  already closes the sentence ("…is 3." in a true/false statement). */
 function promptText(body: string): string {
@@ -332,7 +332,7 @@ function promptText(body: string): string {
   const text = dropTrailingBlank(collapsed)
     .replace(/\s+([?.:,;!])/g, "$1")
     .replace(/(?:\uE000|\uE001)([?.])/g, "$1")
-    .replace(/(?:\uE000|\uE001)/g, "?");
+    .replace(/(?:\uE000|\uE001)/g, "_");
   return text.length > 180 ? `${text.slice(0, 180)}…` : text;
 }
 
