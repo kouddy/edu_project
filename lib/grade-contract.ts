@@ -31,6 +31,13 @@ export interface GradeRequestPayload {
    * Never accepted from the client body.
    */
   accountParentId?: string;
+  /**
+   * The verified parent's bearer token, kept server-side only for the
+   * life of the job so the persistence step writes as the parent (RLS
+   * scopes the writes to their own kids). Never accepted from the
+   * client body, never sent back to it.
+   */
+  accountToken?: string;
 }
 
 export interface ApiQuestionGrade {

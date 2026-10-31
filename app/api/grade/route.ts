@@ -10,7 +10,12 @@
 import { NextResponse } from "next/server";
 import type { KidContext } from "@/lib/grade-contract";
 import { startGradeJob } from "@/lib/server/run-grade";
-import { bearerToken, parentFromToken, supabaseAdmin, supabaseConfigured } from "@/lib/server/supabase";
+import {
+  bearerToken,
+  parentFromToken,
+  supabaseConfigured,
+  supabaseForToken,
+} from "@/lib/server/supabase";
 
 
 const MAX_TOTAL_PHOTO_CHARS = 30_000_000;
@@ -74,12 +79,12 @@ async function authorizeAndStart(req: Request, photos: string[], kidContext: Kid
   if (!parent) {
     return NextResponse.json({ error: "Your sign-in has expired — please sign in again." }, { status: 401 });
   }
-  const admin = supabaseAdmin();
-  if (!admin) {
+  const db = supabaseForToken(token);
+  if (!db) {
     return NextResponse.json({ error: "Account is unavailable just now." }, { status: 503 });
   }
   if (kidContext.length > 0) {
-    const { data: owned } = await admin
+    const { data: owned } = await db
       .from("kids")
       .select("id")
       .eq("parent_id", parent.id)
@@ -88,5 +93,5 @@ async function authorizeAndStart(req: Request, photos: string[], kidContext: Kid
       return NextResponse.json({ error: "Those children aren't on your account." }, { status: 403 });
     }
   }
-  return startGradeJob({ photos, kidContext, accountParentId: parent.id });
+  return startGradeJob({ photos, kidContext, accountParentId: parent.id, accountToken: token });
 }

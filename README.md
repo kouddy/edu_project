@@ -72,15 +72,14 @@ types, so it cannot stand in for this.)
    ```
    NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
-   SUPABASE_SERVICE_ROLE_KEY=<Secret key>
    ```
 
-   The current CLI labels the two keys **Publishable**
-   (`sb_publishable_…`) and **Secret** (`sb_secret_…`); older output
-   calls the same keys the *anon* and *service_role* keys. The
-   publishable key is safe in the browser (RLS decides what it can
-   touch); the secret key is a full-admin key — server-only, never
-   committed and never shipped to the client. Add your grading key too
+   The current CLI labels this key **Publishable** (`sb_publishable_…`);
+   older output calls it the *anon* key. It is the only Supabase key
+   the app needs: the server verifies the parent's sign-in token and
+   then reads and writes as that parent, with row-level security
+   scoping every query to their own family — the Secret
+   (service_role) key is not used. Add your grading key too
    (`META_API_KEY`, or `GRADING_PROVIDER=demo`).
 
 4. Start (or restart) the app with `npm run dev` and open
@@ -114,7 +113,7 @@ npm run supabase:stop    # stop the local stack
 npm run supabase:reset   # wipe the database; reapplies migrations + seed
 ```
 
-Leave the three Supabase variables unset and live mode turns off: the
+Leave the Supabase variables unset and live mode turns off: the
 sign-in screen falls back to the demo flow and only demo/guest are
 offered. `GET /api/config` reports `accounts: true/false`, so you can
 confirm which way the server booted. If repeated test sign-ins hit an

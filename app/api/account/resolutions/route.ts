@@ -6,14 +6,21 @@
 
 import { NextResponse } from "next/server";
 import { recordResolution } from "@/lib/server/account";
-import { bearerToken, parentFromToken, supabaseConfigured } from "@/lib/server/supabase";
+import {
+  bearerToken,
+  parentFromToken,
+  supabaseConfigured,
+  supabaseForToken,
+} from "@/lib/server/supabase";
 
 export async function POST(req: Request) {
   if (!supabaseConfigured()) {
     return NextResponse.json({ error: "Accounts are not configured on this server." }, { status: 503 });
   }
-  const parent = await parentFromToken(bearerToken(req));
-  if (!parent) {
+  const token = bearerToken(req);
+  const parent = await parentFromToken(token);
+  const db = token ? supabaseForToken(token) : null;
+  if (!parent || !db) {
     return NextResponse.json({ error: "Sign in to record a check." }, { status: 401 });
   }
   let body: unknown;
@@ -36,7 +43,7 @@ export async function POST(req: Request) {
   ) {
     return NextResponse.json({ error: "A check needs a kid, a sheet, a question, and a ruling." }, { status: 400 });
   }
-  const ok = await recordResolution(parent, {
+  const ok = await recordResolution(parent, db, {
     kidId: record.kidId,
     sheetCode: record.sheetCode,
     questionNumber: record.questionNumber,

@@ -8,9 +8,10 @@ import type {
   Sheet,
   Submission,
 } from "../store";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { BOOK_REGISTRY } from "./book-catalogue";
 import { REGISTRY, type RegistryEntry } from "./registry";
-import { bytesToPostgresHex, supabaseAdmin, type AuthedParent } from "./supabase";
+import { bytesToPostgresHex, supabaseForToken, type AuthedParent } from "./supabase";
 
 // The account API: everything a signed-in parent's device needs to
 // mirror its server state, plus the write paths (grading persistence,
@@ -43,16 +44,16 @@ interface KidRow {
   current_week: number;
 }
 
-export async function buildAccountState(parent: AuthedParent): Promise<AccountState | null> {
-  const admin = supabaseAdmin();
-  if (!admin) return null;
-
-  const { data: parentRow } = await admin
+export async function buildAccountState(
+  parent: AuthedParent,
+  db: SupabaseClient,
+): Promise<AccountState | null> {
+  const { data: parentRow } = await db
     .from("parents")
     .select("display_name")
     .eq("id", parent.id)
     .maybeSingle();
-  const { data: kidRows } = await admin
+  const { data: kidRows } = await db
     .from("kids")
     .select("id, name, grade, subject, current_week")
     .eq("parent_id", parent.id)
@@ -85,7 +86,7 @@ export async function buildAccountState(parent: AuthedParent): Promise<AccountSt
   const photos: AccountPhotoRef[] = [];
 
   if (kidsData.length > 0) {
-    const { data: subRows } = await admin
+    const { data: subRows } = await db
       .from("submissions")
       .select("id, kid_id, sheet_code, created_at, graded_at")
       .in("kid_id", kidsData.map((k) => k.id))
@@ -95,9 +96,9 @@ export async function buildAccountState(parent: AuthedParent): Promise<AccountSt
       const subIds = subs.map((s) => s.id as string);
       const [{ data: resultRows }, { data: resolutionRows }, { data: blobRows }] =
         await Promise.all([
-          admin.from("grade_results").select("submission_id, per_question, graded_at").in("submission_id", subIds),
-          admin.from("check_resolutions").select("id, submission_id, question_number, resolution, resolved_at").in("submission_id", subIds),
-          admin.from("photo_blobs").select("id, submission_id, ordinal").in("submission_id", subIds).order("ordinal"),
+          db.from("grade_results").select("submission_id, per_question, graded_at").in("submission_id", subIds),
+          db.from("check_resolutions").select("id, submission_id, question_number, resolution, resolved_at").in("submission_id", subIds),
+          db.from("photo_blobs").select("id, submission_id, ordinal").in("submission_id", subIds).order("ordinal"),
         ]);
       const resultBySub = new Map((resultRows ?? []).map((r) => [r.submission_id as string, r]));
       const blobsBySub = new Map<string, { id: string; ordinal: number }[]>();
@@ -172,13 +173,15 @@ export async function buildAccountState(parent: AuthedParent): Promise<AccountSt
  * Failures are logged, never fatal — the job still completes.
  */
 export async function persistGradedJob(args: {
-  parentId: string;
+  token: string;
   kidContext: { id: string; grade: number }[];
   photos: string[];
   result: GradeJobResult;
 }): Promise<void> {
-  const admin = supabaseAdmin();
-  if (!admin) return;
+  // The parent's own token: RLS confirms each kid in the context is
+  // theirs before any row is written.
+  const db = supabaseForToken(args.token);
+  if (!db) return;
   const sheetsById = new Map(args.result.sheets.map((s) => [s.sheetId, s]));
   const photoBySheet = new Map<string, number>();
   for (const outcome of args.result.photoOutcomes) {
@@ -196,7 +199,7 @@ export async function persistGradedJob(args: {
       continue;
     }
     const kidId = candidates[0].id;
-    const { data: sub, error: subError } = await admin
+    const { data: sub, error: subError } = await db
       .from("submissions")
       .upsert(
         {
@@ -213,7 +216,7 @@ export async function persistGradedJob(args: {
       console.error("persist submission failed:", subError?.message);
       continue;
     }
-    const { error: resultError } = await admin.from("grade_results").upsert(
+    const { error: resultError } = await db.from("grade_results").upsert(
       {
         submission_id: sub.id,
         per_question: sheet.perQuestion.map((q) => ({
@@ -233,8 +236,8 @@ export async function persistGradedJob(args: {
     const dataUrl = photoIndex !== undefined ? args.photos[photoIndex] : undefined;
     if (dataUrl?.startsWith("data:image/")) {
       const bytes = new Uint8Array(Buffer.from(dataUrl.split(",")[1] ?? "", "base64"));
-      await admin.from("photo_blobs").delete().eq("submission_id", sub.id);
-      const { error: blobError } = await admin.from("photo_blobs").insert({
+      await db.from("photo_blobs").delete().eq("submission_id", sub.id);
+      const { error: blobError } = await db.from("photo_blobs").insert({
         submission_id: sub.id,
         ordinal: 0,
         content_type: dataUrl.slice(5, dataUrl.indexOf(";")) || "image/jpeg",
@@ -248,25 +251,24 @@ export async function persistGradedJob(args: {
 
 export async function recordResolution(
   parent: AuthedParent,
+  db: SupabaseClient,
   input: { kidId: string; sheetCode: string; questionNumber: number; resolution: "correct" | "wrong" },
 ): Promise<boolean> {
-  const admin = supabaseAdmin();
-  if (!admin) return false;
-  const { data: kid } = await admin
+  const { data: kid } = await db
     .from("kids")
     .select("id")
     .eq("id", input.kidId)
     .eq("parent_id", parent.id)
     .maybeSingle();
   if (!kid) return false;
-  const { data: sub } = await admin
+  const { data: sub } = await db
     .from("submissions")
     .select("id")
     .eq("kid_id", input.kidId)
     .eq("sheet_code", input.sheetCode)
     .maybeSingle();
   if (!sub) return false;
-  const { error } = await admin.from("check_resolutions").upsert(
+  const { error } = await db.from("check_resolutions").upsert(
     {
       submission_id: sub.id,
       question_number: input.questionNumber,

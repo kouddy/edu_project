@@ -20,6 +20,15 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
   `POST /api/grade` when a token is present (kid ownership enforced,
   403 otherwise). Graded results and their photos persist to the
   account as the job finishes; check rulings write through and re-sync.
+- Account data access runs as the signed-in parent rather than under
+  a service-role bypass: after verifying the token, the server reads
+  and writes with it, and a second migration adds the matching write
+  policies (submissions, results, resolutions, photos — each scoped
+  to the parent's own kids). Only the URL and publishable key are
+  configured; the secret (service_role) key is not used. This
+  replaced the original service-role design, whose bypass the local
+  stack's secret key did not grant — the first account call failed
+  its parents upsert and returned 401.
 - Deviation from the keys rule below, accepted for Phase 1: Results and
   Parent check render correct answers on the device, so the account
   payload includes the answer keys for the signed-in parent's own kids'
@@ -28,11 +37,12 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
   answers into the grade-result payload (so keys never leave the
   server) is the follow-up that removes this.
 - Verified end to end against a real Postgres + Auth + PostgREST
-  stack: migration applies; RLS isolates two parents (and photo blobs
-  have no client-facing policy at all); the magic-link round trip
-  enters live mode; grading persists submissions, results, and photo
-  bytes; a second browser profile sees the same account, including the
-  stored photo and a resolved check; demo and guest modes unaffected.
+  stack: migrations apply; RLS isolates two parents (photo rows
+  included — reachable only through the parent's own kids'
+  submissions); the magic-link round trip enters live mode; grading
+  persists submissions, results, and photo bytes; a second browser
+  profile sees the same account, including the stored photo and a
+  resolved check; demo and guest modes unaffected.
 
 ## Target architecture
 
@@ -118,8 +128,8 @@ Each phase is independently verifiable before the next begins.
    - Switch the Meta model from `muse-spark-1.3-contributor` back to
      Standard `muse-spark-1.3` before grading any real child's sheet
      (contributor traffic trains on prompts/completions).
-   - RLS audit: confirm no table is readable across parents; photo blobs
-     have no client-facing policy at all.
+   - RLS audit: confirm no table is readable or writable across
+     parents.
    - Custom SMTP for magic-link email if free-tier send limits bite.
    - Kid-data privacy review (COPPA/PIPEDA) before public enrollment.
 

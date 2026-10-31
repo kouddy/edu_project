@@ -62,13 +62,13 @@ export function startGradeJob(payload: GradeRequestPayload): GradeJob {
         );
       }
       const result = await runBatch(job.id, provider, payload);
-      if (payload.accountParentId) {
+      if (payload.accountParentId && payload.accountToken) {
         // Persist before the job reads as done, so a device that pulls
         // its account the moment grading settles already sees the
         // results. A persistence failure must not fail the grading.
         try {
           await persistGradedJob({
-            parentId: payload.accountParentId,
+            token: payload.accountToken,
             kidContext: payload.kidContext,
             photos: payload.photos,
             result,
