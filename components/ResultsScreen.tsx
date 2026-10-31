@@ -25,6 +25,15 @@ const HAND = '"Segoe Print", "Comic Sans MS", cursive';
 
 type Kind = "correct" | "wrong" | "unsure";
 
+/* The question line reads "prompt = answer". Book prompts whose blank
+   came last keep the punctuation that preceded it ("1/4 of 8 =",
+   "Estimate 477 + 591:"), so for those the answer follows directly —
+   appending another " = " would print the equals sign twice. */
+function questionLine(prompt: string, correctAnswer: string): string {
+  const p = prompt.trimEnd();
+  return /[=:]$/.test(p) ? `${p} ${correctAnswer}` : `${p} = ${correctAnswer}`;
+}
+
 /* ------------------------------------------------------------- results */
 
 interface ResultsProps {
@@ -181,7 +190,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
               <Badge kind={kind} />
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-semibold leading-snug text-ink">
-                  {q.prompt} = {q.correctAnswer}
+                  {questionLine(q.prompt, q.correctAnswer)}
                 </div>
                 <div className="mt-[1px] text-[13px] text-mid">
                   {kind === "unsure"
