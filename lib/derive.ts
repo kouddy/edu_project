@@ -27,7 +27,7 @@ import {
   type Sheet,
   type Submission,
 } from "./store";
-import { ensureGuestData } from "./guest";
+import { ensureDemoData } from "./demo";
 
 export { kidTrackLabel, sheetLabel };
 
@@ -49,10 +49,10 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  // Guest mode layers its own data: the guest account, its assigned
+  // Demo mode layers its own data: the demo account, its assigned
   // packets and its seeded history. Live mode seeds nothing — its
   // database mirrors the server (lib/live-sync.ts).
-  if (getActiveMode() === "guest") ensureGuestData();
+  if (getActiveMode() === "demo") ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));

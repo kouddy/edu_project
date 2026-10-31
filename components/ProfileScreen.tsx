@@ -60,10 +60,10 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
           {parent.name}
         </p>
         <p className="mt-[3px] text-[13px] text-mid">
-          {mode === "guest"
+          {mode === "demo"
             ? email
-              ? `Guest account · ${email}`
-              : "Guest account — for testing"
+              ? `Demo account · ${email}`
+              : "Demo account — for testing"
             : (email ?? "Signed in with an emailed link")}
         </p>
       </div>

@@ -50,7 +50,7 @@ export interface ApiQuestionGrade {
 
 /**
  * The sheet's catalogue entry, sent with a graded result so a device
- * that has never seen this sheet (a guest account scanning from
+ * that has never seen this sheet (a demo account scanning from
  * scratch) can file it locally under its own kid of the same grade.
  */
 export interface ApiSheetSpec {

@@ -167,7 +167,7 @@ async function runBatch(
 
       if (res.kind === "graded" && res.sheet) {
         // Attach the catalogue entry so a device with no local record
-        // for this sheet can still file the result (guest accounts
+        // for this sheet can still file the result (demo accounts
         // scanning from scratch have no seeded sheets at all).
         const entry = findBySheetId(res.sheet.sheetId);
         if (entry && !res.sheet.spec) {

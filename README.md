@@ -19,7 +19,7 @@ uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
   printed code on the sheet is read from the photo and looked up in the
   server registry. Parents never type a sheet code or pick which child a
   sheet belongs to.
-- **Children's photos are private.** In guest mode they stay on
+- **Children's photos are private.** In demo mode they stay on
   the parent's device (IndexedDB). In live mode they are stored in the
   account's own server database and are served only to the parent who
   owns them.
@@ -32,7 +32,7 @@ uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
 You need Node 20+ and npm. Live mode (real accounts) also needs Docker
 Desktop running.
 
-### Guest mode (no account setup)
+### Demo mode (no account setup)
 
 ```bash
 npm install
@@ -41,7 +41,7 @@ npm run build   # production build
 npm start       # serve the production build
 ```
 
-- The **Guest** button on the sign-in screen enters a seeded test
+- The **Demo** button on the sign-in screen enters a seeded test
   account (Amy, Grade 3, and Bob, Grade 4) that opens the way a real
   account looks mid-term: both kids are on Week 40, Weeks 38 and 39 are
   marked in History, one of Amy's Week 40 sheets is marked, and one
@@ -116,7 +116,7 @@ npm run supabase:reset   # wipe the database; reapplies migrations + seed
 ```
 
 Leave the Supabase variables unset and live mode turns off: the
-sign-in screen offers the guest account only. `GET /api/config`
+sign-in screen offers the demo account only. `GET /api/config`
 reports `accounts: true/false`, so you can
 confirm which way the server booted. If repeated test sign-ins hit an
 email rate limit, raise `email_sent` under `[auth.rate_limit]` in
@@ -150,7 +150,7 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
   identical across modes. `lib/derive.ts` builds the read snapshot (home
   state, scores, streaks); `scoreFor()` never counts an unresolved `unsure`.
 - Screens (`components/`, behind `AppShell.tsx`): **Sign-in** (a real
-  emailed link when accounts are configured, plus Guest), **Home** (status slot — Needs-your-check
+  emailed link when accounts are configured, plus Demo), **Home** (status slot — Needs-your-check
   card or "All caught up", kid switcher, current-week Homework, two-stat
   Progress card, immutable History of finished sheets), **Scan**
   (full-screen camera or Upload Photo; photos stage in a tray and grading
@@ -205,7 +205,7 @@ app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config,
                 api/account (+ resolutions, photos)
 components/     AppShell + screens (Home, Scan, Results, Check, Profile, SignIn), ui.tsx
 lib/            store.ts (data layer), derive.ts, seed.ts, grading.ts (client),
-                grade-contract.ts (wire types), guest.ts (seeded guest lifecycle),
+                grade-contract.ts (wire types), demo.ts (seeded demo lifecycle),
                 live-sync.ts + supabase-client.ts (live mode), account-contract.ts
 lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
                 pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
@@ -226,7 +226,7 @@ docs/           stage-3-design.md (grading design), stage-3.5-design.md (result 
   lifecycle (background marking, per-photo outcomes with retries and
   partial success, blank-answer verdicts, rescan protection —
   `docs/stage-3.5-design.md`); Stage 4 book integration (printed sheet
-  codes, the frozen grade 2–5 catalogues); guest mode; parallel grading;
+  codes, the frozen grade 2–5 catalogues); demo mode; parallel grading;
   Phase 1 accounts — Supabase magic-link sign-in (live mode) with kids,
   results and photos persisted server-side under row-level security
   (`docs/production-plan.md`).

@@ -137,7 +137,7 @@ function sheetResultIsFinal(sheetId: string): boolean {
 /**
  * File a graded sheet this device has no record for, using the
  * catalogue entry the server sent with the result. The sheet belongs
- * to the account's kid of the same grade — guest accounts hold no
+ * to the account's kid of the same grade — demo accounts hold no
  * seeded sheets, so every real scan arrives this way. Returns false
  * when the account has no kid (or more than one) at that grade.
  */

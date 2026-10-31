@@ -5,8 +5,8 @@
  *   seeded sheets below — Gina's Week 12 set and friends — alongside
  *   the book catalogue, so a photo of one grades the same way wherever
  *   it is filed.
- * - The guest account constants (GUEST_PARENT / GUEST_KIDS /
- *   GUEST_EMAIL) that lib/store.ts seeds the guest database from.
+ * - The demo account constants (DEMO_PARENT / DEMO_KIDS /
+ *   DEMO_EMAIL) that lib/store.ts seeds the demo database from.
  *
  * Gina's Math · Week 12 answer key is the interactive prototype's demo sheet,
  * extracted verbatim from the interactive prototype
@@ -27,22 +27,22 @@ export const SEED_KIDS: Kid[] = [
 ];
 
 /**
- * Guest mode's account: a parent with two kids whose packets and
- * marking history lib/guest.ts layers on, so the app opens the way a
+ * Demo mode's account: a parent with two kids whose packets and
+ * marking history lib/demo.ts layers on, so the app opens the way a
  * real account looks mid-term.
  */
-export const GUEST_PARENT: Parent = {
-  id: "parent-guest",
-  name: "Guest",
+export const DEMO_PARENT: Parent = {
+  id: "parent-demo",
+  name: "Demo",
 };
 
-export const GUEST_KIDS: Kid[] = [
-  { id: "kid-amy", parentId: GUEST_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
-  { id: "kid-bob", parentId: GUEST_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
+export const DEMO_KIDS: Kid[] = [
+  { id: "kid-amy", parentId: DEMO_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
+  { id: "kid-bob", parentId: DEMO_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
 ];
 
-/** The guest account's sign-in email — a fake address for a fake account. */
-export const GUEST_EMAIL = "guest@example.com";
+/** The demo account's sign-in email — a fake address for a fake account. */
+export const DEMO_EMAIL = "demo@example.com";
 
 export const GINA_MATH_W12 = "sheet-gina-math-w12";
 const GINA_MATH_W11 = "sheet-gina-math-w11";

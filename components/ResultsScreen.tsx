@@ -72,7 +72,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
   // Removing a marked sheet is the deliberate undo for a mistaken
   // scan: the result goes away and the sheet is homework again. In
   // live mode the server owns the record, so there is nothing to
-  // remove here — the button only exists in the local guest account.
+  // remove here — the button only exists in the local demo account.
   const removable = getActiveMode() !== "live";
   const doneLabel = removable;
 

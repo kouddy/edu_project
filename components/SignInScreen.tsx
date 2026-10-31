@@ -9,8 +9,8 @@ const BTN_SECONDARY =
   "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 interface Props {
-  /** Enter guest mode: the seeded test account (Amy and Bob). */
-  onGuest: () => void;
+  /** Enter demo mode: the seeded test account (Amy and Bob). */
+  onDemo: () => void;
   showToast: (msg: string) => void;
 }
 
@@ -18,10 +18,10 @@ interface Props {
  * Sign-in: an emailed one-tap link, no password. The link is real —
  * tapping it returns to the app with a session, and AppShell enters
  * the live account. When no Supabase project is configured there is
- * no account to sign in to, so the screen offers the guest account
+ * no account to sign in to, so the screen offers the demo account
  * only.
  */
-export default function SignInScreen({ onGuest, showToast }: Props) {
+export default function SignInScreen({ onDemo, showToast }: Props) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -51,10 +51,10 @@ export default function SignInScreen({ onGuest, showToast }: Props) {
     setSent(true);
   };
 
-  const guestBlock = (
+  const demoBlock = (
     <div className={live ? "mt-5 border-t border-dashed border-linesoft pt-5" : ""}>
-      <button type="button" className={BTN_SECONDARY} onClick={onGuest}>
-        Guest
+      <button type="button" className={BTN_SECONDARY} onClick={onDemo}>
+        Demo
       </button>
       <p className="mt-2.5 text-center text-[12px] leading-[1.5] text-faint">
         For testing: Amy (Grade 3) and Bob (Grade 4), with their packets and
@@ -74,9 +74,9 @@ export default function SignInScreen({ onGuest, showToast }: Props) {
         </h1>
         <p className="mb-5 text-[13.5px] leading-[1.45] text-mid">
           Account sign-in isn’t set up on this build yet. You can explore the
-          whole app with the guest account.
+          whole app with the demo account.
         </p>
-        {guestBlock}
+        {demoBlock}
       </div>
     );
   }
@@ -132,7 +132,7 @@ export default function SignInScreen({ onGuest, showToast }: Props) {
       <button type="button" className={BTN} onClick={() => void sendLink()} disabled={sending}>
         {sending ? "Sending…" : "Email me a sign-in link"}
       </button>
-      {guestBlock}
+      {demoBlock}
       <p className="mt-[26px] text-center text-[12px] text-faint">
         No password — we email you a one-tap link.
       </p>

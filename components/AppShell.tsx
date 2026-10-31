@@ -7,7 +7,7 @@ import { activateMode, deletePhoto, getActiveMode, getAuthState, getPhoto, listP
 import { dispatchGrading, pollPendingJobs } from "@/lib/grading";
 import { postResolution, syncLiveAccount } from "@/lib/live-sync";
 import { getSupabase } from "@/lib/supabase-client";
-import { GUEST_EMAIL } from "@/lib/seed";
+import { DEMO_EMAIL } from "@/lib/seed";
 import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
 import { homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
@@ -63,7 +63,7 @@ export default function AppShell() {
   useEffect(() => {
     // Point the data layer at the signed-in mode's database before the
     // first read; the mode lives in the auth record.
-    activateMode(getAuthState().mode ?? "guest");
+    activateMode(getAuthState().mode ?? "demo");
     const next = refresh();
     setKidId((prev) => prev ?? next.kids[0]?.id ?? null);
     if (!getAuthState().signedIn) setScreen({ name: "signin" });
@@ -120,7 +120,7 @@ export default function AppShell() {
   }, []);
 
   const handleSignedIn = useCallback(
-    (email?: string, mode: AppMode = "guest") => {
+    (email?: string, mode: AppMode = "demo") => {
       // Entering a local mode ends any live session, so the next launch
       // does not get pulled back into the account.
       if (mode !== "live") void getSupabase()?.auth.signOut();
@@ -324,7 +324,7 @@ export default function AppShell() {
           onClick={() => {
             void getSupabase()?.auth.signOut();
             signOut();
-            activateMode("guest");
+            activateMode("demo");
             refresh();
             setScreen({ name: "signin" });
           }}
@@ -353,7 +353,7 @@ export default function AppShell() {
         <div ref={scrollRef} className="screen-scroll min-h-0 flex-1 overflow-y-auto">
           {screen.name === "signin" && (
             <SignInScreen
-              onGuest={() => handleSignedIn(GUEST_EMAIL, "guest")}
+              onDemo={() => handleSignedIn(DEMO_EMAIL, "demo")}
               showToast={showToast}
             />
           )}
@@ -467,9 +467,9 @@ export default function AppShell() {
             <ProfileScreen
               snap={snap}
               onSignOut={() => {
-                // Back to the guest dataset behind the sign-in screen;
+                // Back to the demo dataset behind the sign-in screen;
                 // a live account's mirror stays in its own database.
-                activateMode("guest");
+                activateMode("demo");
                 const next = refresh();
                 setKidId(next.kids[0]?.id ?? null);
                 setScreen({ name: "signin" });
