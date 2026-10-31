@@ -25,6 +25,19 @@ export interface GradeRequestPayload {
   photos: string[];
   /** The account's kids, used only to disambiguate whose sheet this is. */
   kidContext: KidContext[];
+  /**
+   * Set server-side when the request carried a verified parent token:
+   * the graded results are also persisted to that parent's account.
+   * Never accepted from the client body.
+   */
+  accountParentId?: string;
+  /**
+   * The verified parent's bearer token, kept server-side only for the
+   * life of the job so the persistence step writes as the parent (RLS
+   * scopes the writes to their own kids). Never accepted from the
+   * client body, never sent back to it.
+   */
+  accountToken?: string;
 }
 
 export interface ApiQuestionGrade {
@@ -37,7 +50,7 @@ export interface ApiQuestionGrade {
 
 /**
  * The sheet's catalogue entry, sent with a graded result so a device
- * that has never seen this sheet (a guest account scanning from
+ * that has never seen this sheet (a demo account scanning from
  * scratch) can file it locally under its own kid of the same grade.
  */
 export interface ApiSheetSpec {
@@ -104,7 +117,7 @@ export type GradeJobStatusValue = "running" | "done" | "failed";
 export interface PhotoProgress {
   index: number;
   state: "marking" | "marked" | "settled";
-  /** "Gina · Math · Week 12" once the photo has been identified. */
+  /** "Amy · Math · Week 40" once the photo has been identified. */
   sheetLabel?: string;
   /** Current parent-language step for this photo, while marking. */
   step?: string;

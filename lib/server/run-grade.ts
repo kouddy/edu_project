@@ -28,6 +28,7 @@ import type {
   PhotoOutcome,
 } from "../grade-contract";
 import { createJob, updateJob, updatePhotoProgress, type GradeJob } from "./jobs";
+import { persistGradedJob } from "./account";
 import { findBySheetId } from "./registry";
 import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, validatePiConfig } from "./pi-config";
 import { resolveProvider, type GradingProvider, type PhotoAttempt } from "./providers";
@@ -37,7 +38,7 @@ const MAX_ATTEMPTS = 3;
 /** How many photos grade at once. Each photo is a multi-call provider
  *  session, so the cap keeps a big batch from flooding the provider —
  *  a finished photo frees its slot immediately (no fixed batches). */
-const GRADE_CONCURRENCY = 2;
+const GRADE_CONCURRENCY = 3;
 
 export function startGradeJob(payload: GradeRequestPayload): GradeJob {
   const job = createJob(payload.photos.length);
@@ -61,6 +62,21 @@ export function startGradeJob(payload: GradeRequestPayload): GradeJob {
         );
       }
       const result = await runBatch(job.id, provider, payload);
+      if (payload.accountParentId && payload.accountToken) {
+        // Persist before the job reads as done, so a device that pulls
+        // its account the moment grading settles already sees the
+        // results. A persistence failure must not fail the grading.
+        try {
+          await persistGradedJob({
+            token: payload.accountToken,
+            kidContext: payload.kidContext,
+            photos: payload.photos,
+            result,
+          });
+        } catch (err) {
+          console.error("persist graded job failed:", err instanceof Error ? err.message : err);
+        }
+      }
       updateJob(job.id, { status: "done", step: "Done", result });
     } catch (err) {
       updateJob(job.id, {
@@ -151,7 +167,7 @@ async function runBatch(
 
       if (res.kind === "graded" && res.sheet) {
         // Attach the catalogue entry so a device with no local record
-        // for this sheet can still file the result (guest accounts
+        // for this sheet can still file the result (demo accounts
         // scanning from scratch have no seeded sheets at all).
         const entry = findBySheetId(res.sheet.sheetId);
         if (entry && !res.sheet.spec) {

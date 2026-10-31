@@ -1,12 +1,10 @@
 "use client";
 
 import {
+  historyGroups,
   homeworkGroups,
-  historyStates,
   kidHasGradedSheet,
   reviewRetentionText,
-  scannedText,
-  sheetLabel,
   shortDate,
   statusSlot,
   streakFor,
@@ -35,6 +33,7 @@ interface Props {
   onSelectKid: (kid: Kid) => void;
   onOpenSheet: (sheetId: string, origin: "homework" | "history") => void;
   onOpenGroup: (subject: string, week: number) => void;
+  onOpenHistoryGroup: (subject: string, week: number) => void;
   onOpenCheck: () => void;
   scrollSection: "homework" | "history" | null;
   marking: MarkingCardData | null;
@@ -56,6 +55,7 @@ export default function HomeScreen({
   onSelectKid,
   onOpenSheet,
   onOpenGroup,
+  onOpenHistoryGroup,
   onOpenCheck,
   marking,
 }: Props) {
@@ -66,12 +66,13 @@ export default function HomeScreen({
     (a, b) =>
       (a.subject === "Word Problems" ? 0 : 1) - (b.subject === "Word Problems" ? 0 : 1),
   );
-  const history = historyStates(snap, kid);
+  /* History is grouped like Homework: one row per subject + week. */
+  const history = historyGroups(snap, kid);
   const showProgress = kidHasGradedSheet(snap, kid);
   const retention = reviewRetentionText(snap, kid);
 
   /* The check card's copy, in the wireframe's words: the label arrives as
-     "Gina · Math · Week 12" and reads "Gina · Math Week 12" / "Math Week 12". */
+     "Amy · Math · Week 40" and reads "Amy · Math Week 40" / "Math Week 40". */
   const checkParts = status?.type === "check" ? status.label.split(" · ") : [];
   const checkKid = checkParts[0] ?? "";
   const checkSheet = checkParts.slice(1).join(" ");
@@ -259,32 +260,23 @@ export default function HomeScreen({
       {history.length > 0 ? (
         <section id="section-history" className="scroll-mt-4">
           <div className={CARD}>
-            <h3 className={`${H3} px-[15px] pb-0.5 pt-[14px]`}>History</h3>
-            {history.map((st, i) => (
-              <button
-                key={st.sheet.id}
-                type="button"
-                onClick={() => onOpenSheet(st.sheet.id, "history")}
-                className={`flex w-full items-center justify-between gap-2 px-[17px] py-[11px] text-left ${
-                  i < history.length - 1 ? "border-b border-dashed border-linesoft" : ""
-                }`}
-              >
-                <span className="min-w-0">
-                  <span className="block truncate text-[14.5px] font-semibold text-ink">
-                    {sheetLabel(st.sheet)}
-                  </span>
-                  <span className="block text-[12.5px] text-mid">
-                    {st.sheet.setName
-                      ? capitalize(scannedText(st.result?.gradedAt))
-                      : `Graded ${st.result ? shortDate(st.result.gradedAt) : ""}`}
-                  </span>
-                </span>
-                {st.score && (
-                  <span className={`${PILL} border-linesoft bg-fill text-mid`}>
-                    {st.score.finalCorrect}/{st.score.total} final
-                  </span>
-                )}
-              </button>
+            <h3 className={`${H3} px-[15px] pb-2 pt-[14px]`}>History</h3>
+            {history.map((group, i) => (
+              <HomeworkRow
+                key={`${group.subject}|${group.week}`}
+                group={group}
+                last={i === history.length - 1}
+                subtitle={
+                  group.states.length > 1 && group.lastGradedAt
+                    ? `Graded ${shortDate(group.lastGradedAt)}`
+                    : undefined
+                }
+                onOpen={() =>
+                  group.states.length === 1
+                    ? onOpenSheet(group.states[0].sheet.id, "history")
+                    : onOpenHistoryGroup(group.subject, group.week)
+                }
+              />
             ))}
           </div>
         </section>
@@ -302,27 +294,28 @@ export default function HomeScreen({
   );
 }
 
-function capitalize(s: string): string {
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
-}
-
 function HomeworkRow({
   group,
   last,
+  subtitle: subtitleOverride,
   onOpen,
 }: {
   group: HomeworkGroup;
   last: boolean;
+  /** Replaces the done-count line (History rows show the graded date). */
+  subtitle?: string;
   onOpen: () => void;
 }) {
   const single = group.states.length === 1 ? group.states[0].sheet : null;
-  const subtitle = single
-    ? `${single.topic} · ${single.printedCode}`
-    : group.done
-      ? `All ${group.states.length} sheets done`
-      : group.doneCount > 0
-        ? `${group.doneCount} of ${group.states.length} sheets done`
-        : `${group.states.length} sheets`;
+  const subtitle =
+    subtitleOverride ??
+    (single
+      ? `${single.topic} · ${single.printedCode}`
+      : group.done
+        ? `All ${group.states.length} sheets done`
+        : group.doneCount > 0
+          ? `${group.doneCount} of ${group.states.length} sheets done`
+          : `${group.states.length} sheets`);
   return (
     <div
       className={`flex w-full items-center gap-1.5 px-[17px] py-[11px] ${

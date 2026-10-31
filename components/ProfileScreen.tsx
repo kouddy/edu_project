@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
-import { getAuthState, signOut } from "@/lib/store";
+import { getActiveMode, getAuthState, signOut } from "@/lib/store";
+import { getSupabase } from "@/lib/supabase-client";
 import { ScreenHeader } from "./ui";
 
 interface Props {
@@ -29,14 +30,21 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
 
   useEffect(() => {
     if (!parent) return;
-    QRCode.toDataURL(`practice-sheets:member:${parent.id}`, {
+    // The member code carries the parent's email as well as their id
+    // when the sign-in record has one, so staff scanning it can match
+    // the account by either. Without an email it stays the bare id
+    // form.
+    const payload = email
+      ? `practice-sheets:member:${parent.id}?email=${encodeURIComponent(email)}`
+      : `practice-sheets:member:${parent.id}`;
+    QRCode.toDataURL(payload, {
       width: 336,
       margin: 0,
       color: { dark: "#3d2b1f", light: "#ffffff" },
     })
       .then(setQrUrl)
       .catch(() => setQrUrl(null));
-  }, [parent]);
+  }, [parent, email]);
 
   if (!parent) return null;
 
@@ -52,8 +60,10 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
           {parent.name}
         </p>
         <p className="mt-[3px] text-[13px] text-mid">
-          {mode === "guest"
-            ? "Guest mode — a fresh account for testing"
+          {mode === "demo"
+            ? email
+              ? `Demo account · ${email}`
+              : "Demo account — for testing"
             : (email ?? "Signed in with an emailed link")}
         </p>
       </div>
@@ -97,6 +107,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
       <button
         type="button"
         onClick={() => {
+          if (getActiveMode() === "live") void getSupabase()?.auth.signOut();
           signOut();
           onSignOut();
         }}

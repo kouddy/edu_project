@@ -19,8 +19,8 @@ interface Props {
 /* Styled directly from the wireframe's full-screen Scan (.scanfs,
    .camera.fullscreen corners, .camclose, .scan-bottom stack, gallery
    tile + orange shutter, cream .scan-grade bar, .preview-overlay).
-   The wireframe's demo view / bad-photo demo are intentionally not
-   carried over — this screen drives the real camera. */
+   The wireframe's static camera mock is intentionally not carried
+   over — this screen drives the real camera. */
 const BTN =
   "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
 const BTN_SECONDARY =

@@ -28,7 +28,6 @@ import {
   type Submission,
 } from "./store";
 import { ensureDemoData } from "./demo";
-import { ensureGuestData } from "./guest";
 
 export { kidTrackLabel, sheetLabel };
 
@@ -50,10 +49,10 @@ export interface Snapshot {
 }
 
 export function loadSnapshot(): Snapshot {
-  // Each mode layers its own data: the demo dataset in demo mode, the
-  // guest account and its assigned packets in guest mode.
-  if (getActiveMode() === "guest") ensureGuestData();
-  else ensureDemoData();
+  // Demo mode layers its own data: the demo account, its assigned
+  // packets and its seeded history. Live mode seeds nothing — its
+  // database mirrors the server (lib/live-sync.ts).
+  if (getActiveMode() === "demo") ensureDemoData();
   const parent = getCurrentParent();
   const kids = parent ? listKids(parent.id) : [];
   const kidById = new Map(kids.map((k) => [k.id, k]));
@@ -99,7 +98,7 @@ export function isDone(st: SheetState): boolean {
   return !!st.score?.isFinal;
 }
 
-/** Homework grouped the way the packet is handed out: one entry per
+/** Sheets grouped the way packets are handed out: one entry per
  *  subject + week, holding that group's sheets in packet order. */
 export interface HomeworkGroup {
   subject: string;
@@ -107,29 +106,40 @@ export interface HomeworkGroup {
   states: SheetState[];
   doneCount: number;
   done: boolean;
+  /** The most recent grading time inside the group, if any. */
+  lastGradedAt: string | null;
 }
 
-export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+function groupByWeek(states: SheetState[]): HomeworkGroup[] {
   const byKey = new Map<string, SheetState[]>();
-  for (const st of homeworkStates(snap, kid)) {
+  for (const st of states) {
     const key = `${st.sheet.subject}|${st.sheet.week}`;
     const list = byKey.get(key) ?? [];
     list.push(st);
     byKey.set(key, list);
   }
-  return [...byKey.values()].map((states) => {
-    const sorted = [...states].sort((a, b) =>
+  return [...byKey.values()].map((list) => {
+    const sorted = [...list].sort((a, b) =>
       a.sheet.printedCode.localeCompare(b.sheet.printedCode),
     );
     const doneCount = sorted.filter(isDone).length;
+    const graded = sorted
+      .map((st) => st.result?.gradedAt)
+      .filter((d): d is string => !!d)
+      .sort();
     return {
       subject: sorted[0].sheet.subject,
       week: sorted[0].sheet.week,
       states: sorted,
       doneCount,
       done: doneCount === sorted.length,
+      lastGradedAt: graded[graded.length - 1] ?? null,
     };
   });
+}
+
+export function homeworkGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+  return groupByWeek(homeworkStates(snap, kid));
 }
 
 /** One topic's sheets inside a packet, in packet order — the practice
@@ -166,11 +176,10 @@ function kidWeekDone(snap: Snapshot, kid: Kid): boolean {
 
 /**
  * History: finished records only — final results that are not part of this
- * week's homework. The live Week 12 sheet never appears here, so nothing in
- * History can change. (Math · Set C lands here once scanned in, already
- * final.)
+ * week's homework. A sheet still being marked, or still waiting on a
+ * parent check, never appears here, so nothing in History can change.
  */
-export function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
+function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
   const homeworkIds = new Set(homeworkStates(snap, kid).map((st) => st.sheet.id));
   return [...snap.states.values()]
     .filter(
@@ -180,20 +189,67 @@ export function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
     .sort((a, b) => (b.result?.gradedAt ?? "").localeCompare(a.result?.gradedAt ?? ""));
 }
 
+/** History grouped like Homework: one entry per subject + week,
+ *  newest week first. */
+export function historyGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {
+  return groupByWeek(historyStates(snap, kid)).sort(
+    (a, b) => b.week - a.week || a.subject.localeCompare(b.subject),
+  );
+}
+
 export function kidHasGradedSheet(snap: Snapshot, kid: Kid): boolean {
   return [...snap.states.values()].some((st) => st.kid.id === kid.id && st.result);
 }
 
-/** Weekly streak: Gina's seeded run is 6, +1 once this week is finished. */
-const STREAK_BASE: Record<string, number> = { "kid-gina": 6 };
+/**
+ * Weekly streak: consecutive finished weeks, counted back from the
+ * most recent finished week. A week is finished when every one of its
+ * sheets is final; the current week joins the streak once it is
+ * finished, and an unfinished current week does not break a run of
+ * finished weeks behind it.
+ */
 export function streakFor(snap: Snapshot, kid: Kid): number {
-  return (STREAK_BASE[kid.id] ?? 0) + (kidWeekDone(snap, kid) ? 1 : 0);
+  const byWeek = new Map<number, SheetState[]>();
+  for (const st of snap.states.values()) {
+    if (st.kid.id !== kid.id) continue;
+    const rows = byWeek.get(st.sheet.week) ?? [];
+    rows.push(st);
+    byWeek.set(st.sheet.week, rows);
+  }
+  const finished = (week: number): boolean => {
+    const rows = byWeek.get(week);
+    return !!rows && rows.length > 0 && rows.every(isDone);
+  };
+  const start = [...byWeek.keys()].sort((a, b) => b - a).find(finished);
+  if (start === undefined) return 0;
+  let streak = 0;
+  for (let week = start; finished(week); week--) streak++;
+  return streak;
 }
 
-/** Share of month-old review questions still answered correctly. */
+/**
+ * Share of past weeks' review questions still answered correctly —
+ * the review sheets from earlier packets, marked final. Null when the
+ * kid has no finished review questions yet.
+ */
 export function reviewRetentionText(snap: Snapshot, kid: Kid): string | null {
   if (!kidHasGradedSheet(snap, kid)) return null;
-  return kid.id === "kid-gina" ? "8/10 still correct" : null;
+  const current = currentWeek(snap, kid);
+  let total = 0;
+  let correct = 0;
+  for (const st of snap.states.values()) {
+    if (st.kid.id !== kid.id || !st.result || !st.key || !st.score?.isFinal) continue;
+    if (st.sheet.week >= current) continue;
+    const resolved = new Map(st.resolutions.map((r) => [r.questionNumber, r.resolution]));
+    for (const g of st.result.perQuestion) {
+      const q = st.key.questions.find((x) => x.number === g.questionNumber);
+      if (!q?.isReview) continue;
+      total++;
+      const effective = g.verdict === "unsure" ? resolved.get(g.questionNumber) : g.verdict;
+      if (effective === "correct") correct++;
+    }
+  }
+  return total > 0 ? `${correct}/${total} still correct` : null;
 }
 
 /* ----------------------------------------------------------- pending checks */
@@ -259,7 +315,10 @@ export function statusSlot(snap: Snapshot, viewedKid: Kid | null): StatusSlot {
 /* ------------------------------------------------------------------ display */
 
 function pronounFor(kid: Kid): string {
-  return kid.name === "Gina" ? "her" : kid.name === "Leo" ? "his" : "their";
+  // One neutral pronoun for every kid — the summaries never need a
+  // name-specific form.
+  void kid;
+  return "their";
 }
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];

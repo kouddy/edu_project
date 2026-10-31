@@ -18,7 +18,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { AgentId } from "./registry";
-import { Modal } from "@heroui/react";
 
 interface PiSettings {
   defaultProvider: string;
@@ -112,7 +111,6 @@ export function providerDef(config: PiConfig, providerId: string): PiProviderDef
 /** Extra env names accepted for a provider's key (Meta's docs call theirs MODEL_API_KEY). */
 const KEY_ENV_ALIASES: Record<string, string[]> = {
   meta: ["MODEL_API_KEY"],
-  modal: ["MODAL_API_KEY", "MODAL_API_KEY"],
 };
 
 /** The env var a provider's "$ENV" apiKey points at, if any. */
@@ -152,7 +150,6 @@ export function providerKeyAvailable(config: PiConfig, providerId: string): bool
  * (so switching providers by env var alone still lands on a sane model).
  */
 export function effectiveModel(config: PiConfig, agent: AgentId, providerId: string): string {
-  if (providerId === "demo") return "demo-scripted";
   const def = providerDef(config, providerId);
   if (!def || def.models.length === 0) return subjectManifest(config, agent).model;
   const wanted = subjectManifest(config, agent).model;
@@ -167,7 +164,7 @@ export function validatePiConfig(config: PiConfig): string[] {
     for (const rel of [...Object.values(manifest.promptFiles), ...manifest.contextFiles]) {
       if (rel && !existsSync(path.join(config.configDir, rel))) missing.push(rel);
     }
-    if (manifest.provider !== "demo" && !providerDef(config, manifest.provider)) {
+    if (!providerDef(config, manifest.provider)) {
       missing.push(`models.json provider "${manifest.provider}"`);
     }
   }

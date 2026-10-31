@@ -6,6 +6,7 @@
 
 import { connection, NextResponse } from "next/server";
 import { effectiveModel, loadPiConfig, providerForAgent, validatePiConfig } from "@/lib/server/pi-config";
+import { supabaseConfigured } from "@/lib/server/supabase";
 import { listProviders } from "@/lib/server/providers";
 import { REGISTRY, type AgentId } from "@/lib/server/registry";
 
@@ -34,5 +35,6 @@ export async function GET() {
       withKeys: REGISTRY.filter((e) => e.questions.length > 0).length,
     },
     piConfig: { valid: missing.length === 0, missing },
+    accounts: supabaseConfigured(),
   });
 }

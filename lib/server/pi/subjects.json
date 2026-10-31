@@ -9,7 +9,7 @@
             "model": "muse-spark-1.3-contributor",
             "plannedProvider": "meta",
             "promptFiles": {},
-            "provider": "demo",
+            "provider": "meta",
             "schemaVersion": "B1",
             "status": "planned",
             "tokenBudget": 90000

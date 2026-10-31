@@ -19,14 +19,20 @@ uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
   printed code on the sheet is read from the photo and looked up in the
   server registry. Parents never type a sheet code or pick which child a
   sheet belongs to.
-- **Children's photos are private.** In this local-first phase they stay on
-  the parent's device (IndexedDB); the grading server keeps no photos. A
-  later cloud phase must use private storage with signed URLs only.
+- **Children's photos are private.** In demo mode they stay on
+  the parent's device (IndexedDB). In live mode they are stored in the
+  account's own server database and are served only to the parent who
+  owns them.
 - **Enrollment is admin-only.** Hub staff add kids; the parent app has no
   add-child flow. The parent's Profile QR doubles as their member/pickup ID.
 - **MVP scope:** no payments, no delivery/logistics features yet.
 
-## Run it
+## Run it locally
+
+You need Node 20+ and npm. Live mode (real accounts) also needs Docker
+Desktop running.
+
+### Demo mode (no account setup)
 
 ```bash
 npm install
@@ -34,6 +40,88 @@ npm run dev     # http://localhost:3000
 npm run build   # production build
 npm start       # serve the production build
 ```
+
+- The **Demo** button on the sign-in screen enters a seeded test
+  account (Amy, Grade 3, and Bob, Grade 4) that opens the way a real
+  account looks mid-term: both kids are on Week 40, Weeks 38 and 39 are
+  marked in History, one of Amy's Week 40 sheets is marked, and one
+  answer is waiting for a parent check. Everything stays on-device; no
+  server account is involved.
+- Grading still needs a provider in every mode: set `META_API_KEY` in
+  `.env.local` (see [Grading provider](#grading-provider)).
+
+### Live mode (real accounts on a local Supabase stack)
+
+Live mode adds real parent accounts: magic-link sign-in, with kids,
+results and photos persisted server-side. It runs on the Supabase local
+stack — the same Postgres, Auth and row-level-security policies as the
+hosted product, in Docker. (Not SQLite: it has no RLS and different
+types, so it cannot stand in for this.)
+
+1. Start Docker Desktop.
+2. Start the stack. The first run downloads its images and takes a few
+   minutes:
+
+   ```bash
+   npm run supabase:start
+   npm run supabase:status   # prints the API URL and keys; run it anytime
+   ```
+
+3. Create `.env.local` in the repo root (see `.env.example`) with the
+   values the status output prints:
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
+   ```
+
+   The current CLI labels this key **Publishable** (`sb_publishable_…`);
+   older output calls it the *anon* key. It is the only Supabase key
+   the app needs: the server verifies the parent's sign-in token and
+   then reads and writes as that parent, with row-level security
+   scoping every query to their own family — the Secret
+   (service_role) key is not used. Add your grading key too
+   (`META_API_KEY`, or `GRADING_PROVIDER=demo`).
+
+4. Start (or restart) the app with `npm run dev` and open
+   http://127.0.0.1:3000 — localhost:3000 works too; both are
+   allow-listed redirect URLs in `supabase/config.toml`.
+5. Enter your email and choose **Email me a sign-in link**. Local mail
+   is not really sent: open the mail catcher at
+   http://127.0.0.1:54324 and click the link there. You land in live
+   mode. A first sign-in shows "No children are on your account yet" —
+   the parent row is created automatically; kids are enrolled by staff
+   (next step).
+6. Enroll a test kid in Supabase Studio (http://127.0.0.1:54323), SQL
+   editor:
+
+   ```sql
+   insert into public.kids (parent_id, name, grade, current_week)
+   select id, 'Amy', 3, 40 from public.parents
+   where email = 'you@example.com';
+   ```
+
+   Reload the app: the kid appears with the packet for their grade and
+   current week. Grade as usual — results and photos persist server-side
+   (check the `submissions`, `grade_results`, `photo_blobs` and
+   `check_resolutions` tables in Studio). Signing in from a second
+   browser shows the same account, photos included.
+
+Shut down and reset:
+
+```bash
+npm run supabase:stop    # stop the local stack
+npm run supabase:reset   # wipe the database; reapplies migrations + seed
+```
+
+Leave the Supabase variables unset and live mode turns off: the
+sign-in screen offers the demo account only. `GET /api/config`
+reports `accounts: true/false`, so you can
+confirm which way the server booted. If repeated test sign-ins hit an
+email rate limit, raise `email_sent` under `[auth.rate_limit]` in
+`supabase/config.toml` and restart the stack.
+
+### Grading provider
 
 Grading needs a model API key. Create `.env.local` in the repo root (see
 `.env.example`):
@@ -45,30 +133,33 @@ META_API_KEY=LLM_...
 Restart the server after changing it. Sanity check: `GET /api/config`
 should report the provider as available. Without a key, grading fails
 honestly — the parent keeps their staged photos and sees "We couldn't mark
-the sheet just now — please try again in a moment." For keyless
-development, `GRADING_PROVIDER=demo` selects a scripted demo provider
-(fixed verdict patterns, no model call); it is never used as a fallback.
+the sheet just now — please try again in a moment." There is no scripted
+or fallback provider: every grade is a real model call, in every mode.
 
 ## How it works
 
-### Parent app (local-first)
+### Parent app
 
 - All data access goes through `lib/store.ts` — records in localStorage
-  (one versioned JSON document), photos in IndexedDB. UI code never touches
-  storage directly, so the data layer can be swapped for Supabase later
-  without changing screens. `lib/derive.ts` builds the read snapshot (home
+  (one versioned JSON document per mode), photos in IndexedDB. UI code
+  never touches storage directly. In live mode the same records are a
+  mirror of the server account, downloaded wholesale at sign-in and
+  refreshed after each grading or check update, so the screens are
+  identical across modes. `lib/derive.ts` builds the read snapshot (home
   state, scores, streaks); `scoreFor()` never counts an unresolved `unsure`.
-- Screens (`components/`, behind `AppShell.tsx`): **Sign-in** (emailed-link
-  flow plus Skip; device-local), **Home** (status slot — Needs-your-check
+- Screens (`components/`, behind `AppShell.tsx`): **Sign-in** (a real
+  emailed link when accounts are configured, plus Demo), **Home** (status slot — Needs-your-check
   card or "All caught up", kid switcher, current-week Homework, two-stat
   Progress card, immutable History of finished sheets), **Scan**
   (full-screen camera or Upload Photo; photos stage in a tray and grading
   starts only on **Grade**), **Results**, **Parent check** (one consolidated
   queue across kids), **Profile** (member QR).
-- Seed data (`lib/seed.ts`): parent "David G."; kids Gina (Grade 4 · Math)
-  and Leo (Grade 1 · Math); seven sheets. A fresh profile opens with Gina's
-  Math · Week 12 already marked and two answers awaiting check, so the
-  Parent check flow is visible immediately.
+- Demo data (`lib/demo.ts`): one file holds the whole demo dataset —
+  the account (parent "Demo"; kids Amy, Grade 3, and Bob, Grade 4),
+  their Weeks 38–40 packets, and the seeded marking history. A fresh
+  profile opens with two weeks of History, one of Amy's Week 40 sheets
+  already marked, and one answer awaiting check, so the Parent check
+  flow is visible immediately.
 
 ### Grading (server)
 
@@ -105,19 +196,26 @@ development, `GRADING_PROVIDER=demo` selects a scripted demo provider
   provider is defined but its multimodal tool-calling path currently
   hangs, so it is not usable for grading.
 - Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
-  versioned key, seeded from `lib/seed.ts`. All 7 sheets have keys.
+  versioned key. The registry is exactly the frozen book catalogues —
+  2,019 sheets, all with keys.
 
 ## Repo map
 
 ```
-app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config
+app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config,
+                api/account (+ resolutions, photos)
 components/     AppShell + screens (Home, Scan, Results, Check, Profile, SignIn), ui.tsx
-lib/            store.ts (data layer), derive.ts, seed.ts, grading.ts (client),
-                grade-contract.ts (wire types), demo.ts (seeded demo lifecycle)
+lib/            store.ts (data layer), derive.ts, grading.ts (client),
+                grade-contract.ts (wire types), demo.ts (the demo dataset),
+                live-sync.ts + supabase-client.ts (live mode), account-contract.ts
 lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
                 pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
-                prompts/, context/ error taxonomy)
-docs/           stage-3-design.md (grading design), stage-3.5-design.md (result lifecycle), wireframe/ (design reference)
+                prompts/, context/ error taxonomy), supabase.ts + account.ts
+                (token verification, account payload, grading persistence),
+                book-data/ (frozen grade 2–5 book catalogues)
+supabase/       local stack config, migrations (accounts schema + RLS),
+                seed.sql (staff enrollment examples)
+docs/           stage-3-design.md (grading design), stage-3.5-design.md (result lifecycle), production-plan.md, wireframe/ (design reference)
 ```
 
 ## Status
@@ -128,7 +226,11 @@ docs/           stage-3-design.md (grading design), stage-3.5-design.md (result 
   cases that genuinely exercise the `unsure` path; Stage 3.5 result
   lifecycle (background marking, per-photo outcomes with retries and
   partial success, blank-answer verdicts, rescan protection —
-  `docs/stage-3.5-design.md`).
+  `docs/stage-3.5-design.md`); Stage 4 book integration (printed sheet
+  codes, the frozen grade 2–5 catalogues); demo mode; parallel grading;
+  Phase 1 accounts — Supabase magic-link sign-in (live mode) with kids,
+  results and photos persisted server-side under row-level security
+  (`docs/production-plan.md`).
 - **Not built yet:** English grading agent (launch is math-first),
-  spaced-review queue (deferred to v2), Supabase migration
-  (only when real accounts / multi-device access are needed).
+  spaced-review queue (deferred to v2), hosted deployment and the
+  PWA/Capacitor builds (Phases 2–4 of the production plan).

@@ -1,6 +1,51 @@
 # Production Plan — Railway + Supabase + Dual Build (PWA / Capacitor)
 
-Status: agreed direction (2026-10-30 discussion). Not yet built.
+Status: agreed direction (2026-10-30 discussion). Phase 1 is built and
+verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
+
+## Phase 1 as built (branch `phase-1-supabase`)
+
+- `supabase/` holds the project: `config.toml` (magic-link redirects for
+  localhost dev), one migration (parents, kids, submissions,
+  grade_results, check_resolutions, photo_blobs + RLS), and a seed file
+  documenting SQL enrollment. Local development uses the real local
+  stack — `npm run supabase:start`, then copy the URL and keys it
+  prints into `.env.local` (see `.env.example`). No SQLite anywhere:
+  local and hosted run the same Postgres, Auth, and policies.
+- A third app mode, **live**, sits beside demo and guest with its own
+  local database. Signing in with a real magic link enters it; the
+  database mirrors `GET /api/account` and seeds nothing locally.
+  (Follow-up, later the same day: the original demo mode was removed
+  and guest was renamed demo — now seeded with packets and two weeks
+  of marking history, it is the only local mode beside live.)
+- The server verifies the parent's token on `/api/account`,
+  `/api/account/resolutions`, `/api/account/photos/:blobId`, and on
+  `POST /api/grade` when a token is present (kid ownership enforced,
+  403 otherwise). Graded results and their photos persist to the
+  account as the job finishes; check rulings write through and re-sync.
+- Account data access runs as the signed-in parent rather than under
+  a service-role bypass: after verifying the token, the server reads
+  and writes with it, and a second migration adds the matching write
+  policies (submissions, results, resolutions, photos — each scoped
+  to the parent's own kids). Only the URL and publishable key are
+  configured; the secret (service_role) key is not used. This
+  replaced the original service-role design, whose bypass the local
+  stack's secret key did not grant — the first account call failed
+  its parents upsert and returned 401.
+- Deviation from the keys rule below, accepted for Phase 1: Results and
+  Parent check render correct answers on the device, so the account
+  payload includes the answer keys for the signed-in parent's own kids'
+  assigned sheets — the same exposure the shipped local bundles
+  already have. Keys still never sit in database tables. Moving correct
+  answers into the grade-result payload (so keys never leave the
+  server) is the follow-up that removes this.
+- Verified end to end against a real Postgres + Auth + PostgREST
+  stack: migrations apply; RLS isolates two parents (photo rows
+  included — reachable only through the parent's own kids'
+  submissions); the magic-link round trip enters live mode; grading
+  persists submissions, results, and photo bytes; a second browser
+  profile sees the same account, including the stored photo and a
+  resolved check; demo and guest modes unaffected at the time.
 
 ## Target architecture
 
@@ -10,7 +55,7 @@ Status: agreed direction (2026-10-30 discussion). Not yet built.
   usage: ~$10–15/mo (Hobby plan is usage-metered; no sleep on any plan).
 - **Supabase** provides Auth and Postgres.
   - Auth: magic link by email — the same flow the sign-in screen already
-    presents, made real. Demo and guest modes stay local-only beside it.
+    presents, made real. Demo mode stays local-only beside it.
   - Postgres tables: parent accounts, kids and enrollment, each kid's
     current week / assignments, grade results and history, check
     resolutions. Row-level security enforces that a parent reads only
@@ -39,7 +84,7 @@ Status: agreed direction (2026-10-30 discussion). Not yet built.
    production.)
 2. **Data layer points at the server.** All client data access already
    flows through `lib/store.ts`; for signed-in accounts it becomes an API
-   client instead of localStorage/IndexedDB. Demo/guest keep the local
+   client instead of localStorage/IndexedDB. Demo keeps the local
    behaviour.
 3. **CORS on the API routes** (`/api/grade`, `/api/grade/:jobId`,
    `/api/config`), so the Capacitor shell's origin is accepted.
@@ -86,8 +131,8 @@ Each phase is independently verifiable before the next begins.
    - Switch the Meta model from `muse-spark-1.3-contributor` back to
      Standard `muse-spark-1.3` before grading any real child's sheet
      (contributor traffic trains on prompts/completions).
-   - RLS audit: confirm no table is readable across parents; photo blobs
-     have no client-facing policy at all.
+   - RLS audit: confirm no table is readable or writable across
+     parents.
    - Custom SMTP for magic-link email if free-tier send limits bite.
    - Kid-data privacy review (COPPA/PIPEDA) before public enrollment.
 

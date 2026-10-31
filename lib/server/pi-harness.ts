@@ -87,7 +87,7 @@ export interface IdentifiedSheet {
   sheetId: string;
   printedCode: string;
   kidName: string;
-  /** "Gina · Math · Week 12" — for progress displays. */
+  /** "Amy · Math · Week 40" — for progress displays. */
   sheetLabel: string;
 }
 
