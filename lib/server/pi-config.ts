@@ -111,6 +111,7 @@ export function providerDef(config: PiConfig, providerId: string): PiProviderDef
 /** Extra env names accepted for a provider's key (Meta's docs call theirs MODEL_API_KEY). */
 const KEY_ENV_ALIASES: Record<string, string[]> = {
   meta: ["MODEL_API_KEY"],
+  gemini: ["GOOGLE_API_KEY", "GOOGLE_GENAI_API_KEY"],
 };
 
 /** The env var a provider's "$ENV" apiKey points at, if any. */

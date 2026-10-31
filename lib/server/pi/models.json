@@ -61,6 +61,24 @@
                 }
             ],
             "name": "Meta Model API"
+        },
+        "gemini": {
+            "api": "google-generative-ai",
+            "apiKey": "$GEMINI_API_KEY",
+            "baseUrl": "https://generativelanguage.googleapis.com/v1beta",
+            "models": [
+                {
+                    "contextWindow": 1048576,
+                    "id": "gemini-3.8-flash",
+                    "input": [
+                        "text",
+                        "image"
+                    ],
+                    "maxTokens": 8192,
+                    "name": "Gemini 3.8 Flash"
+                }
+            ],
+            "name": "Google Gemini"
         }
     }
 }
