@@ -30,14 +30,21 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
 
   useEffect(() => {
     if (!parent) return;
-    QRCode.toDataURL(`practice-sheets:member:${parent.id}`, {
+    // The member code carries the parent's email as well as their id
+    // when the sign-in email is known, so staff scanning it can match
+    // the account by either. Without an email (demo Skip, guest mode)
+    // it stays the bare id form.
+    const payload = email
+      ? `practice-sheets:member:${parent.id}?email=${encodeURIComponent(email)}`
+      : `practice-sheets:member:${parent.id}`;
+    QRCode.toDataURL(payload, {
       width: 336,
       margin: 0,
       color: { dark: "#3d2b1f", light: "#ffffff" },
     })
       .then(setQrUrl)
       .catch(() => setQrUrl(null));
-  }, [parent]);
+  }, [parent, email]);
 
   if (!parent) return null;
 
