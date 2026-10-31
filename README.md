@@ -48,8 +48,7 @@ npm start       # serve the production build
   answer is waiting for a parent check. Everything stays on-device; no
   server account is involved.
 - Grading still needs a provider in every mode: set `META_API_KEY` in
-  `.env.local`, or `GRADING_PROVIDER=demo` for the scripted provider
-  (see [Grading provider](#grading-provider)).
+  `.env.local` (see [Grading provider](#grading-provider)).
 
 ### Live mode (real accounts on a local Supabase stack)
 
@@ -134,9 +133,8 @@ META_API_KEY=LLM_...
 Restart the server after changing it. Sanity check: `GET /api/config`
 should report the provider as available. Without a key, grading fails
 honestly — the parent keeps their staged photos and sees "We couldn't mark
-the sheet just now — please try again in a moment." For keyless
-development, `GRADING_PROVIDER=demo` selects a scripted demo provider
-(fixed verdict patterns, no model call); it is never used as a fallback.
+the sheet just now — please try again in a moment." There is no scripted
+or fallback provider: every grade is a real model call, in every mode.
 
 ## How it works
 
