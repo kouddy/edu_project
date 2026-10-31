@@ -4,8 +4,10 @@
  * The book generators freeze each grade's weekly assignment into
  * weekly_questions.json (every sheet already split, in packet order, with
  * its printed code). Copies live in lib/server/book-data/, organised by
- * region then subject (book-data/on/math/… — see its README). This
- * module discovers those folders and turns every frozen file into
+ * region then subject (book-data/on/math/… — see its README). A v3 frozen
+ * file holds refs into a sibling pools file instead of copies; the loader
+ * resolves them at startup against the pools file its sha256 pin names.
+ * This module discovers those folders and turns every frozen file into
  * registry entries so a photo of any real sheet grades against the
  * book's own answer key.
  *
@@ -18,6 +20,7 @@
  * during grading remains the real explanation for wrong answers.
  */
 
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { AnswerKeyQuestion } from "../store";
@@ -41,6 +44,7 @@ interface FrozenDoc {
   curriculum: string;
   subject: string;
   grade: number;
+  version?: number;
   weeks: {
     week: number;
     topics: number[];
@@ -49,6 +53,39 @@ interface FrozenDoc {
   }[];
   finals: { sheets: FrozenSheet[] };
 }
+
+interface FrozenRef {
+  topic: number;
+  index: number;
+}
+
+interface FrozenSheetV3 {
+  code: string;
+  refs: (number | FrozenRef)[];
+  star?: boolean;
+}
+
+interface FrozenDocV3 {
+  curriculum: string;
+  subject: string;
+  grade: number;
+  version: number;
+  pools_sha256: string;
+  weeks: {
+    week: number;
+    topics: number[];
+    practice: { topic: number; sheets: FrozenSheetV3[] }[];
+    reviews: Record<string, { sheets: FrozenSheetV3[] }>;
+  }[];
+  finals: { sheets: FrozenSheetV3[] };
+}
+
+type PoolsDoc = {
+  num: number;
+  title: string;
+  questions: FrozenQuestion[];
+  star: FrozenQuestion;
+}[];
 
 const DATA_DIR = path.join(process.cwd(), "lib", "server", "book-data");
 
@@ -87,16 +124,88 @@ function discoverBookFolders(): BookFolder[] {
       }
       const files = names.filter((f) => /^weekly-questions-g\d+\.json$/.test(f)).sort();
       if (files.length === 0) continue;
-      let topics: BookFolder["topics"] = {};
-      try {
-        topics = JSON.parse(readFileSync(path.join(dir, "topics.json"), "utf8")) as BookFolder["topics"];
-      } catch {
-        /* A subject without a topic map falls back to "Topic N" titles. */
+      // Topic titles live in the pools files — each topic record carries
+      // its title — so no separate topic map exists to keep in sync.
+      const topics: BookFolder["topics"] = {};
+      for (const name of names) {
+        const m = /^questions-g(\d+)\.json$/.exec(name);
+        if (!m) continue;
+        try {
+          const pools = JSON.parse(readFileSync(path.join(dir, name), "utf8")) as PoolsDoc;
+          topics[m[1]] = Object.fromEntries(pools.map((t) => [String(t.num), t.title]));
+        } catch {
+          /* An unreadable pools file leaves its grade on the "Topic N"
+             fallback; the frozen file's pin check is the hard failure
+             for a broken pair. */
+        }
       }
       folders.push({ region, subject, dir, files, topics });
     }
   }
   return folders;
+}
+
+/** A frozen file holds refs into a sibling pools file
+ *  (questions-g{grade}.json), pinned by the pools file's sha256. Resolve
+ *  it here, on the server, to the copy shape the registry builder
+ *  consumes; a pin mismatch is a hard error, never a silent re-point.
+ *  Only the v3 reference form is supported. */
+function materializeDoc(folder: BookFolder, file: string, raw: FrozenDoc): FrozenDoc {
+  if ((raw.version ?? 2) < 3) {
+    throw new Error(
+      `[book-data] ${file}: not in the v3 reference form — re-sync a frozen v3 file`,
+    );
+  }
+  const v3 = raw as unknown as FrozenDocV3;
+  const poolsFile = `questions-g${v3.grade}.json`;
+  const poolsBytes = readFileSync(path.join(folder.dir, poolsFile));
+  const digest = createHash("sha256").update(poolsBytes).digest("hex");
+  if (digest !== v3.pools_sha256) {
+    throw new Error(
+      `[book-data] ${file}: ${poolsFile} does not match the frozen file's pools pin — re-sync the pair`,
+    );
+  }
+  const pools = new Map(
+    (JSON.parse(poolsBytes.toString("utf8")) as PoolsDoc).map((t) => [t.num, t]),
+  );
+  const poolQ = (topic: number, index: number): FrozenQuestion => {
+    const q = pools.get(topic)?.questions[index];
+    if (!q) throw new Error(`[book-data] ${file}: no pool question ${index} in topic ${topic}`);
+    return { body: q.body, answer: q.answer };
+  };
+  const refQ = (ref: FrozenRef): FrozenQuestion => ({ ...poolQ(ref.topic, ref.index), topic: ref.topic });
+  const reviewSheet = (s: FrozenSheetV3): FrozenSheet => ({
+    code: s.code,
+    questions: (s.refs as FrozenRef[]).map(refQ),
+  });
+  return {
+    curriculum: v3.curriculum,
+    subject: v3.subject,
+    grade: v3.grade,
+    weeks: v3.weeks.map((wk) => ({
+      week: wk.week,
+      topics: wk.topics,
+      practice: wk.practice.map((blk) => ({
+        topic: blk.topic,
+        sheets: blk.sheets.map((s) => {
+          const sheet: FrozenSheet = {
+            code: s.code,
+            questions: (s.refs as number[]).map((i) => poolQ(blk.topic, i)),
+          };
+          const star = pools.get(blk.topic)?.star;
+          if (s.star && star) sheet.star = { body: star.body, answer: star.answer };
+          return sheet;
+        }),
+      })),
+      reviews: Object.fromEntries(
+        Object.entries(wk.reviews).map(([kind, rv]) => [
+          kind,
+          { sheets: rv.sheets.map(reviewSheet) },
+        ]),
+      ),
+    })),
+    finals: { sheets: v3.finals.sheets.map(reviewSheet) },
+  };
 }
 
 function loadDoc(folder: BookFolder, file: string): FrozenDoc {
@@ -110,7 +219,7 @@ function loadDoc(folder: BookFolder, file: string): FrozenDoc {
         `${doc.curriculum}/${doc.subject} — loading it as declared; keep the folder in sync.`,
     );
   }
-  return doc;
+  return materializeDoc(folder, file, doc);
 }
 
 function topicTitle(
