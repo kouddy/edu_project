@@ -284,13 +284,42 @@ function stackedText(table: string): string {
   return kept.join(" ");
 }
 
+/** Sheets append an answer blank after a question's own blanks — a
+ *  second blank right after "= ___", or one trailing a hint or a
+ *  finished instruction sentence. That appended blank is not part of
+ *  the question, so drop it when it directly follows another blank or
+ *  a closed sentence, or follows a hint when the question already has
+ *  a blank of its own. Blanks travel through promptText as private
+ *  placeholders and become "?" only at the end. */
+function dropTrailingBlank(s: string): string {
+  // One drop can expose another appended blank ("get? ___ ___"), so
+  // repeat until the end of the text is a blank the rules keep.
+  for (;;) {
+    const m = s.match(/^(.*?)\s*(?:\uE000|\uE001)$/);
+    if (!m) return s;
+    const head = m[1].replace(/\s+$/, "");
+    if (!head) return s;
+    if (/(?:\uE000|\uE001)$/.test(head)) { s = head; continue; }
+    const last = head.slice(-1);
+    if (last === "." || last === "!" || last === "?") { s = head; continue; }
+    if (last === ")" && /(?:\uE000|\uE001)/.test(head)) { s = head; continue; }
+    if (/[0-9A-Za-z]/.test(last) && /(?:\uE000|\uE001)/.test(head)) { s = head; continue; }
+    return s;
+  }
+}
+
 /** The printed question as plain text: picture markup removed, tags
  *  stripped, whitespace collapsed. Empty for purely visual questions —
- *  the photo is the ground truth there. */
+ *  the photo is the ground truth there. A printed blank (the line the
+ *  kid writes on) reads as "?" — the value the parent is looking for —
+ *  except right before sentence punctuation, where the punctuation
+ *  already closes the sentence ("…is 3." in a true/false statement). */
 function promptText(body: string): string {
   const stacked = body.replace(/<table class="vsub">[\s\S]*?<\/table>/g, (t) => ` ${stackedText(t)} `);
   const noSvg = stacked.replace(/<svg[\s\S]*?<\/svg>/g, " ");
-  const text = noSvg
+  const collapsed = noSvg
+    .replace(/<span class="blank sm">\s*<\/span>/g, " \uE001 ")
+    .replace(/<span class="blank">\s*<\/span>/g, " \uE000 ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -300,6 +329,10 @@ function promptText(body: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
+  const text = dropTrailingBlank(collapsed)
+    .replace(/\s+([?.:,;!])/g, "$1")
+    .replace(/(?:\uE000|\uE001)([?.])/g, "$1")
+    .replace(/(?:\uE000|\uE001)/g, "?");
   return text.length > 180 ? `${text.slice(0, 180)}…` : text;
 }
 

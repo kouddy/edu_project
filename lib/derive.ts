@@ -377,12 +377,14 @@ export function summaryText(st: SheetState): string {
  *  options leave only their letters, "… ? A B C"; True/False reads
  *  "T True F False"). Display-only: grading keeps the full prompt. */
 export function promptForDisplay(prompt: string, correctAnswer: string): string {
-  // The stripped text keeps a space wherever a blank or picture sat,
-  // which strands spaces before punctuation ("…sides ?") and around
-  // the stacked-fraction slash ("5 ⁄ 10"); tighten both for display.
+  // Registry text already tightens the spaces a removed picture
+  // strands before punctuation; the stacked-fraction slash ("5 ⁄ 10")
+  // is tightened here. "?" is deliberately not tightened: in registry
+  // text a standalone "?" is the printed blank, and its space is the
+  // separation ("1/4 of 8 = ?").
   const p = prompt
     .trimEnd()
-    .replace(/\s+([?.:,;!])/g, "$1")
+    .replace(/\s+([.:,;!])/g, "$1")
     .replace(/\s*⁄\s*/g, "/");
   if (correctAnswer === "True" || correctAnswer === "False") {
     return p.replace(/ T True F False$/, "");

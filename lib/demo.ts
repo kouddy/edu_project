@@ -917,7 +917,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Perimeter",
@@ -925,7 +925,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "24",
         "explanation": "The correct answer is 24.",
         "topic": "Perimeter",
@@ -933,7 +933,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "26",
         "explanation": "The correct answer is 26.",
         "topic": "Perimeter",
@@ -946,7 +946,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A square has sides of 8 cm . What is its perimeter ?",
+        "prompt": "A square has sides of 8 cm. What is its perimeter?",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Perimeter",
@@ -954,7 +954,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A square has sides of 3 cm . What is its perimeter ?",
+        "prompt": "A square has sides of 3 cm. What is its perimeter?",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Perimeter",
@@ -962,7 +962,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A triangle has sides 4 cm , 5 cm and 7 cm . What is its perimeter ?",
+        "prompt": "A triangle has sides 4 cm, 5 cm and 7 cm. What is its perimeter?",
         "correctAnswer": "16",
         "explanation": "The correct answer is 16.",
         "topic": "Perimeter",
@@ -975,7 +975,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A triangle has sides 3 cm , 2 cm and 6 cm . What is its perimeter ?",
+        "prompt": "A triangle has sides 3 cm, 2 cm and 6 cm. What is its perimeter?",
         "correctAnswer": "11",
         "explanation": "The correct answer is 11.",
         "topic": "Perimeter",
@@ -983,7 +983,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A regular pentagon has sides of 4 cm . What is its perimeter ?",
+        "prompt": "A regular pentagon has sides of 4 cm. What is its perimeter?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Perimeter",
@@ -1004,7 +1004,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A triangle has sides 5 cm , 5 cm , 5 cm . What is its perimeter? A 15 cm B 10 cm C 25 cm",
+        "prompt": "A triangle has sides 5 cm, 5 cm, 5 cm. What is its perimeter? A 15 cm B 10 cm C 25 cm",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Perimeter",
@@ -1020,7 +1020,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which rectangle has a perimeter of 18 cm ? A 5 cm by 4 cm B 3 cm by 5 cm C 6 cm by 6 cm",
+        "prompt": "Which rectangle has a perimeter of 18 cm? A 5 cm by 4 cm B 3 cm by 5 cm C 6 cm by 6 cm",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Perimeter",
@@ -1033,7 +1033,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A 3 cm by 4 cm rectangle has a perimeter of 14 cm . T True F False",
+        "prompt": "A 3 cm by 4 cm rectangle has a perimeter of 14 cm. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Perimeter",
@@ -1041,7 +1041,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Perimeter is measured in square units . T True F False",
+        "prompt": "Perimeter is measured in square units. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Perimeter",
@@ -1049,7 +1049,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A square with 5 cm sides has a perimeter of 20 cm . T True F False",
+        "prompt": "A square with 5 cm sides has a perimeter of 20 cm. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Perimeter",
@@ -1062,7 +1062,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which rectangles have a perimeter of 20 cm ? 8 cm by 2 cm 5 cm by 5 cm 9 cm by 2 cm 6 cm by 3 cm",
+        "prompt": "Which rectangles have a perimeter of 20 cm? 8 cm by 2 cm 5 cm by 5 cm 9 cm by 2 cm 6 cm by 3 cm",
         "correctAnswer": "8 cm by 2 cm, 5 cm by 5 cm",
         "explanation": "The correct answer is 8 cm by 2 cm, 5 cm by 5 cm.",
         "topic": "Perimeter",
@@ -1070,7 +1070,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which shapes have a perimeter of 12 cm ? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
+        "prompt": "Which shapes have a perimeter of 12 cm? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
         "correctAnswer": "3 cm square, 4 cm by 2 cm rectangle",
         "explanation": "The correct answer is 3 cm square, 4 cm by 2 cm rectangle.",
         "topic": "Perimeter",
@@ -1078,7 +1078,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle has a perimeter of 26 cm . Its length is 8 cm . What is its width?",
+        "prompt": "A rectangle has a perimeter of 26 cm. Its length is 8 cm. What is its width?",
         "correctAnswer": "5",
         "explanation": "The correct answer is 5.",
         "topic": "Perimeter",
@@ -1091,7 +1091,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle has a perimeter of 22 cm . Its width is 5 cm . What is its length?",
+        "prompt": "A rectangle has a perimeter of 22 cm. Its width is 5 cm. What is its length?",
         "correctAnswer": "6",
         "explanation": "The correct answer is 6.",
         "topic": "Perimeter",
@@ -1099,7 +1099,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A square has a perimeter of 28 cm . How long is each side?",
+        "prompt": "A square has a perimeter of 28 cm. How long is each side?",
         "correctAnswer": "7",
         "explanation": "The correct answer is 7.",
         "topic": "Perimeter",
@@ -1112,7 +1112,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which rectangle has a perimeter of 18 cm ? A 5 cm by 4 cm B 3 cm by 5 cm C 6 cm by 6 cm",
+        "prompt": "Which rectangle has a perimeter of 18 cm? A 5 cm by 4 cm B 3 cm by 5 cm C 6 cm by 6 cm",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Perimeter",
@@ -1120,7 +1120,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "26",
         "explanation": "The correct answer is 26.",
         "topic": "Perimeter",
@@ -1133,7 +1133,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle has a perimeter of 22 cm . Its width is 5 cm . What is its length?",
+        "prompt": "A rectangle has a perimeter of 22 cm. Its width is 5 cm. What is its length?",
         "correctAnswer": "6",
         "explanation": "The correct answer is 6.",
         "topic": "Perimeter",
@@ -1141,7 +1141,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A square has sides of 8 cm . What is its perimeter ?",
+        "prompt": "A square has sides of 8 cm. What is its perimeter?",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Perimeter",
@@ -1149,7 +1149,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which shapes have a perimeter of 12 cm ? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
+        "prompt": "Which shapes have a perimeter of 12 cm? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
         "correctAnswer": "3 cm square, 4 cm by 2 cm rectangle",
         "explanation": "The correct answer is 3 cm square, 4 cm by 2 cm rectangle.",
         "topic": "Perimeter",
@@ -1157,7 +1157,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A triangle has sides 4 cm , 5 cm and 7 cm . What is its perimeter ?",
+        "prompt": "A triangle has sides 4 cm, 5 cm and 7 cm. What is its perimeter?",
         "correctAnswer": "16",
         "explanation": "The correct answer is 16.",
         "topic": "Perimeter",
@@ -1165,7 +1165,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A square has a perimeter of 28 cm . How long is each side?",
+        "prompt": "A square has a perimeter of 28 cm. How long is each side?",
         "correctAnswer": "7",
         "explanation": "The correct answer is 7.",
         "topic": "Perimeter",
@@ -1173,7 +1173,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A rectangle has a perimeter of 26 cm . Its length is 8 cm . What is its width?",
+        "prompt": "A rectangle has a perimeter of 26 cm. Its length is 8 cm. What is its width?",
         "correctAnswer": "5",
         "explanation": "The correct answer is 5.",
         "topic": "Perimeter",
@@ -1186,7 +1186,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which shapes can be built using only triangles ? hexagon trapezoid square diamond",
+        "prompt": "Which shapes can be built using only triangles? hexagon trapezoid square diamond",
         "correctAnswer": "hexagon, trapezoid, diamond",
         "explanation": "The correct answer is hexagon, trapezoid, diamond.",
         "topic": "Compose & Decompose Shapes",
@@ -1202,7 +1202,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A mirror image is called a",
+        "prompt": "A mirror image is called a ?",
         "correctAnswer": "flip",
         "explanation": "The correct answer is flip.",
         "topic": "Congruent Shapes & Transformations",
@@ -1218,7 +1218,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which transformations keep a shape congruent ? slide flip turn stretch",
+        "prompt": "Which transformations keep a shape congruent? slide flip turn stretch",
         "correctAnswer": "slide, flip, turn",
         "explanation": "The correct answer is slide, flip, turn.",
         "topic": "Congruent Shapes & Transformations",
@@ -1231,7 +1231,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which two shapes make a hexagon ? A 2 squares B 2 trapezoids C 2 triangles",
+        "prompt": "Which two shapes make a hexagon? A 2 squares B 2 trapezoids C 2 triangles",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Compose & Decompose Shapes",
@@ -1247,7 +1247,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which two shapes make a rectangle ? A 2 circles B 2 triangles C 2 squares",
+        "prompt": "Which two shapes make a rectangle? A 2 circles B 2 triangles C 2 squares",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Compose & Decompose Shapes",
@@ -1271,7 +1271,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Which are ways to build a hexagon ? 6 triangles 2 trapezoids 3 diamonds 4 squares",
+        "prompt": "Which are ways to build a hexagon? 6 triangles 2 trapezoids 3 diamonds 4 squares",
         "correctAnswer": "6 triangles, 2 trapezoids, 3 diamonds",
         "explanation": "The correct answer is 6 triangles, 2 trapezoids, 3 diamonds.",
         "topic": "Compose & Decompose Shapes",
@@ -1279,7 +1279,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Shapes that are the same shape AND the same size are called",
+        "prompt": "Shapes that are the same shape AND the same size are called ?",
         "correctAnswer": "congruent",
         "explanation": "The correct answer is congruent.",
         "topic": "Congruent Shapes & Transformations",
@@ -1292,7 +1292,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "236 is less than 715 . T True F False",
+        "prompt": "236 is less than 715. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Compare Numbers to 1000",
@@ -1316,7 +1316,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "700 + 70 + 9 =",
+        "prompt": "700 + 70 + 9 = ?",
         "correctAnswer": "779",
         "explanation": "The correct answer is 779.",
         "topic": "Expanded Form",
@@ -1329,7 +1329,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "m − 3 = 8 means m = 5 . T True F False",
+        "prompt": "m − 3 = 8 means m = 5. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Variables & Equations",
@@ -1345,7 +1345,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Write one hundred ninety as a number:",
+        "prompt": "Write one hundred ninety as a number: ?",
         "correctAnswer": "190",
         "explanation": "The correct answer is 190.",
         "topic": "Read & Write Numbers to 1000",
@@ -1353,7 +1353,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the total of all four bars? Trees planted 7 4 2 6 Oak Pine Maple Birch",
+        "prompt": "What is the total of all four bars? Trees planted 7 4 2 6 Oak Pine Maple Birch ?",
         "correctAnswer": "19",
         "explanation": "The correct answer is 19.",
         "topic": "Bar Graphs",
@@ -1366,7 +1366,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Estimate 854 − 695 (round to the nearest 10):",
+        "prompt": "Estimate 854 − 695 (round to the nearest 10): ?",
         "correctAnswer": "150",
         "explanation": "The correct answer is 150.",
         "topic": "Estimate Sums & Differences to 1000",
@@ -1406,7 +1406,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Round 457 to the nearest 100:",
+        "prompt": "Round 457 to the nearest 100: ?",
         "correctAnswer": "500",
         "explanation": "The correct answer is 500.",
         "topic": "Round to the Nearest 10 or 100",
@@ -1435,7 +1435,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many mm are in 7 cm ?",
+        "prompt": "How many mm are in 7 cm?",
         "correctAnswer": "70",
         "explanation": "The correct answer is 70.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1443,7 +1443,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many mm are in 3 cm ?",
+        "prompt": "How many mm are in 3 cm?",
         "correctAnswer": "30",
         "explanation": "The correct answer is 30.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1451,7 +1451,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "How many cm are in 90 mm ?",
+        "prompt": "How many cm are in 90 mm?",
         "correctAnswer": "9",
         "explanation": "The correct answer is 9.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1459,7 +1459,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "How many cm are in 6 m ?",
+        "prompt": "How many cm are in 6 m?",
         "correctAnswer": "600",
         "explanation": "The correct answer is 600.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1467,7 +1467,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "How many cm are in 2 m ?",
+        "prompt": "How many cm are in 2 m?",
         "correctAnswer": "200",
         "explanation": "The correct answer is 200.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1480,7 +1480,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many m are in 900 cm ?",
+        "prompt": "How many m are in 900 cm?",
         "correctAnswer": "9",
         "explanation": "The correct answer is 9.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1488,7 +1488,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many m are in 4 km ?",
+        "prompt": "How many m are in 4 km?",
         "correctAnswer": "4000",
         "explanation": "The correct answer is 4000.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1496,7 +1496,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the best unit to measure a pencil ? A millimetres B metres C centimetres D kilometres",
+        "prompt": "What is the best unit to measure a pencil? A millimetres B metres C centimetres D kilometres",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1504,7 +1504,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the best unit to measure an ant ? A millimetres B kilometres C metres D centimetres",
+        "prompt": "What is the best unit to measure an ant? A millimetres B kilometres C metres D centimetres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1512,7 +1512,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "What is the best unit to measure a classroom ? A centimetres B metres C kilometres D millimetres",
+        "prompt": "What is the best unit to measure a classroom? A centimetres B metres C kilometres D millimetres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1525,7 +1525,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the best unit to measure the distance from Toronto to Ottawa ? A centimetres B kilometres C millimetres D metres",
+        "prompt": "What is the best unit to measure the distance from Toronto to Ottawa? A centimetres B kilometres C millimetres D metres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1533,7 +1533,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which is longer : 90 cm or 1 m? A They are equal B 90 cm C 1 m",
+        "prompt": "Which is longer: 90 cm or 1 m? A They are equal B 90 cm C 1 m",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1541,7 +1541,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which is shorter : 500 m or 1 km? A 1 km B They are equal C 500 m",
+        "prompt": "Which is shorter: 500 m or 1 km? A 1 km B They are equal C 500 m",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1549,7 +1549,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which is longer : 250 cm or 2 m? A 2 m B 250 cm C They are equal",
+        "prompt": "Which is longer: 250 cm or 2 m? A 2 m B 250 cm C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1570,7 +1570,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "1 m is longer than 90 cm . T True F False",
+        "prompt": "1 m is longer than 90 cm. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1578,7 +1578,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "There are 100 mm in 1 cm . T True F False",
+        "prompt": "There are 100 mm in 1 cm. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1586,7 +1586,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Circle all the lengths longer than 1 m . 90 cm 150 cm 1 m 2 m",
+        "prompt": "Circle all the lengths longer than 1 m. 90 cm 150 cm 1 m 2 m",
         "correctAnswer": "150 cm, 2 m",
         "explanation": "The correct answer is 150 cm, 2 m.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1594,7 +1594,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "How many mm are in 8 cm ?",
+        "prompt": "How many mm are in 8 cm?",
         "correctAnswer": "80",
         "explanation": "The correct answer is 80.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1602,7 +1602,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "How many cm are in 40 mm ?",
+        "prompt": "How many cm are in 40 mm?",
         "correctAnswer": "4",
         "explanation": "The correct answer is 4.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1615,7 +1615,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many cm are in 70 mm ?",
+        "prompt": "How many cm are in 70 mm?",
         "correctAnswer": "7",
         "explanation": "The correct answer is 7.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1623,7 +1623,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many cm are in 7 m ?",
+        "prompt": "How many cm are in 7 m?",
         "correctAnswer": "700",
         "explanation": "The correct answer is 700.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1631,7 +1631,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "How many cm are in 3 m ?",
+        "prompt": "How many cm are in 3 m?",
         "correctAnswer": "300",
         "explanation": "The correct answer is 300.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1639,7 +1639,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "How many m are in 400 cm ?",
+        "prompt": "How many m are in 400 cm?",
         "correctAnswer": "4",
         "explanation": "The correct answer is 4.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1652,7 +1652,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many m are in 3 km ?",
+        "prompt": "How many m are in 3 km?",
         "correctAnswer": "3000",
         "explanation": "The correct answer is 3000.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1660,7 +1660,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit to measure a pencil ? A centimetres B metres C millimetres D kilometres",
+        "prompt": "What is the best unit to measure a pencil? A centimetres B metres C millimetres D kilometres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1668,7 +1668,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the best unit to measure an ant ? A metres B millimetres C kilometres D centimetres",
+        "prompt": "What is the best unit to measure an ant? A metres B millimetres C kilometres D centimetres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1676,7 +1676,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the best unit to measure a classroom ? A kilometres B centimetres C metres D millimetres",
+        "prompt": "What is the best unit to measure a classroom? A kilometres B centimetres C metres D millimetres",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1689,7 +1689,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the best unit to measure the distance from Toronto to Ottawa ? A centimetres B millimetres C metres D kilometres",
+        "prompt": "What is the best unit to measure the distance from Toronto to Ottawa? A centimetres B millimetres C metres D kilometres",
         "correctAnswer": "D",
         "explanation": "The correct answer is D.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1697,7 +1697,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which is longer : 90 cm or 1 m? A 90 cm B 1 m C They are equal",
+        "prompt": "Which is longer: 90 cm or 1 m? A 90 cm B 1 m C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1705,7 +1705,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which is shorter : 500 m or 1 km? A 1 km B 500 m C They are equal",
+        "prompt": "Which is shorter: 500 m or 1 km? A 1 km B 500 m C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1713,7 +1713,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which is longer : 250 cm or 2 m? A 2 m B They are equal C 250 cm",
+        "prompt": "Which is longer: 250 cm or 2 m? A 2 m B They are equal C 250 cm",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -1726,7 +1726,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the best unit for the mass of an apple ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of an apple? A grams B kilograms",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1734,7 +1734,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit for the mass of a dog ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of a dog? A grams B kilograms",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1742,7 +1742,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the best unit for the mass of a bag of sugar ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of a bag of sugar? A grams B kilograms",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1750,7 +1750,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the best unit for a spoon of medicine ? A litres B millilitres",
+        "prompt": "What is the best unit for a spoon of medicine? A litres B millilitres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1758,7 +1758,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "What is the best unit for a bathtub of water ? A litres B millilitres",
+        "prompt": "What is the best unit for a bathtub of water? A litres B millilitres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1766,7 +1766,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "What is the best unit for a juice box ? A litres B millilitres",
+        "prompt": "What is the best unit for a juice box? A litres B millilitres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1774,7 +1774,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "How many g are in 2 kg ?",
+        "prompt": "How many g are in 2 kg?",
         "correctAnswer": "2000",
         "explanation": "The correct answer is 2000.",
         "topic": "Mass & Capacity",
@@ -1782,7 +1782,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "How many g are in 5 kg ?",
+        "prompt": "How many g are in 5 kg?",
         "correctAnswer": "5000",
         "explanation": "The correct answer is 5000.",
         "topic": "Mass & Capacity",
@@ -1795,7 +1795,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many kg are in 3000 g ?",
+        "prompt": "How many kg are in 3000 g?",
         "correctAnswer": "3",
         "explanation": "The correct answer is 3.",
         "topic": "Mass & Capacity",
@@ -1803,7 +1803,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many mL are in 3 L ?",
+        "prompt": "How many mL are in 3 L?",
         "correctAnswer": "3000",
         "explanation": "The correct answer is 3000.",
         "topic": "Mass & Capacity",
@@ -1811,7 +1811,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "How many mL are in 5 L ?",
+        "prompt": "How many mL are in 5 L?",
         "correctAnswer": "5000",
         "explanation": "The correct answer is 5000.",
         "topic": "Mass & Capacity",
@@ -1819,7 +1819,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "How many L are in 2000 mL ?",
+        "prompt": "How many L are in 2000 mL?",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Mass & Capacity",
@@ -1827,7 +1827,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "1 kg is heavier than 900 g . T True F False",
+        "prompt": "1 kg is heavier than 900 g. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Mass & Capacity",
@@ -1835,7 +1835,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "500 mL is more than 1 L . T True F False",
+        "prompt": "500 mL is more than 1 L. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Mass & Capacity",
@@ -1843,7 +1843,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "We measure a car's mass in grams . T True F False",
+        "prompt": "We measure a car's mass in grams. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Mass & Capacity",
@@ -1851,7 +1851,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "1000 g = 1 kg . T True F False",
+        "prompt": "1000 g = 1 kg. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Mass & Capacity",
@@ -1864,7 +1864,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "How many kg is 500 g + 500 g ?",
+        "prompt": "How many kg is 500 g + 500 g?",
         "correctAnswer": "1",
         "explanation": "The correct answer is 1.",
         "topic": "Mass & Capacity",
@@ -1872,7 +1872,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many mL is 2 L − 500 mL ?",
+        "prompt": "How many mL is 2 L − 500 mL?",
         "correctAnswer": "1500",
         "explanation": "The correct answer is 1500.",
         "topic": "Mass & Capacity",
@@ -1880,7 +1880,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which is heavier : 2 kg or 1800 g? A 1800 g B 2 kg C They are equal",
+        "prompt": "Which is heavier: 2 kg or 1800 g? A 1800 g B 2 kg C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1888,7 +1888,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which holds more : 1 L or 900 mL? A 1 L B They are equal C 900 mL",
+        "prompt": "Which holds more: 1 L or 900 mL? A 1 L B They are equal C 900 mL",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1896,7 +1896,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "What is the best unit for a spoon of medicine ? A millilitres B litres",
+        "prompt": "What is the best unit for a spoon of medicine? A millilitres B litres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1904,7 +1904,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "How many g are in 4 kg ?",
+        "prompt": "How many g are in 4 kg?",
         "correctAnswer": "4000",
         "explanation": "The correct answer is 4000.",
         "topic": "Mass & Capacity",
@@ -1912,7 +1912,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "How many mL are in 2 L ?",
+        "prompt": "How many mL are in 2 L?",
         "correctAnswer": "2000",
         "explanation": "The correct answer is 2000.",
         "topic": "Mass & Capacity",
@@ -1920,7 +1920,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "Which is heavier : 2 kg or 1800 g? A 2 kg B 1800 g C They are equal",
+        "prompt": "Which is heavier: 2 kg or 1800 g? A 2 kg B 1800 g C They are equal",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1933,7 +1933,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which holds more : 1 L or 900 mL? A 900 mL B 1 L C They are equal",
+        "prompt": "Which holds more: 1 L or 900 mL? A 900 mL B 1 L C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1941,7 +1941,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit for the mass of an apple ? A kilograms B grams",
+        "prompt": "What is the best unit for the mass of an apple? A kilograms B grams",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1949,7 +1949,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the best unit for the mass of a bag of sugar ? A kilograms B grams",
+        "prompt": "What is the best unit for the mass of a bag of sugar? A kilograms B grams",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1957,7 +1957,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the best unit for a bathtub of water ? A millilitres B litres",
+        "prompt": "What is the best unit for a bathtub of water? A millilitres B litres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -1965,7 +1965,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "What is the best unit for a juice box ? A millilitres B litres",
+        "prompt": "What is the best unit for a juice box? A millilitres B litres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -1973,7 +1973,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "How many g are in 3 kg ?",
+        "prompt": "How many g are in 3 kg?",
         "correctAnswer": "3000",
         "explanation": "The correct answer is 3000.",
         "topic": "Mass & Capacity",
@@ -1981,7 +1981,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Which holds more : 1 L or 900 mL? A 900 mL B They are equal C 1 L",
+        "prompt": "Which holds more: 1 L or 900 mL? A 900 mL B They are equal C 1 L",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Mass & Capacity",
@@ -1989,7 +1989,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "Which is heavier : 2 kg or 1800 g? A 2 kg B They are equal C 1800 g",
+        "prompt": "Which is heavier: 2 kg or 1800 g? A 2 kg B They are equal C 1800 g",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -2002,7 +2002,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "1 m is longer than 90 cm . T True F False",
+        "prompt": "1 m is longer than 90 cm. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -2015,7 +2015,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which is longer : 90 cm or 1 m? A They are equal B 90 cm C 1 m",
+        "prompt": "Which is longer: 90 cm or 1 m? A They are equal B 90 cm C 1 m",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -2023,7 +2023,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit for a bathtub of water ? A millilitres B litres",
+        "prompt": "What is the best unit for a bathtub of water? A millilitres B litres",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -2031,7 +2031,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the best unit for a bathtub of water ? A litres B millilitres",
+        "prompt": "What is the best unit for a bathtub of water? A litres B millilitres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -2039,7 +2039,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What is the best unit for the mass of a bag of sugar ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of a bag of sugar? A grams B kilograms",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -2047,7 +2047,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "There are 100 mm in 1 cm . T True F False",
+        "prompt": "There are 100 mm in 1 cm. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -2055,7 +2055,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Which is heavier : 2 kg or 1800 g? A 2 kg B They are equal C 1800 g",
+        "prompt": "Which is heavier: 2 kg or 1800 g? A 2 kg B They are equal C 1800 g",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -2063,7 +2063,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Which is shorter : 500 m or 1 km? A 1 km B They are equal C 500 m",
+        "prompt": "Which is shorter: 500 m or 1 km? A 1 km B They are equal C 500 m",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -2092,7 +2092,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "26",
         "explanation": "The correct answer is 26.",
         "topic": "Perimeter",
@@ -2100,7 +2100,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A square has sides of 8 cm . What is its perimeter ?",
+        "prompt": "A square has sides of 8 cm. What is its perimeter?",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Perimeter",
@@ -2113,7 +2113,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A triangle has sides 5 cm , 5 cm , 5 cm . What is its perimeter? A 15 cm B 10 cm C 25 cm",
+        "prompt": "A triangle has sides 5 cm, 5 cm, 5 cm. What is its perimeter? A 15 cm B 10 cm C 25 cm",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Perimeter",
@@ -2121,7 +2121,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A mirror image is called a",
+        "prompt": "A mirror image is called a ?",
         "correctAnswer": "flip",
         "explanation": "The correct answer is flip.",
         "topic": "Congruent Shapes & Transformations",
@@ -2150,7 +2150,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Perimeter",
@@ -2166,7 +2166,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A triangle has sides 3 cm , 2 cm and 6 cm . What is its perimeter ?",
+        "prompt": "A triangle has sides 3 cm, 2 cm and 6 cm. What is its perimeter?",
         "correctAnswer": "11",
         "explanation": "The correct answer is 11.",
         "topic": "Perimeter",
@@ -2174,7 +2174,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which shapes have a perimeter of 12 cm ? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
+        "prompt": "Which shapes have a perimeter of 12 cm? 3 cm square 4 cm by 2 cm rectangle 6 cm by 6 cm square 2 cm by 3 cm rectangle",
         "correctAnswer": "3 cm square, 4 cm by 2 cm rectangle",
         "explanation": "The correct answer is 3 cm square, 4 cm by 2 cm rectangle.",
         "topic": "Perimeter",
@@ -2187,7 +2187,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "152 is less than 524 . T True F False",
+        "prompt": "152 is less than 524. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Compare Numbers to 1000",
@@ -2195,7 +2195,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Round 535 to the nearest 10:",
+        "prompt": "Round 535 to the nearest 10: ?",
         "correctAnswer": "540",
         "explanation": "The correct answer is 540.",
         "topic": "Round to the Nearest 10 or 100",
@@ -2203,7 +2203,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "4/10 = 2/5 . T True F False",
+        "prompt": "4/10 = 2/5. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Equivalent Fractions",
@@ -2211,7 +2211,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "600 + 40 + 1 =",
+        "prompt": "600 + 40 + 1 = ?",
         "correctAnswer": "641",
         "explanation": "The correct answer is 641.",
         "topic": "Expanded Form",
@@ -2232,7 +2232,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "In 642 , what is the value of the digit in the ones place?",
+        "prompt": "In 642, what is the value of the digit in the ones place?",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Place Value: Hundreds, Tens & Ones",
@@ -2240,7 +2240,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which equals 30 ÷ 10 ? A 5 B 6 C 3",
+        "prompt": "Which equals 30 ÷ 10? A 5 B 6 C 3",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Divide by 2, 5 & 10",
@@ -2256,7 +2256,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Least to greatest: 834, 404, 946",
+        "prompt": "Least to greatest: 834, 404, 946 ?",
         "correctAnswer": "404, 834, 946",
         "explanation": "The correct answer is 404, 834, 946.",
         "topic": "Order Numbers to 1000",
@@ -2264,7 +2264,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which solid has 2 faces , 1 edges and 1 vertices ? A cube B triangular prism C cone",
+        "prompt": "Which solid has 2 faces, 1 edges and 1 vertices? A cube B triangular prism C cone",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "3D Shapes: Faces, Edges & Vertices",
@@ -2277,7 +2277,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which number is four hundred sixty-five ? A 365 B 455 C 465",
+        "prompt": "Which number is four hundred sixty-five? A 365 B 455 C 465",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Read & Write Numbers to 1000",
@@ -2285,7 +2285,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "How many toys are round altogether? Toy box sort Round Not round Red 2 5 Not red 5 1",
+        "prompt": "How many toys are round altogether? Toy box sort Round Not round Red 2 5 Not red 5 1 ?",
         "correctAnswer": "7",
         "explanation": "The correct answer is 7.",
         "topic": "Venn & Carroll Diagrams",
@@ -2293,7 +2293,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Counting by 100s: 600, 700, 800, 900 . T True F False",
+        "prompt": "Counting by 100s: 600, 700, 800, 900. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Skip-Count by 50s, 100s & 200s",
@@ -2301,7 +2301,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "8 × 5 =",
+        "prompt": "8 × 5 = ?",
         "correctAnswer": "40",
         "explanation": "The correct answer is 40.",
         "topic": "Multiply by 2, 5 & 10",
@@ -2317,7 +2317,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "15, 18, 21, 24,",
+        "prompt": "15, 18, 21, 24, ?",
         "correctAnswer": "27",
         "explanation": "The correct answer is 27.",
         "topic": "Growing Patterns",
@@ -2383,7 +2383,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which clock shows 12:15 ? A B C",
+        "prompt": "Which clock shows 12:15? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2391,7 +2391,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which clock shows 3:30 ? A B C",
+        "prompt": "Which clock shows 3:30? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2399,7 +2399,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which clock shows 7:45 ? A B C",
+        "prompt": "Which clock shows 7:45? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2407,7 +2407,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which clock shows 1:30 ? A B C",
+        "prompt": "Which clock shows 1:30? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2420,7 +2420,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "School starts at 8:00",
+        "prompt": "School starts at 8:00 ?",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2428,7 +2428,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Dinner is at 6:00",
+        "prompt": "Dinner is at 6:00 ?",
         "correctAnswer": "PM",
         "explanation": "The correct answer is PM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2436,7 +2436,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The sun rises at 6:30",
+        "prompt": "The sun rises at 6:30 ?",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2444,7 +2444,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Hockey practice is at 5:30",
+        "prompt": "Hockey practice is at 5:30 ?",
         "correctAnswer": "PM",
         "explanation": "The correct answer is PM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2457,7 +2457,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A movie starts at 3:00 and ends at 4:00 . How many hours long is it?",
+        "prompt": "A movie starts at 3:00 and ends at 4:00. How many hours long is it?",
         "correctAnswer": "1",
         "explanation": "The correct answer is 1.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2465,7 +2465,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A movie starts at 3:00 and ends at 5:00 . How many hours long is it?",
+        "prompt": "A movie starts at 3:00 and ends at 5:00. How many hours long is it?",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2473,7 +2473,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A movie starts at 5:00 and ends at 6:00 . How many hours long is it?",
+        "prompt": "A movie starts at 5:00 and ends at 6:00. How many hours long is it?",
         "correctAnswer": "1",
         "explanation": "The correct answer is 1.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2481,7 +2481,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Half past 4 is the same as 4:30 . T True F False",
+        "prompt": "Half past 4 is the same as 4:30. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2552,7 +2552,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 8 cm long and 6 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 8 cm long and 6 cm wide. What is its area in square centimetres?",
         "correctAnswer": "48",
         "explanation": "The correct answer is 48.",
         "topic": "Area of Rectangles",
@@ -2560,7 +2560,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 5 cm long and 4 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 5 cm long and 4 cm wide. What is its area in square centimetres?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Area of Rectangles",
@@ -2568,7 +2568,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 6 cm long and 6 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 6 cm long and 6 cm wide. What is its area in square centimetres?",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -2581,7 +2581,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 7 cm long and 9 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 7 cm long and 9 cm wide. What is its area in square centimetres?",
         "correctAnswer": "63",
         "explanation": "The correct answer is 63.",
         "topic": "Area of Rectangles",
@@ -2589,7 +2589,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 4 cm long and 3 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 4 cm long and 3 cm wide. What is its area in square centimetres?",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Area of Rectangles",
@@ -2597,7 +2597,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 2 cm long and 9 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 2 cm long and 9 cm wide. What is its area in square centimetres?",
         "correctAnswer": "18",
         "explanation": "The correct answer is 18.",
         "topic": "Area of Rectangles",
@@ -2610,7 +2610,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which rectangle has an area of 12 square units ? A 2 by 5 B 5 by 5 C 3 by 4",
+        "prompt": "Which rectangle has an area of 12 square units? A 2 by 5 B 5 by 5 C 3 by 4",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Area of Rectangles",
@@ -2618,7 +2618,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which rectangle has an area of 12 square units ? A 3 by 4 B 2 by 5 C 5 by 5",
+        "prompt": "Which rectangle has an area of 12 square units? A 3 by 4 B 2 by 5 C 5 by 5",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Area of Rectangles",
@@ -2626,7 +2626,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which rectangle has an area of 20 square units ? A 7 by 7 B 4 by 5 C 3 by 6",
+        "prompt": "Which rectangle has an area of 20 square units? A 7 by 7 B 4 by 5 C 3 by 6",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Area of Rectangles",
@@ -2639,7 +2639,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which rectangle has an area of 20 square units ? A 4 by 5 B 3 by 6 C 7 by 7",
+        "prompt": "Which rectangle has an area of 20 square units? A 4 by 5 B 3 by 6 C 7 by 7",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Area of Rectangles",
@@ -2647,7 +2647,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A 4 by 3 rectangle has an area of 12 square units . T True F False",
+        "prompt": "A 4 by 3 rectangle has an area of 12 square units. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Area of Rectangles",
@@ -2655,7 +2655,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Area is measured in centimetres . T True F False",
+        "prompt": "Area is measured in centimetres. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Area of Rectangles",
@@ -2668,7 +2668,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Circle all the rectangles with an area of 18 square units . 9 by 2 6 by 3 5 by 4 3 by 5",
+        "prompt": "Circle all the rectangles with an area of 18 square units. 9 by 2 6 by 3 5 by 4 3 by 5",
         "correctAnswer": "9 by 2, 6 by 3",
         "explanation": "The correct answer is 9 by 2, 6 by 3.",
         "topic": "Area of Rectangles",
@@ -2676,7 +2676,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Circle all the rectangles with an area of 24 square units . 6 by 4 8 by 3 5 by 5 7 by 3",
+        "prompt": "Circle all the rectangles with an area of 24 square units. 6 by 4 8 by 3 5 by 5 7 by 3",
         "correctAnswer": "6 by 4, 8 by 3",
         "explanation": "The correct answer is 6 by 4, 8 by 3.",
         "topic": "Area of Rectangles",
@@ -2689,7 +2689,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "The apple pie costs $3.02 . You pay with $5 How much change do you get?",
+        "prompt": "The apple pie costs $3.02. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.98",
         "explanation": "The correct answer is $1.98.",
         "topic": "Making Change",
@@ -2697,7 +2697,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "The toy car costs $3.92 . You pay with $5 How much change do you get?",
+        "prompt": "The toy car costs $3.92. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.08",
         "explanation": "The correct answer is $1.08.",
         "topic": "Making Change",
@@ -2705,7 +2705,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The soccer ball costs $3.05 . You pay with $5 How much change do you get?",
+        "prompt": "The soccer ball costs $3.05. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.95",
         "explanation": "The correct answer is $1.95.",
         "topic": "Making Change",
@@ -2713,7 +2713,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "The apple pie costs $5.07 . You pay with $10 How much change do you get?",
+        "prompt": "The apple pie costs $5.07. You pay with $10 How much change do you get?",
         "correctAnswer": "$4.93",
         "explanation": "The correct answer is $4.93.",
         "topic": "Making Change",
@@ -2721,7 +2721,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "The kite costs $6.72 . You pay with $10 How much change do you get?",
+        "prompt": "The kite costs $6.72. You pay with $10 How much change do you get?",
         "correctAnswer": "$3.28",
         "explanation": "The correct answer is $3.28.",
         "topic": "Making Change",
@@ -2729,7 +2729,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "The ice cream costs $2.69 . You pay with $5 How much change do you get?",
+        "prompt": "The ice cream costs $2.69. You pay with $5 How much change do you get?",
         "correctAnswer": "$2.31",
         "explanation": "The correct answer is $2.31.",
         "topic": "Making Change",
@@ -2737,7 +2737,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "The apple pie costs $7.52 . You pay with $10 How much change do you get?",
+        "prompt": "The apple pie costs $7.52. You pay with $10 How much change do you get?",
         "correctAnswer": "$2.48",
         "explanation": "The correct answer is $2.48.",
         "topic": "Making Change",
@@ -2745,7 +2745,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "The ice cream costs $4.76 . You pay with $5 How much change do you get?",
+        "prompt": "The ice cream costs $4.76. You pay with $5 How much change do you get?",
         "correctAnswer": "24¢",
         "explanation": "The correct answer is 24¢.",
         "topic": "Making Change",
@@ -2753,7 +2753,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "The book costs $6.20 . You pay with $10 How much change do you get?",
+        "prompt": "The book costs $6.20. You pay with $10 How much change do you get?",
         "correctAnswer": "$3.80",
         "explanation": "The correct answer is $3.80.",
         "topic": "Making Change",
@@ -2766,7 +2766,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "The toy car costs $8.97 . You pay with $10 How much change do you get?",
+        "prompt": "The toy car costs $8.97. You pay with $10 How much change do you get?",
         "correctAnswer": "$1.03",
         "explanation": "The correct answer is $1.03.",
         "topic": "Making Change",
@@ -2774,7 +2774,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "The book costs $3.97 . You pay with $5 How much change do you get?",
+        "prompt": "The book costs $3.97. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.03",
         "explanation": "The correct answer is $1.03.",
         "topic": "Making Change",
@@ -2782,7 +2782,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which coins make exactly 75¢ ? A B C",
+        "prompt": "Which coins make exactly 75¢? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Making Change",
@@ -2790,7 +2790,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which coins make exactly 35¢ ? A B C",
+        "prompt": "Which coins make exactly 35¢? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Making Change",
@@ -2798,7 +2798,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which coins make exactly 45¢ ? A B C",
+        "prompt": "Which coins make exactly 45¢? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Making Change",
@@ -2806,7 +2806,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Which coins make exactly 45¢ ? A B C",
+        "prompt": "Which coins make exactly 45¢? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Making Change",
@@ -2814,7 +2814,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "You pay $2 for a 130¢ chocolate bar. Your change is 70¢ . T True F False",
+        "prompt": "You pay $2 for a 130¢ chocolate bar. Your change is 70¢. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Making Change",
@@ -2822,7 +2822,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "Change for $5 − $2.25 is $2.75 . T True F False",
+        "prompt": "Change for $5 − $2.25 is $2.75. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Making Change",
@@ -2830,7 +2830,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "You pay $1 for an 85¢ candy. Your change is 20¢ . T True F False",
+        "prompt": "You pay $1 for an 85¢ candy. Your change is 20¢. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Making Change",
@@ -2843,7 +2843,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Circle ALL the coin groups worth 50¢ .",
+        "prompt": "Circle ALL the coin groups worth 50¢.",
         "correctAnswer": "<span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"></span>",
         "explanation": "The correct answer is <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"></span>.",
         "topic": "Making Change",
@@ -2851,7 +2851,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Circle ALL the ways to pay exactly $1 .",
+        "prompt": "Circle ALL the ways to pay exactly $1.",
         "correctAnswer": "<span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_100.png\" alt=\"1 dollar\" style=\"width:48px;height:48px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"></span>",
         "explanation": "The correct answer is <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_100.png\" alt=\"1 dollar\" style=\"width:48px;height:48px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"><img class=\"coinimg\" src=\"assets/coins/coin_25.png\" alt=\"25 cents\" style=\"width:44px;height:44px\"></span>, <span class=\"coins-row\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"><img class=\"coinimg\" src=\"assets/coins/coin_10.png\" alt=\"10 cents\" style=\"width:36px;height:36px\"></span>.",
         "topic": "Making Change",
@@ -2859,7 +2859,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The puzzle costs $6.32 . You pay with $10 How much change do you get?",
+        "prompt": "The puzzle costs $6.32. You pay with $10 How much change do you get?",
         "correctAnswer": "$3.68",
         "explanation": "The correct answer is $3.68.",
         "topic": "Making Change",
@@ -2867,7 +2867,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "The toy car costs $4.25 . You pay with $5 How much change do you get?",
+        "prompt": "The toy car costs $4.25. You pay with $5 How much change do you get?",
         "correctAnswer": "75¢",
         "explanation": "The correct answer is 75¢.",
         "topic": "Making Change",
@@ -2875,7 +2875,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "The box of crayons costs $4.14 . You pay with $5 How much change do you get?",
+        "prompt": "The box of crayons costs $4.14. You pay with $5 How much change do you get?",
         "correctAnswer": "86¢",
         "explanation": "The correct answer is 86¢.",
         "topic": "Making Change",
@@ -2883,7 +2883,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "The box of crayons costs $5.59 . You pay with $10 How much change do you get?",
+        "prompt": "The box of crayons costs $5.59. You pay with $10 How much change do you get?",
         "correctAnswer": "$4.41",
         "explanation": "The correct answer is $4.41.",
         "topic": "Making Change",
@@ -2891,7 +2891,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "The toy car costs 87¢ . You pay with How much change do you get?",
+        "prompt": "The toy car costs 87¢. You pay with How much change do you get?",
         "correctAnswer": "13¢",
         "explanation": "The correct answer is 13¢.",
         "topic": "Making Change",
@@ -2904,7 +2904,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "The ice cream costs $3.84 . You pay with $5 How much change do you get?",
+        "prompt": "The ice cream costs $3.84. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.16",
         "explanation": "The correct answer is $1.16.",
         "topic": "Making Change",
@@ -2912,7 +2912,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "The puzzle costs $9.22 . You pay with $10 How much change do you get?",
+        "prompt": "The puzzle costs $9.22. You pay with $10 How much change do you get?",
         "correctAnswer": "78¢",
         "explanation": "The correct answer is 78¢.",
         "topic": "Making Change",
@@ -2920,7 +2920,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The soccer ball costs $6.94 . You pay with $10 How much change do you get?",
+        "prompt": "The soccer ball costs $6.94. You pay with $10 How much change do you get?",
         "correctAnswer": "$3.06",
         "explanation": "The correct answer is $3.06.",
         "topic": "Making Change",
@@ -2928,7 +2928,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "The book costs 68¢ . You pay with How much change do you get?",
+        "prompt": "The book costs 68¢. You pay with How much change do you get?",
         "correctAnswer": "32¢",
         "explanation": "The correct answer is 32¢.",
         "topic": "Making Change",
@@ -2936,7 +2936,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "The kite costs $4.99 . You pay with $5 How much change do you get?",
+        "prompt": "The kite costs $4.99. You pay with $5 How much change do you get?",
         "correctAnswer": "1¢",
         "explanation": "The correct answer is 1¢.",
         "topic": "Making Change",
@@ -2944,7 +2944,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "The apple pie costs $3.22 . You pay with $5 How much change do you get?",
+        "prompt": "The apple pie costs $3.22. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.78",
         "explanation": "The correct answer is $1.78.",
         "topic": "Making Change",
@@ -2952,7 +2952,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Which coins make exactly 55¢ ? A B C",
+        "prompt": "Which coins make exactly 55¢? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Making Change",
@@ -2978,7 +2978,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "School starts at 8:00",
+        "prompt": "School starts at 8:00 ?",
         "correctAnswer": "AM",
         "explanation": "The correct answer is AM.",
         "topic": "Time: Analog & Digital Clocks",
@@ -2994,7 +2994,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Area is measured in centimetres . T True F False",
+        "prompt": "Area is measured in centimetres. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Area of Rectangles",
@@ -3002,7 +3002,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 5 cm long and 4 cm wide. What is its area in square centimetres ?",
+        "prompt": "A rectangle is 5 cm long and 4 cm wide. What is its area in square centimetres?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Area of Rectangles",
@@ -3010,7 +3010,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A movie starts at 3:00 and ends at 4:00 . How many hours long is it?",
+        "prompt": "A movie starts at 3:00 and ends at 4:00. How many hours long is it?",
         "correctAnswer": "1",
         "explanation": "The correct answer is 1.",
         "topic": "Time: Analog & Digital Clocks",
@@ -3018,7 +3018,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Change for $5 − $2.25 is $2.75 . T True F False",
+        "prompt": "Change for $5 − $2.25 is $2.75. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Making Change",
@@ -3026,7 +3026,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "The apple pie costs $3.22 . You pay with $5 How much change do you get?",
+        "prompt": "The apple pie costs $3.22. You pay with $5 How much change do you get?",
         "correctAnswer": "$1.78",
         "explanation": "The correct answer is $1.78.",
         "topic": "Making Change",
@@ -3039,7 +3039,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the best unit for a bathtub of water ? A litres B millilitres",
+        "prompt": "What is the best unit for a bathtub of water? A litres B millilitres",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -3047,7 +3047,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "26",
         "explanation": "The correct answer is 26.",
         "topic": "Perimeter",
@@ -3055,7 +3055,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which is longer : 250 cm or 2 m? A 2 m B 250 cm C They are equal",
+        "prompt": "Which is longer: 250 cm or 2 m? A 2 m B 250 cm C They are equal",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -3063,7 +3063,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "500 mL is more than 1 L . T True F False",
+        "prompt": "500 mL is more than 1 L. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Mass & Capacity",
@@ -3076,7 +3076,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is the perimeter ?",
+        "prompt": "What is the perimeter?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Perimeter",
@@ -3084,7 +3084,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit for the mass of a bag of sugar ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of a bag of sugar? A grams B kilograms",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Mass & Capacity",
@@ -3092,7 +3092,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "1 m is longer than 90 cm . T True F False",
+        "prompt": "1 m is longer than 90 cm. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -3105,7 +3105,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A regular pentagon has sides of 4 cm . What is its perimeter ?",
+        "prompt": "A regular pentagon has sides of 4 cm. What is its perimeter?",
         "correctAnswer": "20",
         "explanation": "The correct answer is 20.",
         "topic": "Perimeter",
@@ -3113,7 +3113,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "What is the best unit for the mass of an apple ? A grams B kilograms",
+        "prompt": "What is the best unit for the mass of an apple? A grams B kilograms",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Mass & Capacity",
@@ -3121,7 +3121,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "There are 100 mm in 1 cm . T True F False",
+        "prompt": "There are 100 mm in 1 cm. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -3137,7 +3137,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which is shorter : 500 m or 1 km? A 1 km B They are equal C 500 m",
+        "prompt": "Which is shorter: 500 m or 1 km? A 1 km B They are equal C 500 m",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Metric Length: mm, cm, m, km",
@@ -3150,7 +3150,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Estimate 477 + 591 (round to the nearest 10):",
+        "prompt": "Estimate 477 + 591 (round to the nearest 10): ?",
         "correctAnswer": "1070",
         "explanation": "The correct answer is 1070.",
         "topic": "Estimate Sums & Differences to 1000",
@@ -3158,7 +3158,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "1/4 of 8 =",
+        "prompt": "1/4 of 8 = ?",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Fractions of a Group",
@@ -3195,7 +3195,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "The least of 464, 843, 197, 707 is",
+        "prompt": "The least of 464, 843, 197, 707 is ?",
         "correctAnswer": "197",
         "explanation": "The correct answer is 197.",
         "topic": "Order Numbers to 1000",
@@ -3203,7 +3203,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write three hundred thirty-six as a number:",
+        "prompt": "Write three hundred thirty-six as a number: ?",
         "correctAnswer": "336",
         "explanation": "The correct answer is 336.",
         "topic": "Read & Write Numbers to 1000",
@@ -3211,7 +3211,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which picture shows 2/3 ? A B C",
+        "prompt": "Which picture shows 2/3? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Halves, Thirds & Fourths",
@@ -3227,7 +3227,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "5 × 5 = 25 , so 25 ÷ 5 =",
+        "prompt": "5 × 5 = 25, so 25 ÷ 5 = ?",
         "correctAnswer": "5",
         "explanation": "The correct answer is 5.",
         "topic": "Relate Multiplication & Division",
@@ -3235,7 +3235,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Counting by 100s: 300, 400, 500, 700 . T True F False",
+        "prompt": "Counting by 100s: 300, 400, 500, 700. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Skip-Count by 50s, 100s & 200s",
@@ -3248,7 +3248,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "458 = + +",
+        "prompt": "458 = ? + ? + ?",
         "correctAnswer": "400 + 50 + 8",
         "explanation": "The correct answer is 400 + 50 + 8.",
         "topic": "Expanded Form",
@@ -3256,7 +3256,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which number is greater than 463 ? A 463 B 402 C 517",
+        "prompt": "Which number is greater than 463? A 463 B 402 C 517",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Compare Numbers to 1000",
@@ -3272,7 +3272,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which was the most popular? Favourite sport ⚽ — class votes Choice Tally Frequency Soccer 11 Swimming 3 Hockey 10 Tennis 4",
+        "prompt": "Which was the most popular? Favourite sport ⚽ — class votes Choice Tally Frequency Soccer 11 Swimming 3 Hockey 10 Tennis 4 ?",
         "correctAnswer": "Soccer",
         "explanation": "The correct answer is Soccer.",
         "topic": "Frequency Tables",
@@ -3293,7 +3293,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3301,7 +3301,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which angle is right ? A B C",
+        "prompt": "Which angle is right? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Classify Angles",
@@ -3314,7 +3314,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3322,7 +3322,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which angle is straight ? A B C",
+        "prompt": "Which angle is straight? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3330,7 +3330,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Classify Angles",
@@ -3338,7 +3338,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3351,7 +3351,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which angle is right ? A B C",
+        "prompt": "Which angle is right? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3359,7 +3359,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Classify Angles",
@@ -3367,7 +3367,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Classify Angles",
@@ -3375,7 +3375,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which angle is straight ? A B C",
+        "prompt": "Which angle is straight? A B C",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Classify Angles",
@@ -3436,7 +3436,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A straight angle measures degrees.",
+        "prompt": "A straight angle measures ? degrees.",
         "correctAnswer": "180",
         "explanation": "The correct answer is 180.",
         "topic": "Classify Angles",
@@ -3444,7 +3444,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A right angle measures degrees.",
+        "prompt": "A right angle measures ? degrees.",
         "correctAnswer": "90",
         "explanation": "The correct answer is 90.",
         "topic": "Classify Angles",
@@ -3553,7 +3553,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "The tip of a slice of pizza is an angle.",
+        "prompt": "The tip of a slice of pizza is an ? angle.",
         "correctAnswer": "acute",
         "explanation": "The correct answer is acute.",
         "topic": "Classify Angles",
@@ -3561,7 +3561,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 10,
-        "prompt": "The hands of a clock at 3:00 make a angle.",
+        "prompt": "The hands of a clock at 3:00 make a ? angle.",
         "correctAnswer": "right",
         "explanation": "The correct answer is right.",
         "topic": "Classify Angles",
@@ -3590,7 +3590,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3598,7 +3598,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "The tip of a slice of pizza is an angle.",
+        "prompt": "The tip of a slice of pizza is an ? angle.",
         "correctAnswer": "acute",
         "explanation": "The correct answer is acute.",
         "topic": "Classify Angles",
@@ -3619,7 +3619,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Classify Angles",
@@ -3627,7 +3627,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -3635,7 +3635,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A right angle measures degrees.",
+        "prompt": "A right angle measures ? degrees.",
         "correctAnswer": "90",
         "explanation": "The correct answer is 90.",
         "topic": "Classify Angles",
@@ -3648,7 +3648,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "3 L 3,000 mL",
+        "prompt": "3 L ? 3,000 mL",
         "correctAnswer": "=",
         "explanation": "The correct answer is =.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -3664,7 +3664,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A movie starts at 1:00 and lasts 40 minutes . It ends at",
+        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at ?",
         "correctAnswer": "1:40",
         "explanation": "The correct answer is 1:40.",
         "topic": "Elapsed Time",
@@ -3672,7 +3672,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which unit would you use to measure the capacity of a swimming pool ? A km B mL C L",
+        "prompt": "Which unit would you use to measure the capacity of a swimming pool? A km B mL C L",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Choose the Right Metric Unit",
@@ -3680,7 +3680,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A bus ride to Ottawa ends at 5:05 and lasted 1 hour 45 minutes . It started at",
+        "prompt": "A bus ride to Ottawa ends at 5:05 and lasted 1 hour 45 minutes. It started at ?",
         "correctAnswer": "3:20",
         "explanation": "The correct answer is 3:20.",
         "topic": "Elapsed Time",
@@ -3693,7 +3693,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A school play ends at 5:40 and lasted 15 minutes . It started at",
+        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at ?",
         "correctAnswer": "5:25",
         "explanation": "The correct answer is 5:25.",
         "topic": "Elapsed Time",
@@ -3709,7 +3709,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "3 kg 3,000 g",
+        "prompt": "3 kg ? 3,000 g",
         "correctAnswer": "=",
         "explanation": "The correct answer is =.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -3725,7 +3725,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which unit would you use to measure the length of a hockey stick ? A m B km C cm",
+        "prompt": "Which unit would you use to measure the length of a hockey stick? A m B km C cm",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Choose the Right Metric Unit",
@@ -3733,7 +3733,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "From 5:50 to 6:10 is 20 minutes . T True F False",
+        "prompt": "From 5:50 to 6:10 is 20 minutes. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Elapsed Time",
@@ -3741,7 +3741,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A bag of apples has a mass of 3 kg . A bag of oranges has a mass of 2,500 g. Which bag is heavier?",
+        "prompt": "A bag of apples has a mass of 3 kg. A bag of oranges has a mass of 2,500 g. Which bag is heavier?",
         "correctAnswer": "apples",
         "explanation": "The correct answer is apples.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -3754,7 +3754,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "What is 32 ÷ 4 ? A 7 B 8 C 9",
+        "prompt": "What is 32 ÷ 4? A 7 B 8 C 9",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Division Facts to 100 ÷ 10",
@@ -3770,7 +3770,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "3000 + 800 + 20 + 2 =",
+        "prompt": "3000 + 800 + 20 + 2 = ?",
         "correctAnswer": "3822",
         "explanation": "The correct answer is 3822.",
         "topic": "Place Value to 10,000",
@@ -3778,7 +3778,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "8.9 rounds to 9 . T True F False",
+        "prompt": "8.9 rounds to 9. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Round Decimals to the Nearest Whole",
@@ -3799,7 +3799,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "10 × 100 = 1,000 . T True F False",
+        "prompt": "10 × 100 = 1,000. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Multiply & Divide by 10, 100, 1000",
@@ -3807,7 +3807,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "5 × 5 =",
+        "prompt": "5 × 5 = ?",
         "correctAnswer": "25",
         "explanation": "The correct answer is 25.",
         "topic": "Multiplication Facts to 10 × 10",
@@ -3823,7 +3823,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "3/6 = 1 /",
+        "prompt": "3/6 = 1 / ?",
         "correctAnswer": "2",
         "explanation": "The correct answer is 2.",
         "topic": "Equivalent Fractions",
@@ -3844,7 +3844,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write from least to greatest: 0.0 , 0.8 , 0.2",
+        "prompt": "Write from least to greatest: 0.0, 0.8, 0.2 ?",
         "correctAnswer": "0.0, 0.2, 0.8",
         "explanation": "The correct answer is 0.0, 0.2, 0.8.",
         "topic": "Decimals to Tenths",
@@ -3852,7 +3852,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Solve: 708 ÷ 9",
+        "prompt": "Solve: 708 ÷ 9 ?",
         "correctAnswer": "78 R 6",
         "explanation": "The correct answer is 78 R 6.",
         "topic": "Divide 3-Digit by 1-Digit",
@@ -3876,7 +3876,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Greatest to least: 6175, 3542, 1661",
+        "prompt": "Greatest to least: 6175, 3542, 1661 ?",
         "correctAnswer": "6175, 3542, 1661",
         "explanation": "The correct answer is 6175, 3542, 1661.",
         "topic": "Compare & Order to 10,000",
@@ -3897,7 +3897,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Area of Rectangles",
@@ -3905,7 +3905,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "63",
         "explanation": "The correct answer is 63.",
         "topic": "Area of Rectangles",
@@ -3913,7 +3913,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "42",
         "explanation": "The correct answer is 42.",
         "topic": "Area of Rectangles",
@@ -3921,7 +3921,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Area of Rectangles",
@@ -3934,7 +3934,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "35",
         "explanation": "The correct answer is 35.",
         "topic": "Area of Rectangles",
@@ -3942,7 +3942,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -3950,7 +3950,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "24",
         "explanation": "The correct answer is 24.",
         "topic": "Area of Rectangles",
@@ -3958,7 +3958,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "27",
         "explanation": "The correct answer is 27.",
         "topic": "Area of Rectangles",
@@ -3971,7 +3971,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 4 cm by 8 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 4 cm by 8 cm. Its area is ? square centimetres.",
         "correctAnswer": "32",
         "explanation": "The correct answer is 32.",
         "topic": "Area of Rectangles",
@@ -3979,7 +3979,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 9 cm by 4 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 9 cm by 4 cm. Its area is ? square centimetres.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -3987,7 +3987,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 5 cm by 9 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 5 cm by 9 cm. Its area is ? square centimetres.",
         "correctAnswer": "45",
         "explanation": "The correct answer is 45.",
         "topic": "Area of Rectangles",
@@ -3995,7 +3995,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 4 cm by 7 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 4 cm by 7 cm. Its area is ? square centimetres.",
         "correctAnswer": "28",
         "explanation": "The correct answer is 28.",
         "topic": "Area of Rectangles",
@@ -4003,7 +4003,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A rectangle is 6 cm by 10 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4011,7 +4011,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A rectangle is 8 cm by 10 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 8 cm by 10 cm. Its area is ? square centimetres.",
         "correctAnswer": "80",
         "explanation": "The correct answer is 80.",
         "topic": "Area of Rectangles",
@@ -4019,7 +4019,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A rectangle is 10 cm by 5 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 10 cm by 5 cm. Its area is ? square centimetres.",
         "correctAnswer": "50",
         "explanation": "The correct answer is 50.",
         "topic": "Area of Rectangles",
@@ -4027,7 +4027,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A rectangle is 8 cm by 8 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4136,7 +4136,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A desk top is 9 dm by 6 dm . Its area is square decimetres.",
+        "prompt": "A desk top is 9 dm by 6 dm. Its area is ? square decimetres.",
         "correctAnswer": "54",
         "explanation": "The correct answer is 54.",
         "topic": "Area of Rectangles",
@@ -4144,7 +4144,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "A garden is 8 m long and 5 m wide. Its area is square metres.",
+        "prompt": "A garden is 8 m long and 5 m wide. Its area is ? square metres.",
         "correctAnswer": "40",
         "explanation": "The correct answer is 40.",
         "topic": "Area of Rectangles",
@@ -4152,7 +4152,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 10,
-        "prompt": "A classroom rug is 6 m by 4 m . Its area is square metres.",
+        "prompt": "A classroom rug is 6 m by 4 m. Its area is ? square metres.",
         "correctAnswer": "24",
         "explanation": "The correct answer is 24.",
         "topic": "Area of Rectangles",
@@ -4160,7 +4160,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 11,
-        "prompt": "A hockey rink is 60 m by 30 m . Its area is square metres.",
+        "prompt": "A hockey rink is 60 m by 30 m. Its area is ? square metres.",
         "correctAnswer": "1,800",
         "explanation": "The correct answer is 1,800.",
         "topic": "Area of Rectangles",
@@ -4173,7 +4173,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 6 cm by 10 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4181,7 +4181,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A rectangle is 10 cm by 5 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 10 cm by 5 cm. Its area is ? square centimetres.",
         "correctAnswer": "50",
         "explanation": "The correct answer is 50.",
         "topic": "Area of Rectangles",
@@ -4197,7 +4197,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 8 cm by 8 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4205,7 +4205,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Count the unit squares. The area is square units.",
+        "prompt": "Count the unit squares. The area is ? square units.",
         "correctAnswer": "12",
         "explanation": "The correct answer is 12.",
         "topic": "Area of Rectangles",
@@ -4221,7 +4221,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A rectangle is 4 cm by 7 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 4 cm by 7 cm. Its area is ? square centimetres.",
         "correctAnswer": "28",
         "explanation": "The correct answer is 28.",
         "topic": "Area of Rectangles",
@@ -4250,7 +4250,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "A movie starts at 1:00 and lasts 40 minutes . It ends at",
+        "prompt": "A movie starts at 1:00 and lasts 40 minutes. It ends at ?",
         "correctAnswer": "1:40",
         "explanation": "The correct answer is 1:40.",
         "topic": "Elapsed Time",
@@ -4258,7 +4258,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A pencil is about 15 long.",
+        "prompt": "A pencil is about 15 ? long.",
         "correctAnswer": "cm",
         "explanation": "The correct answer is cm.",
         "topic": "Choose the Right Metric Unit",
@@ -4274,7 +4274,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A school play ends at 5:40 and lasted 15 minutes . It started at",
+        "prompt": "A school play ends at 5:40 and lasted 15 minutes. It started at ?",
         "correctAnswer": "5:25",
         "explanation": "The correct answer is 5:25.",
         "topic": "Elapsed Time",
@@ -4282,7 +4282,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A birthday party ends at 5:00 and lasted 1 hour . It started at",
+        "prompt": "A birthday party ends at 5:00 and lasted 1 hour. It started at ?",
         "correctAnswer": "4:00",
         "explanation": "The correct answer is 4:00.",
         "topic": "Elapsed Time",
@@ -4295,7 +4295,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which unit would you use to measure the mass of a paperclip ? A L B g C kg",
+        "prompt": "Which unit would you use to measure the mass of a paperclip? A L B g C kg",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Choose the Right Metric Unit",
@@ -4311,7 +4311,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Mia's water bottle holds 500 mL . Leo's holds 1 L . Whose bottle holds more?",
+        "prompt": "Mia's water bottle holds 500 mL. Leo's holds 1 L. Whose bottle holds more?",
         "correctAnswer": "Leo's",
         "explanation": "The correct answer is Leo's.",
         "topic": "Choose the Right Metric Unit",
@@ -4319,7 +4319,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "Which unit would you use to measure the length of a hockey stick ? A m B km C cm",
+        "prompt": "Which unit would you use to measure the length of a hockey stick? A m B km C cm",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Choose the Right Metric Unit",
@@ -4327,7 +4327,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A birthday party starts at 2:55 and lasts 1 hour 30 minutes . It ends at",
+        "prompt": "A birthday party starts at 2:55 and lasts 1 hour 30 minutes. It ends at ?",
         "correctAnswer": "4:25",
         "explanation": "The correct answer is 4:25.",
         "topic": "Elapsed Time",
@@ -4335,7 +4335,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -4348,15 +4348,15 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "92 × 5",
+        "prompt": "92 × 5 ?",
         "correctAnswer": "460",
-        "explanation": "92 × 5 = 460.",
+        "explanation": "The correct answer is 460.",
         "topic": "Multiply 1-Digit × 2-Digit",
         "isReview": true
       },
       {
         "number": 2,
-        "prompt": "The marked point is 2/6 . T True F False",
+        "prompt": "The marked point is 2/6. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Fractions on Number Lines",
@@ -4364,7 +4364,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The rule is ×4 . IN 27 ? 8 14 OUT 108 68 32 56 Write the missing IN value:",
+        "prompt": "The rule is ×4. IN 27? 8 14 OUT 108 68 32 56 Write the missing IN value: ?",
         "correctAnswer": "17",
         "explanation": "The correct answer is 17.",
         "topic": "Input/Output Tables",
@@ -4377,7 +4377,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "0.1 + 0.4 =",
+        "prompt": "0.1 + 0.4 = ?",
         "correctAnswer": "0.5",
         "explanation": "The correct answer is 0.5.",
         "topic": "Add & Subtract Decimal Tenths",
@@ -4385,7 +4385,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which fraction is equivalent to 3/4 ? A 9/12 B 3/5 C 4/4",
+        "prompt": "Which fraction is equivalent to 3/4? A 9/12 B 3/5 C 4/4",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Equivalent Fractions",
@@ -4401,7 +4401,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "If n = 15, what is the value of n − 10 ?",
+        "prompt": "If n = 15, what is the value of n − 10?",
         "correctAnswer": "5",
         "explanation": "The correct answer is 5.",
         "topic": "Write Expressions & Equations",
@@ -4409,7 +4409,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Round 1,677 to the nearest 10:",
+        "prompt": "Round 1,677 to the nearest 10: ?",
         "correctAnswer": "1680",
         "explanation": "The correct answer is 1680.",
         "topic": "Round to the Nearest 10, 100 or 1000",
@@ -4422,7 +4422,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Twice as many as 6 is 12 . T True F False",
+        "prompt": "Twice as many as 6 is 12. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Multiplicative Comparison & Unit Rates",
@@ -4430,7 +4430,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "4000 + 900 + 90 + 6 =",
+        "prompt": "4000 + 900 + 90 + 6 = ?",
         "correctAnswer": "4996",
         "explanation": "The correct answer is 4996.",
         "topic": "Place Value to 10,000",
@@ -4446,7 +4446,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "What fraction equals 0.5 ?",
+        "prompt": "What fraction equals 0.5?",
         "correctAnswer": "5/10",
         "explanation": "The correct answer is 5/10.",
         "topic": "Tenths as Fractions & Decimals",
@@ -4454,7 +4454,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Start Columns and rows are numbered 1 to 6. The square slides 1 square right and 1 square up. It is now in column and row .",
+        "prompt": "Start Columns and rows are numbered 1 to 6. The square slides 1 square right and 1 square up. It is now in column ? and row .",
         "correctAnswer": "5, 1",
         "explanation": "The correct answer is 5, 1.",
         "topic": "Translations & Reflections",
@@ -4467,7 +4467,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "9,743 6,779",
+        "prompt": "9,743 ? 6,779",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Compare & Order to 10,000",
@@ -4483,7 +4483,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Playground Votes 7 3 16 Swings Slide Climber How many more are there for Swings than for Slide ?",
+        "prompt": "Playground Votes 7 3 16 Swings Slide Climber How many more are there for Swings than for Slide?",
         "correctAnswer": "4",
         "explanation": "The correct answer is 4.",
         "topic": "Bar Graphs, Pictographs & Line Plots",
@@ -4565,7 +4565,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A book costs $3.75 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A book costs $3.75. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$1.25",
         "explanation": "The correct answer is $1.25.",
         "topic": "Making Change & Money Choices",
@@ -4573,7 +4573,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A water bottle costs $1.75 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A water bottle costs $1.75. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$3.25",
         "explanation": "The correct answer is $3.25.",
         "topic": "Making Change & Money Choices",
@@ -4581,7 +4581,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A toy car costs $2.75 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A toy car costs $2.75. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$2.25",
         "explanation": "The correct answer is $2.25.",
         "topic": "Making Change & Money Choices",
@@ -4589,7 +4589,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A water bottle costs $7.50 . Mia pays with a $10 bill. Her change is .",
+        "prompt": "A water bottle costs $7.50. Mia pays with a $10 bill. Her change is .",
         "correctAnswer": "$2.50",
         "explanation": "The correct answer is $2.50.",
         "topic": "Making Change & Money Choices",
@@ -4597,7 +4597,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "A book costs $2.25 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A book costs $2.25. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$2.75",
         "explanation": "The correct answer is $2.75.",
         "topic": "Making Change & Money Choices",
@@ -4605,7 +4605,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 8,
-        "prompt": "A soccer ball costs $3.50 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A soccer ball costs $3.50. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$1.50",
         "explanation": "The correct answer is $1.50.",
         "topic": "Making Change & Money Choices",
@@ -4613,7 +4613,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 9,
-        "prompt": "Which coins make exactly $2.25 ? A B C D E",
+        "prompt": "Which coins make exactly $2.25? A B C D E",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Making Change & Money Choices",
@@ -4621,7 +4621,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 10,
-        "prompt": "Which coins make exactly $1.50 ? A B C D E",
+        "prompt": "Which coins make exactly $1.50? A B C D E",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Making Change & Money Choices",
@@ -4634,7 +4634,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which coins make exactly $2.75 ? A B C D E",
+        "prompt": "Which coins make exactly $2.75? A B C D E",
         "correctAnswer": "E",
         "explanation": "The correct answer is E.",
         "topic": "Making Change & Money Choices",
@@ -4642,7 +4642,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which coins make exactly $1.75 ? A B C D E",
+        "prompt": "Which coins make exactly $1.75? A B C D E",
         "correctAnswer": "E",
         "explanation": "The correct answer is E.",
         "topic": "Making Change & Money Choices",
@@ -4650,7 +4650,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which coins make exactly $1.40 ? A B C D E",
+        "prompt": "Which coins make exactly $1.40? A B C D E",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Making Change & Money Choices",
@@ -4663,7 +4663,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "Which coins make exactly $0.85 ? A B C D E",
+        "prompt": "Which coins make exactly $0.85? A B C D E",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Making Change & Money Choices",
@@ -4756,7 +4756,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A hockey puck costs $4.50 . You pay with a $10 bill. Your change is .",
+        "prompt": "A hockey puck costs $4.50. You pay with a $10 bill. Your change is .",
         "correctAnswer": "$5.50",
         "explanation": "The correct answer is $5.50.",
         "topic": "Making Change & Money Choices",
@@ -4764,7 +4764,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 7,
-        "prompt": "Mia saved $15 . She spends $6.25 on a book. She has left.",
+        "prompt": "Mia saved $15. She spends $6.25 on a book. She has ? left.",
         "correctAnswer": "$8.75",
         "explanation": "The correct answer is $8.75.",
         "topic": "Making Change & Money Choices",
@@ -4785,7 +4785,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which coins make exactly $2.25 ? A B C D E",
+        "prompt": "Which coins make exactly $2.25? A B C D E",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Making Change & Money Choices",
@@ -4814,7 +4814,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which coins make exactly $1.40 ? A B C D E",
+        "prompt": "Which coins make exactly $1.40? A B C D E",
         "correctAnswer": "A",
         "explanation": "The correct answer is A.",
         "topic": "Making Change & Money Choices",
@@ -4830,7 +4830,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A toy car costs $2.75 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A toy car costs $2.75. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$2.25",
         "explanation": "The correct answer is $2.25.",
         "topic": "Making Change & Money Choices",
@@ -4838,7 +4838,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "A book costs $3.75 . Mia pays with a $5 bill. Her change is .",
+        "prompt": "A book costs $3.75. Mia pays with a $5 bill. Her change is .",
         "correctAnswer": "$1.25",
         "explanation": "The correct answer is $1.25.",
         "topic": "Making Change & Money Choices",
@@ -4851,7 +4851,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "A rectangle is 9 cm by 4 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 9 cm by 4 cm. Its area is ? square centimetres.",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Area of Rectangles",
@@ -4867,7 +4867,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "A rectangle is 8 cm by 10 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 8 cm by 10 cm. Its area is ? square centimetres.",
         "correctAnswer": "80",
         "explanation": "The correct answer is 80.",
         "topic": "Area of Rectangles",
@@ -4891,7 +4891,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "A rectangle is 6 cm by 10 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 6 cm by 10 cm. Its area is ? square centimetres.",
         "correctAnswer": "60",
         "explanation": "The correct answer is 60.",
         "topic": "Area of Rectangles",
@@ -4920,7 +4920,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Which angle is obtuse ? A B C",
+        "prompt": "Which angle is obtuse? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -4928,7 +4928,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Classify Angles",
@@ -4936,7 +4936,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "A rectangle is 8 cm by 8 cm . Its area is square centimetres.",
+        "prompt": "A rectangle is 8 cm by 8 cm. Its area is ? square centimetres.",
         "correctAnswer": "64",
         "explanation": "The correct answer is 64.",
         "topic": "Area of Rectangles",
@@ -4944,7 +4944,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 5,
-        "prompt": "Which angle is acute ? A B C",
+        "prompt": "Which angle is acute? A B C",
         "correctAnswer": "B",
         "explanation": "The correct answer is B.",
         "topic": "Classify Angles",
@@ -4965,7 +4965,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "Write 5,636 in words:",
+        "prompt": "Write 5,636 in words: ?",
         "correctAnswer": "five thousand six hundred thirty-six",
         "explanation": "The correct answer is five thousand six hundred thirty-six.",
         "topic": "Place Value to 10,000",
@@ -4973,7 +4973,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "2 L 1,800 mL",
+        "prompt": "2 L ? 1,800 mL",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Mass (g, kg) & Capacity (mL, L)",
@@ -5002,7 +5002,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
     "questions": [
       {
         "number": 1,
-        "prompt": "7,165 3,422",
+        "prompt": "7,165 ? 3,422",
         "correctAnswer": ">",
         "explanation": "The correct answer is >.",
         "topic": "Compare & Order to 10,000",
@@ -5018,7 +5018,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "The least of 8/10, 3/10, 6/10 is",
+        "prompt": "The least of 8/10, 3/10, 6/10 is ?",
         "correctAnswer": "3/10",
         "explanation": "The correct answer is 3/10.",
         "topic": "Order Fractions",
@@ -5026,7 +5026,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "2/10 is greater than 9/10 . T True F False",
+        "prompt": "2/10 is greater than 9/10. T True F False",
         "correctAnswer": "False",
         "explanation": "The correct answer is False.",
         "topic": "Compare Fractions",
@@ -5055,7 +5055,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 2,
-        "prompt": "4/8 = 2/4 . T True F False",
+        "prompt": "4/8 = 2/4. T True F False",
         "correctAnswer": "True",
         "explanation": "The correct answer is True.",
         "topic": "Equivalent Fractions",
@@ -5063,7 +5063,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 3,
-        "prompt": "Round 7,609 to the nearest 10:",
+        "prompt": "Round 7,609 to the nearest 10: ?",
         "correctAnswer": "7610",
         "explanation": "The correct answer is 7610.",
         "topic": "Round to the Nearest 10, 100 or 1000",
@@ -5071,15 +5071,15 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 4,
-        "prompt": "719 × 7",
+        "prompt": "719 × 7 ?",
         "correctAnswer": "5033",
-        "explanation": "719 × 7 = 5033.",
+        "explanation": "The correct answer is 5033.",
         "topic": "Multiply 1-Digit × 3-Digit",
         "isReview": true
       },
       {
         "number": 5,
-        "prompt": "What is the median of 36, 19, 33, 24, 21, 20, 2 ? A 20 B 22 C 21 D 23",
+        "prompt": "What is the median of 36, 19, 33, 24, 21, 20, 2? A 20 B 22 C 21 D 23",
         "correctAnswer": "C",
         "explanation": "The correct answer is C.",
         "topic": "Mean, Median & Mode",
@@ -5087,7 +5087,7 @@ const DEMO_PACKET_KEYS: AnswerKey[] = [
       },
       {
         "number": 6,
-        "prompt": "Lucas is thinking of a number. Add 11 and you get 47 . What is the mystery number?",
+        "prompt": "Lucas is thinking of a number. Add 11 and you get 47. What is the mystery number?",
         "correctAnswer": "36",
         "explanation": "The correct answer is 36.",
         "topic": "Solve Equations to 50",
