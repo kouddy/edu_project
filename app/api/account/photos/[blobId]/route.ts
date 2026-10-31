@@ -9,8 +9,8 @@ import {
   bearerToken,
   bytesFromPostgresHex,
   parentFromToken,
-  supabaseAdmin,
   supabaseConfigured,
+  supabaseForToken,
 } from "@/lib/server/supabase";
 
 export async function GET(
@@ -20,16 +20,17 @@ export async function GET(
   if (!supabaseConfigured()) {
     return NextResponse.json({ error: "Accounts are not configured on this server." }, { status: 503 });
   }
-  const parent = await parentFromToken(bearerToken(req));
-  if (!parent) {
+  const token = bearerToken(req);
+  const parent = await parentFromToken(token);
+  const db = token ? supabaseForToken(token) : null;
+  if (!parent || !db) {
     return NextResponse.json({ error: "Sign in to see photos." }, { status: 401 });
   }
   const { blobId } = await ctx.params;
-  const admin = supabaseAdmin();
-  if (!admin) {
-    return NextResponse.json({ error: "Account is unavailable just now." }, { status: 503 });
-  }
-  const { data: blob } = await admin
+  // RLS scopes photo rows to the requester's own kids, so another
+  // parent's blob simply reads as absent; the owner check below is
+  // kept as a second guard.
+  const { data: blob } = await db
     .from("photo_blobs")
     .select("bytes, content_type, submissions!inner(kids!inner(parent_id))")
     .eq("id", blobId)
