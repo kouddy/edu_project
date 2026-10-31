@@ -117,6 +117,13 @@ Each phase is independently verifiable before the next begins.
    Postgres and appears in a second browser. Known limit: Supabase's
    built-in email sender allows only a few messages per hour — fine
    for testing; custom SMTP is in the Phase 5 checklist.
+   Status (2026-10-31): project created (ref `wkatshcvluzcrytprjra`),
+   migrations applied, localhost redirect URLs allowlisted, and
+   magic-link sign-in verified by David. A clean build against the
+   hosted URL reports accounts on; `/api/account` refuses
+   unauthenticated calls (401); all six tables are present and
+   anonymous reads return empty under RLS. Remaining: SQL enrollment
+   and a persisted graded sheet.
 2. **Railway deploy.** The repo deployed as a web service with
    `META_API_KEY` and the Supabase URL + publishable key as environment
    variables (the app uses no service-role key).
