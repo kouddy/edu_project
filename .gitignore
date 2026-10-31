@@ -40,6 +40,7 @@ yarn-error.log*
 # migrations, seed — is committed on purpose)
 supabase/.temp/
 supabase/.branches/
+supabase/snippets/
 
 # typescript
 *.tsbuildinfo

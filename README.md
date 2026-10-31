@@ -56,7 +56,9 @@ Live mode adds real parent accounts: magic-link sign-in, with kids,
 results and photos persisted server-side. It runs on the Supabase local
 stack — the same Postgres, Auth and row-level-security policies as the
 hosted product, in Docker. (Not SQLite: it has no RLS and different
-types, so it cannot stand in for this.)
+types, so it cannot stand in for this.) To run the same mode against
+the hosted project instead, skip to
+[Live mode on the hosted Supabase project](#live-mode-on-the-hosted-supabase-project).
 
 1. Start Docker Desktop.
 2. Start the stack. The first run downloads its images and takes a few
@@ -81,7 +83,7 @@ types, so it cannot stand in for this.)
    then reads and writes as that parent, with row-level security
    scoping every query to their own family — the Secret
    (service_role) key is not used. Add your grading key too
-   (`META_API_KEY`, or `GRADING_PROVIDER=demo`).
+   (`META_API_KEY`).
 
 4. Start (or restart) the app with `npm run dev` and open
    http://127.0.0.1:3000 — localhost:3000 works too; both are
@@ -120,6 +122,63 @@ reports `accounts: true/false`, so you can
 confirm which way the server booted. If repeated test sign-ins hit an
 email rate limit, raise `email_sent` under `[auth.rate_limit]` in
 `supabase/config.toml` and restart the stack.
+
+### Live mode on the hosted Supabase project
+
+The same live mode, with Auth and Postgres on the hosted project
+instead of the local Docker stack. The Next.js server still runs on
+your machine; only Supabase moves. One-time setup:
+
+1. Create the project at supabase.com — pick the region closest to
+   your families (Canada (Central) keeps the data in Canada). Link
+   this repo to it and push the schema — the
+   migrations in `supabase/migrations/` are the source of truth:
+
+   ```bash
+   npx supabase link --project-ref <your-project-ref>
+   npx supabase db push
+   ```
+
+   `link` asks for the project's database password. `db push` applies
+   any migrations the hosted database hasn't seen yet, in order;
+   `npx supabase migration list` shows local vs. remote state.
+2. In the dashboard, **Authentication → URL Configuration**: set the
+   Site URL and add the redirect URLs the app will run at — for now
+   `http://localhost:3000` and `http://127.0.0.1:3000`. Add each new
+   origin here before signing in from it.
+3. Point `.env.local` at the hosted project (Project Settings → **API**
+   for the Project URL, → **API Keys** for the Publishable key):
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
+   ```
+
+   As locally, the Secret key is not used.
+
+Then run the app exactly as in the local flow (`npm run dev`, enter
+your email, **Email me a sign-in link**) with two differences: the
+magic link arrives as a real email — there is no mail catcher — and
+enrollment happens in the dashboard's SQL Editor, with the same
+`insert into public.kids … select … from public.parents` statement as
+the local step 6. Persisted rows are visible in the dashboard's Table
+Editor (`submissions`, `grade_results`, `photo_blobs`,
+`check_resolutions`).
+
+Day to day:
+
+- **Schema changes** go in a new file under `supabase/migrations/`,
+  never as edits to an already-pushed migration. `npx supabase db push`
+  sends the new one to the hosted project; `npm run supabase:reset`
+  applies it locally.
+- **Email limits:** the hosted project's built-in sender allows only a
+  few messages per hour — enough for testing, not for real parents.
+  Custom SMTP is on the pre-launch checklist in
+  `docs/production-plan.md`.
+- **Back to local:** restore the `http://127.0.0.1:54321` values in
+  `.env.local`, restart the app (and the local stack), and you're on
+  Docker again. The two databases are independent; nothing syncs
+  between them.
 
 ### Grading provider
 
@@ -230,7 +289,9 @@ docs/           stage-3-design.md (grading design), stage-3.5-design.md (result 
   codes, the frozen grade 2–5 catalogues); demo mode; parallel grading;
   Phase 1 accounts — Supabase magic-link sign-in (live mode) with kids,
   results and photos persisted server-side under row-level security
-  (`docs/production-plan.md`).
+  (`docs/production-plan.md`); Phase 1.5 — the hosted Supabase project
+  is live, migrations pushed, and magic-link sign-in verified against
+  hosted Auth.
 - **Not built yet:** English grading agent (launch is math-first),
-  spaced-review queue (deferred to v2), hosted deployment and the
+  spaced-review queue (deferred to v2), the Railway deployment and the
   PWA/Capacitor builds (Phases 2–4 of the production plan).
