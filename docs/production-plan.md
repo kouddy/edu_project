@@ -117,8 +117,7 @@ Each phase is independently verifiable before the next begins.
    Postgres and appears in a second browser. Known limit: Supabase's
    built-in email sender allows only a few messages per hour — fine
    for testing; custom SMTP is in the Phase 5 checklist.
-   Status (2026-10-31): **Phase 1.5 complete.** Project created
-   (ref `wkatshcvluzcrytprjra`), migrations applied, localhost
+   Status (2026-10-31): **Phase 1.5 complete.** Project created, migrations applied, localhost
    redirect URLs allowlisted, and magic-link sign-in verified by
    David against hosted Auth. A clean build against the hosted URL
    reports accounts on; `/api/account` refuses unauthenticated
