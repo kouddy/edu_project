@@ -367,3 +367,48 @@ export function summaryText(st: SheetState): string {
   }
   return `Great work, ${kid.name}! We marked the sheet.`;
 }
+
+/* ------------------------------------------------------------ display */
+
+/** The prompt as the app displays it: a choice question's options are
+ *  printed on the sheet, so the app shows the stem only — the answer
+ *  letter (or True/False) carries the result. Registry prompts are
+ *  plain text with the options inlined ("… A x B y C z"; pictorial
+ *  options leave only their letters, "… ? A B C"; True/False reads
+ *  "T True F False"). Display-only: grading keeps the full prompt. */
+export function promptForDisplay(prompt: string, correctAnswer: string): string {
+  const p = prompt.trimEnd();
+  if (correctAnswer === "True" || correctAnswer === "False") {
+    return p.replace(/ T True F False$/, "");
+  }
+  if (!/^[A-E]$/.test(correctAnswer)) return p;
+  // Text options: the earliest " A " whose remainder parses as an
+  // ascending A–E options run to the end of the prompt. The earliest
+  // start wins because an option's own text can contain a later
+  // parseable run ("A A grain of rice B Your arm …").
+  let i = -1;
+  while ((i = p.indexOf(" A ", i + 1)) !== -1) {
+    if (isOptionsRun(p.slice(i + 1))) return p.slice(0, i).trimEnd();
+  }
+  // Pictorial options leave only their letters behind ("… ? A B C").
+  const bare = /^(.*) A B(?: C(?: D(?: E)?)?)?$/.exec(p);
+  return bare ? bare[1].trimEnd() : p;
+}
+
+/** True when `rest` (starting at "A ") is an options run: ascending
+ *  letters A–E, each with option text, running to the end. */
+function isOptionsRun(rest: string): boolean {
+  const letters = ["A", "B", "C", "D", "E"];
+  let pos = 0;
+  let count = 0;
+  for (let k = 0; k < letters.length; k++) {
+    if (!rest.startsWith(`${letters[k]} `, pos)) return count >= 2;
+    count++;
+    if (k === letters.length - 1) return true;
+    const next = rest.indexOf(` ${letters[k + 1]} `, pos + 2);
+    if (next === -1) return count >= 2;
+    if (next === pos + 2) return false;
+    pos = next + 1;
+  }
+  return count >= 2;
+}

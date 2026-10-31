@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { deletePhoto, deleteSheetRecords, getActiveMode, getPhoto } from "@/lib/store";
 import {
+  promptForDisplay,
   scannedText,
   sheetLabel,
   summaryText,
@@ -25,12 +26,13 @@ const HAND = '"Segoe Print", "Comic Sans MS", cursive';
 
 type Kind = "correct" | "wrong" | "unsure";
 
-/* The question line reads "prompt = answer". Book prompts whose blank
-   came last keep the punctuation that preceded it ("1/4 of 8 =",
-   "Estimate 477 + 591:"), so for those the answer follows directly —
-   appending another " = " would print the equals sign twice. */
+/* The question line reads "prompt = answer" over the display prompt
+   (choice questions show their stem, not the printed options). Book
+   prompts whose blank came last keep the punctuation that preceded it
+   ("1/4 of 8 =", "Estimate 477 + 591:"), so for those the answer
+   follows directly — appending another " = " would print it twice. */
 function questionLine(prompt: string, correctAnswer: string): string {
-  const p = prompt.trimEnd();
+  const p = promptForDisplay(prompt, correctAnswer).trimEnd();
   return /[=:]$/.test(p) ? `${p} ${correctAnswer}` : `${p} = ${correctAnswer}`;
 }
 
