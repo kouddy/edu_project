@@ -132,10 +132,10 @@ export default function SignInScreen({ onDemo, showToast }: Props) {
       <button type="button" className={BTN} onClick={() => void sendLink()} disabled={sending}>
         {sending ? "Sending…" : "Email me a sign-in link"}
       </button>
-      {demoBlock}
-      <p className="mt-[26px] text-center text-[12px] text-faint">
+      <p className="mt-2.5 text-center text-[12px] text-faint">
         No password — we email you a one-tap link.
       </p>
+      {demoBlock}
     </div>
   );
 }
