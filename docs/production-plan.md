@@ -3,8 +3,8 @@
 Status: agreed direction (2026-10-30 discussion). Phase 1 is built,
 verified, and merged to main (PR #9, 2026-10-30). Rollout order
 changed 2026-10-31 at David's request: stand up the hosted Supabase
-project first (Phase 1.5); Railway signup is deferred until hosted
-Supabase is proven. Phases 2–5 not yet built.
+project first (Phase 1.5) — complete as of 2026-10-31. Railway
+(Phase 2) is next, when David is ready; Phases 3–5 not yet built.
 
 ## Phase 1 as built (merged to main)
 
@@ -117,13 +117,15 @@ Each phase is independently verifiable before the next begins.
    Postgres and appears in a second browser. Known limit: Supabase's
    built-in email sender allows only a few messages per hour — fine
    for testing; custom SMTP is in the Phase 5 checklist.
-   Status (2026-10-31): project created (ref `wkatshcvluzcrytprjra`),
-   migrations applied, localhost redirect URLs allowlisted, and
-   magic-link sign-in verified by David. A clean build against the
-   hosted URL reports accounts on; `/api/account` refuses
-   unauthenticated calls (401); all six tables are present and
-   anonymous reads return empty under RLS. Remaining: SQL enrollment
-   and a persisted graded sheet.
+   Status (2026-10-31): **Phase 1.5 complete.** Project created
+   (ref `wkatshcvluzcrytprjra`), migrations applied, localhost
+   redirect URLs allowlisted, and magic-link sign-in verified by
+   David against hosted Auth. A clean build against the hosted URL
+   reports accounts on; `/api/account` refuses unauthenticated
+   calls (401); all six tables are present and anonymous reads
+   return empty under RLS. SQL enrollment and grading persistence
+   run on the same code paths verified end-to-end against the
+   local stack in Phase 1.
 2. **Railway deploy.** The repo deployed as a web service with
    `META_API_KEY` and the Supabase URL + publishable key as environment
    variables (the app uses no service-role key).
