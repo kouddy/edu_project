@@ -377,7 +377,13 @@ export function summaryText(st: SheetState): string {
  *  options leave only their letters, "… ? A B C"; True/False reads
  *  "T True F False"). Display-only: grading keeps the full prompt. */
 export function promptForDisplay(prompt: string, correctAnswer: string): string {
-  const p = prompt.trimEnd();
+  // The stripped text keeps a space wherever a blank or picture sat,
+  // which strands spaces before punctuation ("…sides ?") and around
+  // the stacked-fraction slash ("5 ⁄ 10"); tighten both for display.
+  const p = prompt
+    .trimEnd()
+    .replace(/\s+([?.:,;!])/g, "$1")
+    .replace(/\s*⁄\s*/g, "/");
   if (correctAnswer === "True" || correctAnswer === "False") {
     return p.replace(/ T True F False$/, "");
   }

@@ -312,7 +312,7 @@ function MockPhoto({ st, kindFor }: { st: SheetState; kindFor: (n: number) => Ki
                 className="flex items-baseline justify-between gap-2.5 border-b border-dotted border-[#e3d3ae] py-0.5 text-[11px] leading-[1.25]"
               >
                 <span className="min-w-0 text-[#5a4632]">
-                  Q{q.number}. {q.prompt}
+                  Q{q.number}. {promptForDisplay(q.prompt, q.correctAnswer)}
                 </span>
                 <span
                   className={`whitespace-nowrap text-[11.5px] text-[#2a4a8a] ${

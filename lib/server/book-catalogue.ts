@@ -245,11 +245,51 @@ function agentForSubject(display: string): AgentId {
   return display === "English" ? "english" : "math";
 }
 
+/** A stacked (vertical) sum prints as a table: one digit per cell,
+ *  carry/borrow marks in their own row, the rule and the writing row
+ *  empty. Flattened naively it reads as digit soup ("5 8 9 6 − 2 4 8 5"
+ *  with the borrow marks mixed in), so rebuild the expression the
+ *  table shows ("5896 − 2485") and let the generic strip carry it. */
+function stackedText(table: string): string {
+  const rows = [...table.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) =>
+    [...m[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)].map((c) => ({
+      cls: c[1],
+      text: c[2].replace(/<[^>]+>/g, "").trim(),
+    })),
+  );
+  // Long-division bracket form: the divisor sits in the sign cell and
+  // the dividend runs across the bracket and top cells.
+  for (const cells of rows) {
+    if (cells.some((c) => c.cls.includes("vs-brk"))) {
+      const divisor = cells.find((c) => c.cls.includes("vs-sign"))?.text ?? "";
+      const dividend = cells
+        .filter((c) => c.cls.includes("vs-brk") || c.cls.includes("vs-top"))
+        .map((c) => c.text)
+        .join("");
+      if (divisor && dividend) return `${dividend} ÷ ${divisor}`;
+    }
+  }
+  const kept: string[] = [];
+  for (const cells of rows) {
+    if (cells.every((c) => c.text === "")) continue; // blank / writing row
+    if (cells.some((c) => c.cls.includes("vs-line"))) continue; // the rule
+    if (cells.every((c) => c.text === "" || c.cls.includes("vs-ann"))) continue; // carry/borrow marks
+    const sign = cells.find((c) => c.cls.includes("vs-sign"))?.text ?? "";
+    const digits = cells
+      .filter((c) => !c.cls.includes("vs-sign"))
+      .map((c) => c.text)
+      .join("");
+    if (digits) kept.push(sign ? `${sign} ${digits}` : digits);
+  }
+  return kept.join(" ");
+}
+
 /** The printed question as plain text: picture markup removed, tags
  *  stripped, whitespace collapsed. Empty for purely visual questions —
  *  the photo is the ground truth there. */
 function promptText(body: string): string {
-  const noSvg = body.replace(/<svg[\s\S]*?<\/svg>/g, " ");
+  const stacked = body.replace(/<table class="vsub">[\s\S]*?<\/table>/g, (t) => ` ${stackedText(t)} `);
+  const noSvg = stacked.replace(/<svg[\s\S]*?<\/svg>/g, " ");
   const text = noSvg
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
