@@ -264,13 +264,7 @@ export function ensureSeeded(): void {
 
 /* ---------------------------------------------------------------- parents */
 
-export function listParents(): Parent[] {
-  return readDb().parents;
-}
 
-export function getParent(id: string): Parent | null {
-  return readDb().parents.find((p) => p.id === id) ?? null;
-}
 
 /** The MVP is a single-account device: the signed-in parent is the first one. */
 export function getCurrentParent(): Parent | null {
@@ -394,14 +388,6 @@ export function removePendingJob(jobId: string): void {
   savePendingJobs(listPendingJobs().filter((j) => j.jobId !== jobId));
 }
 
-export function upsertParent(parent: Parent): Parent {
-  const db = readDb();
-  const i = db.parents.findIndex((p) => p.id === parent.id);
-  if (i >= 0) db.parents[i] = parent;
-  else db.parents.push(parent);
-  writeDb(db);
-  return parent;
-}
 
 /* ------------------------------------------------------------------- kids */
 
@@ -410,26 +396,8 @@ export function listKids(parentId?: string): Kid[] {
   return parentId ? kids.filter((k) => k.parentId === parentId) : kids;
 }
 
-export function getKid(id: string): Kid | null {
-  return readDb().kids.find((k) => k.id === id) ?? null;
-}
 
-export function addKid(input: Omit<Kid, "id"> & { id?: string }): Kid {
-  const kid: Kid = { ...input, id: input.id ?? newId("kid") };
-  const db = readDb();
-  db.kids.push(kid);
-  writeDb(db);
-  return kid;
-}
 
-export function updateKid(id: string, patch: Partial<Omit<Kid, "id">>): Kid | null {
-  const db = readDb();
-  const i = db.kids.findIndex((k) => k.id === id);
-  if (i < 0) return null;
-  db.kids[i] = { ...db.kids[i], ...patch };
-  writeDb(db);
-  return db.kids[i];
-}
 
 /* ----------------------------------------------------------------- sheets */
 
@@ -443,9 +411,6 @@ export function getSheet(id: string): Sheet | null {
 }
 
 /** Look a sheet up by the code printed on the paper. */
-export function getSheetByCode(printedCode: string): Sheet | null {
-  return readDb().sheets.find((s) => s.printedCode === printedCode) ?? null;
-}
 
 export function addSheet(input: Omit<Sheet, "id"> & { id?: string }): Sheet {
   const sheet: Sheet = { ...input, id: input.id ?? newId("sheet") };
@@ -490,32 +455,8 @@ export function createSubmission(input: {
   return submission;
 }
 
-export function getSubmission(id: string): Submission | null {
-  return readDb().submissions.find((s) => s.id === id) ?? null;
-}
 
-export function listSubmissions(filter?: { sheetId?: string; kidId?: string }): Submission[] {
-  const db = readDb();
-  let subs = db.submissions;
-  if (filter?.sheetId) subs = subs.filter((s) => s.sheetId === filter.sheetId);
-  if (filter?.kidId) {
-    const kidSheetIds = new Set(db.sheets.filter((s) => s.kidId === filter.kidId).map((s) => s.id));
-    subs = subs.filter((s) => kidSheetIds.has(s.sheetId));
-  }
-  return subs;
-}
 
-export function updateSubmission(
-  id: string,
-  patch: Partial<Omit<Submission, "id">>,
-): Submission | null {
-  const db = readDb();
-  const i = db.submissions.findIndex((s) => s.id === id);
-  if (i < 0) return null;
-  db.submissions[i] = { ...db.submissions[i], ...patch };
-  writeDb(db);
-  return db.submissions[i];
-}
 
 /* ------------------------------------------------------------ grade results */
 
@@ -543,18 +484,11 @@ export function saveGradeResult(input: {
   return result;
 }
 
-export function getGradeResult(id: string): GradeResult | null {
-  return readDb().gradeResults.find((g) => g.id === id) ?? null;
-}
 
 export function getGradeResultForSubmission(submissionId: string): GradeResult | null {
   return readDb().gradeResults.find((g) => g.submissionId === submissionId) ?? null;
 }
 
-export function listGradeResults(filter?: { sheetId?: string }): GradeResult[] {
-  const results = readDb().gradeResults;
-  return filter?.sheetId ? results.filter((g) => g.sheetId === filter.sheetId) : results;
-}
 
 /* --------------------------------------------------------- check resolutions */
 
@@ -589,16 +523,6 @@ export function listCheckResolutions(gradeResultId: string): CheckResolution[] {
   return readDb().checkResolutions.filter((r) => r.gradeResultId === gradeResultId);
 }
 
-export function getCheckResolution(
-  gradeResultId: string,
-  questionNumber: number,
-): CheckResolution | null {
-  return (
-    readDb().checkResolutions.find(
-      (r) => r.gradeResultId === gradeResultId && r.questionNumber === questionNumber,
-    ) ?? null
-  );
-}
 
 /* -------------------------------------------- bulk seeding / demo records */
 
@@ -801,14 +725,3 @@ export async function deletePhoto(key: string): Promise<void> {
   }
 }
 
-export async function listPhotoKeys(): Promise<string[]> {
-  const db = await openPhotoDb();
-  try {
-    const keys = await idbRequest(
-      db.transaction(PHOTO_STORE, "readonly").objectStore(PHOTO_STORE).getAllKeys(),
-    );
-    return keys.map(String);
-  } finally {
-    db.close();
-  }
-}
