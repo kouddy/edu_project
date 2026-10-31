@@ -1,23 +1,26 @@
 # Production Plan — Railway + Supabase + Dual Build (PWA / Capacitor)
 
-Status: agreed direction (2026-10-30 discussion). Phase 1 is built and
-verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
+Status: agreed direction (2026-10-30 discussion). Phase 1 is built,
+verified, and merged to main (PR #9, 2026-10-30). Rollout order
+changed 2026-10-31 at David's request: stand up the hosted Supabase
+project first (Phase 1.5); Railway signup is deferred until hosted
+Supabase is proven. Phases 2–5 not yet built.
 
-## Phase 1 as built (branch `phase-1-supabase`)
+## Phase 1 as built (merged to main)
 
 - `supabase/` holds the project: `config.toml` (magic-link redirects for
-  localhost dev), one migration (parents, kids, submissions,
+  localhost dev), two migrations (parents, kids, submissions,
   grade_results, check_resolutions, photo_blobs + RLS), and a seed file
   documenting SQL enrollment. Local development uses the real local
   stack — `npm run supabase:start`, then copy the URL and keys it
   prints into `.env.local` (see `.env.example`). No SQLite anywhere:
   local and hosted run the same Postgres, Auth, and policies.
-- A third app mode, **live**, sits beside demo and guest with its own
-  local database. Signing in with a real magic link enters it; the
-  database mirrors `GET /api/account` and seeds nothing locally.
-  (Follow-up, later the same day: the original demo mode was removed
-  and guest was renamed demo — now seeded with packets and two weeks
-  of marking history, it is the only local mode beside live.)
+- A **live** mode sits beside demo with its own local database.
+  Signing in with a real magic link enters it; the database mirrors
+  `GET /api/account` and seeds nothing locally. (The original demo
+  mode was removed and guest was renamed demo the same day — demo,
+  seeded with packets and two weeks of marking history, is the only
+  local mode beside live.)
 - The server verifies the parent's token on `/api/account`,
   `/api/account/resolutions`, `/api/account/photos/:blobId`, and on
   `POST /api/grade` when a token is present (kid ownership enforced,
@@ -60,8 +63,9 @@ verified on the `phase-1-supabase` branch; Phases 2–5 not yet built.
     current week / assignments, grade results and history, check
     resolutions. Row-level security enforces that a parent reads only
     their own family's data.
-  - The Supabase service-role key lives only in the server's environment
-    (Railway), never in the app.
+  - The app is configured with only the Supabase URL and publishable
+    key; all account access runs as the signed-in parent under RLS,
+    so there is no service-role key to deploy anywhere.
 - **Photos are stored in Postgres to begin with**, in a dedicated
   `photo_blobs` table keyed by ID — never as columns on the rows the app
   queries constantly. A downscaled sheet photo is ~150 KB. Supabase free
@@ -100,8 +104,22 @@ Each phase is independently verifiable before the next begins.
    signed-in users. Verify: real magic-link sign-in; the same account on
    two browsers shows the same kids and current week; a graded packet
    persists server-side.
+1.5. **Hosted Supabase.** Create the project on David's Supabase
+   account (region: Canada (Central), `ca-central-1` — the family's
+   data stays in Canada). Apply the repo migrations with
+   `npx supabase link --project-ref <ref>` then `npx supabase db push`.
+   In the dashboard's Auth → URL Configuration, allowlist the app
+   origins used during this phase (`http://localhost:3000`,
+   `http://127.0.0.1:3000`); the Railway domain is added in Phase 2.
+   Point `.env.local` at the hosted URL and publishable key while the
+   Next server still runs locally. Verify: magic-link sign-in against
+   hosted Auth; SQL enrollment; a graded sheet persists in hosted
+   Postgres and appears in a second browser. Known limit: Supabase's
+   built-in email sender allows only a few messages per hour — fine
+   for testing; custom SMTP is in the Phase 5 checklist.
 2. **Railway deploy.** The repo deployed as a web service with
-   `META_API_KEY` and the Supabase service key as environment variables.
+   `META_API_KEY` and the Supabase URL + publishable key as environment
+   variables (the app uses no service-role key).
    Verify: a real packet graded end-to-end from outside the home network.
 3. **PWA completion.** Add `app/manifest.ts`, a minimal service worker
    (app shell cached; `/api/` never intercepted), and icons. Verify:
