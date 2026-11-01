@@ -215,22 +215,25 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHel
                     You confirmed {kid.name}&rsquo;s answer was correct.
                   </div>
                 )}
+                {/* A wrong answer's teaching lives on its own help
+                    page — the explanation and the animated lesson
+                    together — so the row carries just this one
+                    action: a small pill inside the question's own
+                    column, sized to its label, so it reads as part
+                    of this question rather than a bar to somewhere
+                    else. */}
+                {g.verdict === "wrong" && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenHelp(q.number)}
+                    className="mt-[9px] inline-flex items-center gap-[5px] rounded-full bg-fill px-[13px] py-[6px] text-[13.5px] font-bold text-tangdeep"
+                  >
+                    <span>Help me</span>
+                    <span aria-hidden>›</span>
+                  </button>
+                )}
                 </div>
               </div>
-              {/* A wrong answer's teaching lives on its own help
-                  page — the explanation and the animated lesson
-                  together — so the report row carries just this one
-                  action, full row width under the question lines. */}
-              {g.verdict === "wrong" && (
-                <button
-                  type="button"
-                  onClick={() => onOpenHelp(q.number)}
-                  className="mt-[9px] flex w-full items-center justify-between rounded-[10px] border-[1.5px] border-line bg-card px-[13px] py-[10px] text-[14.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
-                >
-                  <span>Help me</span>
-                  <span aria-hidden>›</span>
-                </button>
-              )}
             </div>
           );
         })}
