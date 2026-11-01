@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MemberCodeCard from "./MemberCode";
+import { BTN_SECONDARY } from "./ui";
 
 /* The first screen a live parent sees before any child is linked.
    The app has nothing to show them yet, so the screen carries the
@@ -10,8 +11,6 @@ import MemberCodeCard from "./MemberCode";
    confirm the account out loud. Check again re-pulls the account;
    the moment a child is linked, AppShell stops rendering this
    screen on its own. */
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 interface Props {
   parentId: string;

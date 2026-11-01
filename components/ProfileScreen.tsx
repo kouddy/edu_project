@@ -5,7 +5,7 @@ import { kidTrackLabel, type Snapshot } from "@/lib/derive";
 import { getActiveMode, getAuthState, signOut } from "@/lib/store";
 import { getSupabase } from "@/lib/supabase-client";
 import MemberCodeCard from "./MemberCode";
-import { ScreenHeader } from "./ui";
+import { BTN_SECONDARY, ScreenHeader } from "./ui";
 
 interface Props {
   snap: Snapshot;
@@ -19,8 +19,6 @@ interface Props {
 const CARD =
   "mb-3 rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;

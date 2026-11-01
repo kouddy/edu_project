@@ -13,6 +13,7 @@ import {
 } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { Spinner } from "@heroui/react";
+import { BTN } from "./ui";
 
 /** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
@@ -46,8 +47,6 @@ const CARD =
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
 const PILL =
   "inline-block shrink-0 rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold";
-const BTN =
-  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
 
 export default function HomeScreen({
   snap,

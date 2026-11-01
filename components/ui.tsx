@@ -56,6 +56,15 @@ export function IconUser({ size = 24, className }: IconProps) {
  * amber "N need your check" pill, collapsing to one "X/Y final" pill once
  * every unsure answer has been settled.
  */
+/* The two full-width button styles, defined once: the solid
+   primary and the card secondary. Screens compose layout extras
+   at the call site (margins, flex) but never restyle — a button
+   doing the same kind of job looks the same on every screen. */
+export const BTN =
+  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
+export const BTN_SECONDARY =
+  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
+
 /* The wireframe's .pill set: solid orange for a final score, green
    "correct/graded graded" and amber "N need your check" while checks
    are outstanding. */
