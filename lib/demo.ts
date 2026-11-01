@@ -177,7 +177,7 @@ function demoHistory(): { submissions: Submission[]; gradeResults: GradeResult[]
 
 /* ------------------------------------------------------- packet records
  * Generated from lib/server/book-data (Weeks 38–40 of the Grade 3 and
- * Grade 4 frozen catalogues). Regenerate, don't hand-edit.
+ * Grade 4 catalogues). Regenerate, don't hand-edit.
  */
 
 const DEMO_PACKET_SHEETS: Sheet[] = [

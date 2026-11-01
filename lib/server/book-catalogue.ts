@@ -1,15 +1,15 @@
 /**
  * lib/server/book-catalogue.ts — registry entries for the printed books.
  *
- * The book generators freeze each grade's weekly assignment into
- * weekly_questions.json (every sheet already split, in packet order, with
- * its printed code). Copies live in lib/server/book-data/, organised by
- * region then subject (book-data/on/math/… — see its README). A v3 frozen
- * file holds refs into a sibling pools file instead of copies; the loader
- * resolves them at startup against the pools file its sha256 pin names.
- * This module discovers those folders and turns every frozen file into
- * registry entries so a photo of any real sheet grades against the
- * book's own answer key.
+ * Each grade's weekly assignment lives in lib/server/book-data/,
+ * organised by region then subject (book-data/on/math/… — see its
+ * README): a weekly file records every sheet already split, in packet
+ * order, with its printed code, holding references into a sibling pools
+ * file instead of copies. The loader resolves those references at
+ * startup against the pools file its sha256 pin names. This module
+ * discovers those folders and turns every weekly file into registry
+ * entries so a photo of any real sheet grades against the book's own
+ * answer key.
  *
  * Book entries are keyed by printed code. They are unbound — no kid is
  * attached at this layer; the client files each result under its own
@@ -28,19 +28,19 @@ import type { AgentId, RegistryEntry } from "./registry";
 
 const BOOK_KEY_VERSION = 1;
 
-interface FrozenQuestion {
+interface WeeklyQuestion {
   body: string;
   answer: string;
   topic?: number;
 }
 
-interface FrozenSheet {
+interface WeeklySheet {
   code: string;
-  questions: FrozenQuestion[];
+  questions: WeeklyQuestion[];
   star?: { body: string; answer: string };
 }
 
-interface FrozenDoc {
+interface WeeklyDoc {
   curriculum: string;
   subject: string;
   grade: number;
@@ -48,24 +48,24 @@ interface FrozenDoc {
   weeks: {
     week: number;
     topics: number[];
-    practice: { topic: number; sheets: FrozenSheet[] }[];
-    reviews: Record<string, { sheets: FrozenSheet[] }>;
+    practice: { topic: number; sheets: WeeklySheet[] }[];
+    reviews: Record<string, { sheets: WeeklySheet[] }>;
   }[];
-  finals: { sheets: FrozenSheet[] };
+  finals: { sheets: WeeklySheet[] };
 }
 
-interface FrozenRef {
+interface WeeklyRef {
   topic: number;
   index: number;
 }
 
-interface FrozenSheetV3 {
+interface WeeklySheetRefs {
   code: string;
-  refs: (number | FrozenRef)[];
+  refs: (number | WeeklyRef)[];
   star?: boolean;
 }
 
-interface FrozenDocV3 {
+interface WeeklyDocRefs {
   curriculum: string;
   subject: string;
   grade: number;
@@ -74,22 +74,22 @@ interface FrozenDocV3 {
   weeks: {
     week: number;
     topics: number[];
-    practice: { topic: number; sheets: FrozenSheetV3[] }[];
-    reviews: Record<string, { sheets: FrozenSheetV3[] }>;
+    practice: { topic: number; sheets: WeeklySheetRefs[] }[];
+    reviews: Record<string, { sheets: WeeklySheetRefs[] }>;
   }[];
-  finals: { sheets: FrozenSheetV3[] };
+  finals: { sheets: WeeklySheetRefs[] };
 }
 
 type PoolsDoc = {
   num: number;
   title: string;
-  questions: FrozenQuestion[];
-  star: FrozenQuestion;
+  questions: WeeklyQuestion[];
+  star: WeeklyQuestion;
 }[];
 
 const DATA_DIR = path.join(process.cwd(), "lib", "server", "book-data");
 
-/** One region/subject folder of frozen books. */
+/** One region/subject folder of book data. */
 interface BookFolder {
   region: string;
   subject: string;
@@ -135,7 +135,7 @@ function discoverBookFolders(): BookFolder[] {
           topics[m[1]] = Object.fromEntries(pools.map((t) => [String(t.num), t.title]));
         } catch {
           /* An unreadable pools file leaves its grade on the "Topic N"
-             fallback; the frozen file's pin check is the hard failure
+             fallback; the weekly file's pin check is the hard failure
              for a broken pair. */
         }
       }
@@ -145,50 +145,51 @@ function discoverBookFolders(): BookFolder[] {
   return folders;
 }
 
-/** A frozen file holds refs into a sibling pools file
+/** A weekly file holds references into a sibling pools file
  *  (questions-g{grade}.json), pinned by the pools file's sha256. Resolve
- *  it here, on the server, to the copy shape the registry builder
+ *  them here, on the server, to the full shape the registry builder
  *  consumes; a pin mismatch is a hard error, never a silent re-point.
- *  Only the v3 reference form is supported. */
-function materializeDoc(folder: BookFolder, file: string, raw: FrozenDoc): FrozenDoc {
+ *  Only the reference form is read — an older file fails the version
+ *  check below. */
+function materializeDoc(folder: BookFolder, file: string, raw: WeeklyDoc): WeeklyDoc {
   if ((raw.version ?? 2) < 3) {
     throw new Error(
-      `[book-data] ${file}: not in the v3 reference form — re-sync a frozen v3 file`,
+      `[book-data] ${file}: not in the reference form — re-sync the weekly file`,
     );
   }
-  const v3 = raw as unknown as FrozenDocV3;
-  const poolsFile = `questions-g${v3.grade}.json`;
+  const refsDoc = raw as unknown as WeeklyDocRefs;
+  const poolsFile = `questions-g${refsDoc.grade}.json`;
   const poolsBytes = readFileSync(path.join(folder.dir, poolsFile));
   const digest = createHash("sha256").update(poolsBytes).digest("hex");
-  if (digest !== v3.pools_sha256) {
+  if (digest !== refsDoc.pools_sha256) {
     throw new Error(
-      `[book-data] ${file}: ${poolsFile} does not match the frozen file's pools pin — re-sync the pair`,
+      `[book-data] ${file}: ${poolsFile} does not match the weekly file's pools pin — re-sync the pair`,
     );
   }
   const pools = new Map(
     (JSON.parse(poolsBytes.toString("utf8")) as PoolsDoc).map((t) => [t.num, t]),
   );
-  const poolQ = (topic: number, index: number): FrozenQuestion => {
+  const poolQ = (topic: number, index: number): WeeklyQuestion => {
     const q = pools.get(topic)?.questions[index];
     if (!q) throw new Error(`[book-data] ${file}: no pool question ${index} in topic ${topic}`);
     return { body: q.body, answer: q.answer };
   };
-  const refQ = (ref: FrozenRef): FrozenQuestion => ({ ...poolQ(ref.topic, ref.index), topic: ref.topic });
-  const reviewSheet = (s: FrozenSheetV3): FrozenSheet => ({
+  const refQ = (ref: WeeklyRef): WeeklyQuestion => ({ ...poolQ(ref.topic, ref.index), topic: ref.topic });
+  const reviewSheet = (s: WeeklySheetRefs): WeeklySheet => ({
     code: s.code,
-    questions: (s.refs as FrozenRef[]).map(refQ),
+    questions: (s.refs as WeeklyRef[]).map(refQ),
   });
   return {
-    curriculum: v3.curriculum,
-    subject: v3.subject,
-    grade: v3.grade,
-    weeks: v3.weeks.map((wk) => ({
+    curriculum: refsDoc.curriculum,
+    subject: refsDoc.subject,
+    grade: refsDoc.grade,
+    weeks: refsDoc.weeks.map((wk) => ({
       week: wk.week,
       topics: wk.topics,
       practice: wk.practice.map((blk) => ({
         topic: blk.topic,
         sheets: blk.sheets.map((s) => {
-          const sheet: FrozenSheet = {
+          const sheet: WeeklySheet = {
             code: s.code,
             questions: (s.refs as number[]).map((i) => poolQ(blk.topic, i)),
           };
@@ -204,12 +205,12 @@ function materializeDoc(folder: BookFolder, file: string, raw: FrozenDoc): Froze
         ]),
       ),
     })),
-    finals: { sheets: v3.finals.sheets.map(reviewSheet) },
+    finals: { sheets: refsDoc.finals.sheets.map(reviewSheet) },
   };
 }
 
-function loadDoc(folder: BookFolder, file: string): FrozenDoc {
-  const doc = JSON.parse(readFileSync(path.join(folder.dir, file), "utf8")) as FrozenDoc;
+function loadDoc(folder: BookFolder, file: string): WeeklyDoc {
+  const doc = JSON.parse(readFileSync(path.join(folder.dir, file), "utf8")) as WeeklyDoc;
   if (
     doc.curriculum?.toLowerCase() !== folder.region ||
     doc.subject?.toLowerCase() !== folder.subject
@@ -344,7 +345,7 @@ function explain(prompt: string, answer: string): string {
 }
 
 function keyQuestions(
-  sheet: FrozenSheet,
+  sheet: WeeklySheet,
   topics: BookFolder["topics"],
   grade: number,
   sheetTopic: string,
@@ -388,7 +389,7 @@ function buildBookRegistry(): RegistryEntry[] {
         keyVersion: BOOK_KEY_VERSION,
       };
       const push = (
-        sheet: FrozenSheet,
+        sheet: WeeklySheet,
         week: number,
         topic: string,
         isReview: boolean,
