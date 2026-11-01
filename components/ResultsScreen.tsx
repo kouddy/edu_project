@@ -183,43 +183,28 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
           return (
             <div
               key={q.number}
-              className="flex items-start gap-[11px] border-b border-dashed border-linesoft px-0.5 py-[11px] last:border-b-0"
+              className="border-b border-dashed border-linesoft px-0.5 py-[11px] last:border-b-0"
             >
-              <span className="w-[26px] shrink-0 pt-[3px] text-[12px] font-bold text-faint">
-                Q{q.number}
-              </span>
-              <Badge kind={kind} />
-              <div className="min-w-0 flex-1">
-                <div className="text-[14.5px] font-semibold leading-snug text-ink">
-                  {promptForDisplay(q.prompt, q.correctAnswer)}
-                </div>
-                <div className="mt-[1px] text-[13px] text-mid">
-                  {kind === "unsure"
-                    ? "We couldn't read this one for sure — needs your check."
-                    : g.meta?.noAnswer
-                      ? "No answer written."
-                      : `${kid.name} wrote ${g.readAnswer}`}
-                </div>
-                <div className="mt-[1px] text-[13px] text-mid">
-                  Correct answer:{" "}
-                  <span className="font-semibold text-ink">{q.correctAnswer}</span>
-                </div>
-                {/* Guidance slot: the text guidance shows at once,
-                    and a generated animation swaps in when ready.
-                    The generic explanation only restates the correct
-                    answer, which already has its own line above, so
-                    it is passed as null and never shown on its own. */}
-                {g.verdict === "wrong" && (
-                  <GuidanceAnimation
-                    printedCode={sheet.printedCode}
-                    questionNumber={q.number}
-                    guidanceText={
-                      guidance === `The correct answer is ${q.correctAnswer}.`
-                        ? null
-                        : guidance
-                    }
-                  />
-                )}
+              <div className="flex items-start gap-[11px]">
+                <span className="w-[26px] shrink-0 pt-[3px] text-[12px] font-bold text-faint">
+                  Q{q.number}
+                </span>
+                <Badge kind={kind} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14.5px] font-semibold leading-snug text-ink">
+                    {promptForDisplay(q.prompt, q.correctAnswer)}
+                  </div>
+                  <div className="mt-[1px] text-[13px] text-mid">
+                    {kind === "unsure"
+                      ? "We couldn't read this one for sure — needs your check."
+                      : g.meta?.noAnswer
+                        ? "No answer written."
+                        : `${kid.name} wrote ${g.readAnswer}`}
+                  </div>
+                  <div className="mt-[1px] text-[13px] text-mid">
+                    Correct answer:{" "}
+                    <span className="font-semibold text-ink">{q.correctAnswer}</span>
+                  </div>
                 {resolution?.resolution === "wrong" && (
                   <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
                     You marked this wrong. Recorded in {kid.name}&rsquo;s progress.
@@ -230,7 +215,27 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
                     You confirmed {kid.name}&rsquo;s answer was correct.
                   </div>
                 )}
+                </div>
               </div>
+              {/* Guidance slot, full row width under the question
+                  lines: the text guidance shows at once, and a
+                  generated animation swaps in when ready — spanning
+                  the whole card width instead of the indented text
+                  column gives the animation room to lay out. The
+                  generic explanation only restates the correct
+                  answer, which already has its own line above, so
+                  it is passed as null and never shown on its own. */}
+              {g.verdict === "wrong" && (
+                <GuidanceAnimation
+                  printedCode={sheet.printedCode}
+                  questionNumber={q.number}
+                  guidanceText={
+                    guidance === `The correct answer is ${q.correctAnswer}.`
+                      ? null
+                      : guidance
+                  }
+                />
+              )}
             </div>
           );
         })}
@@ -286,7 +291,7 @@ function Badge({ kind }: { kind: Kind }) {
   const mark = kind === "correct" ? "✓" : kind === "wrong" ? "✗" : "?";
   return (
     <span
-      className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[13px] font-extrabold ${cls}`}
+      className={`-ml-[5px] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-extrabold ${cls}`}
     >
       {mark}
     </span>
