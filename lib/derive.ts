@@ -202,6 +202,64 @@ function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
     .sort((a, b) => (b.result?.gradedAt ?? "").localeCompare(a.result?.gradedAt ?? ""));
 }
 
+/** The next sheet with a result in the same packet (same kid, subject
+ *  and week), in the order the packet lists its sheets — so Results
+ *  can move forward without a trip back to the list. Sheets without a
+ *  result are skipped; null at the end of the packet. */
+export function nextSheetWithResult(
+  snap: Snapshot,
+  current: SheetState,
+  from: "homework" | "history",
+): SheetState | null {
+  const groups =
+    from === "history" ? historyGroups(snap, current.kid) : homeworkGroups(snap, current.kid);
+  const group = groups.find(
+    (g) => g.subject === current.sheet.subject && g.week === current.sheet.week,
+  );
+  if (!group) return null;
+  const ordered = topicGroups(group.states)
+    .flatMap((t) => t.states)
+    .filter((st) => st.result);
+  const idx = ordered.findIndex((st) => st.sheet.id === current.sheet.id);
+  return idx >= 0 ? (ordered[idx + 1] ?? null) : null;
+}
+
+/** Topic strings that are review kinds rather than practice topics —
+ *  their sheets are parts of one review, not lettered practice pages. */
+const REVIEW_TOPICS = new Set([
+  "Anchor Review",
+  "Consolidation Review",
+  "Spiral Review",
+  "Review Week",
+]);
+
+/** How the packet list titles a sheet inside its topic section:
+ *  "Part 1" for a review kind, "Practice C" for a practice topic.
+ *  The letters and numbers follow the printed sheets. */
+export function partLabelFor(topic: string, index: number): string {
+  return REVIEW_TOPICS.has(topic)
+    ? `Part ${index + 1}`
+    : `Practice ${String.fromCharCode(65 + index)}`;
+}
+
+/** This sheet's part label within its packet topic section, or null
+ *  when the section holds just this sheet — the packet shows no part
+ *  for a lone sheet, and neither does Results. */
+export function sheetPartLabel(snap: Snapshot, current: SheetState): string | null {
+  const siblings = [...snap.states.values()]
+    .filter(
+      (st) =>
+        st.kid.id === current.kid.id &&
+        st.sheet.subject === current.sheet.subject &&
+        st.sheet.week === current.sheet.week &&
+        st.sheet.topic === current.sheet.topic,
+    )
+    .sort((a, b) => a.sheet.printedCode.localeCompare(b.sheet.printedCode));
+  if (siblings.length < 2) return null;
+  const idx = siblings.findIndex((st) => st.sheet.id === current.sheet.id);
+  return idx >= 0 ? partLabelFor(current.sheet.topic, idx) : null;
+}
+
 /** History grouped like Homework: one entry per subject + week,
  *  newest week first. */
 export function historyGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {

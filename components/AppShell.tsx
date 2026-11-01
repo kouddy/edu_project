@@ -9,7 +9,7 @@ import { postResolution, syncLiveAccount } from "@/lib/live-sync";
 import { getSupabase } from "@/lib/supabase-client";
 import { downscalePhoto } from "@/lib/photo-image";
 import type { GradeJobStatus } from "@/lib/grade-contract";
-import { historyGroups, homeworkGroups, loadSnapshot, pendingChecks, type CheckItem, type Snapshot } from "@/lib/derive";
+import { historyGroups, homeworkGroups, loadSnapshot, nextSheetWithResult, pendingChecks, sheetPartLabel, type CheckItem, type Snapshot } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
 import ScanScreen, { type StagedPhoto } from "./ScanScreen";
@@ -470,9 +470,29 @@ export default function AppShell() {
                   />
                 );
               }
+              const nextSt = nextSheetWithResult(
+                snap,
+                st,
+                screen.packet?.from ?? (screen.origin === "history" ? "history" : "homework"),
+              );
               return (
                 <ResultsScreen
+                  key={screen.sheetId}
                   st={st}
+                  partLabel={sheetPartLabel(snap, st)}
+                  onNext={
+                    nextSt
+                      ? () => {
+                          setScreen({
+                            name: "results",
+                            sheetId: nextSt.sheet.id,
+                            origin: screen.origin,
+                            packet: screen.packet,
+                          });
+                          if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                        }
+                      : undefined
+                  }
                   onBack={() => backFromSheet(screen.origin, screen.packet)}
                   onOpenCheck={() =>
                     setScreen({

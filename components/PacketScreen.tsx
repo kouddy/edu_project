@@ -14,7 +14,7 @@
  */
 
 import { type ReactNode } from "react";
-import { isDone, topicGroups, type SheetState } from "@/lib/derive";
+import { isDone, partLabelFor, topicGroups, type SheetState } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { BackButton, ScreenHeader } from "./ui";
 
@@ -22,21 +22,6 @@ const CARD =
   "rounded-[16px] border-[1.5px] border-linesoft bg-card shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const PILL =
   "inline-block shrink-0 rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold";
-
-/** Topic strings that are review kinds rather than practice topics —
- *  their sheets are parts of one review, not lettered practice pages. */
-const REVIEW_TOPICS = new Set([
-  "Anchor Review",
-  "Consolidation Review",
-  "Spiral Review",
-  "Review Week",
-]);
-
-function partLabel(topic: string, index: number): string {
-  return REVIEW_TOPICS.has(topic)
-    ? `Part ${index + 1}`
-    : `Practice ${String.fromCharCode(65 + index)}`;
-}
 
 function DonePill({ done }: { done: boolean }) {
   return (
@@ -181,7 +166,7 @@ export default function PacketScreen({
                 group.states.map((st, si) => (
                   <SheetRow
                     key={st.sheet.id}
-                    title={partLabel(group.topic, si)}
+                    title={partLabelFor(group.topic, si)}
                     code={st.sheet.printedCode}
                     done={isDone(st)}
                     score={variant === "history" ? st.score : undefined}
