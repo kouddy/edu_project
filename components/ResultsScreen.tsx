@@ -137,7 +137,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
           <img
             src={photoUrls[0]}
             alt={`Your photo of ${kid.name}'s sheet`}
-            className="block h-[220px] w-full object-cover"
+            className="block h-[260px] w-full object-cover object-top"
           />
           <span
             className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-[15px] leading-none text-white"
@@ -286,7 +286,7 @@ function MockPhoto({ st, kindFor }: { st: SheetState; kindFor: (n: number) => Ki
   const first = key.questions.slice(0, 5);
   return (
     <div
-      className="mb-3 h-[220px] overflow-hidden rounded-[16px] border-[1.5px] border-linesoft bg-[#fdfcf6] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+      className="mb-3 h-[260px] overflow-hidden rounded-[16px] border-[1.5px] border-linesoft bg-[#fdfcf6] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
       role="img"
       aria-label={`Photo of ${kid.name}'s completed ${sheetLabel(sheet)} sheet`}
     >
