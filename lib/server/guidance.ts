@@ -32,7 +32,6 @@ import { supabaseForToken } from "./supabase";
 
 /** Freshly-graded questions jump the queue over lazy/backfill ones. */
 const FRESH_PRIORITY = 10;
-const REGENERATE_PRIORITY = 5;
 
 function resolveQuestion(
   printedCode: string,
@@ -115,22 +114,6 @@ export async function readGuidance(
     if (!data || data.length === 0) return { kind: "forbidden" };
   }
   return { kind: "ok", view };
-}
-
-/** Explicit regeneration: a terminally failed task returns to
- *  pending with its attempts reset. Ready and in-flight tasks are
- *  untouched — a generated question is not generated again. */
-export async function regenerateGuidance(
-  printedCode: string,
-  questionNumber: number,
-  auth: { token: string } | null,
-): Promise<boolean> {
-  const resolved = resolveQuestion(printedCode, questionNumber);
-  if (!resolved) return false;
-  const store = storeFor(auth !== null);
-  await store.resetFailed(printedCode, questionNumber, resolved.entry.keyVersion);
-  await store.enqueue(printedCode, questionNumber, resolved.entry.keyVersion, REGENERATE_PRIORITY);
-  return true;
 }
 
 /* ------------------------------------------------------- processing */

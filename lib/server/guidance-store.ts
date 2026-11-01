@@ -48,9 +48,6 @@ export interface GuidanceStore {
   /** Insert-if-absent: enqueueing a question that already has a task
    *  (in any state) changes nothing. */
   enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number): Promise<void>;
-  /** A terminally failed task goes back to pending with its attempts
-   *  reset — the explicit regenerate path. */
-  resetFailed(printedCode: string, questionNumber: number, keyVersion: number): Promise<void>;
   /** Claim up to `limit` due tasks for `workerId`. */
   claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]>;
   complete(task: GuidanceTask, html: string): Promise<void>;
@@ -113,13 +110,6 @@ class DbGuidanceStore implements GuidanceStore {
       { ...this.triple(printedCode, questionNumber, keyVersion), priority },
       { onConflict: "printed_code,question_number,key_version", ignoreDuplicates: true },
     );
-  }
-
-  async resetFailed(printedCode: string, questionNumber: number, keyVersion: number): Promise<void> {
-    await this.db
-      .from("guidance_animations")
-      .update({ status: "pending", attempts: 0, claim_count: 0, available_at: new Date().toISOString(), last_error: null, claimed_by: null, lease_until: null, updated_at: new Date().toISOString() })
-      .match({ ...this.triple(printedCode, questionNumber, keyVersion), status: "failed" });
   }
 
   async claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]> {
@@ -218,19 +208,6 @@ export class MemoryGuidanceStore implements GuidanceStore {
       claimedBy: null,
       createdAt: Date.now(),
     });
-  }
-
-  async resetFailed(printedCode: string, questionNumber: number, keyVersion: number): Promise<void> {
-    const row = memoryRows.get(memoryKey(printedCode, questionNumber, keyVersion));
-    if (row && row.status === "failed") {
-      row.status = "pending";
-      row.attempts = 0;
-      row.claimCount = 0;
-      row.availableAt = Date.now();
-      row.lastError = null;
-      row.claimedBy = null;
-      row.leaseUntil = null;
-    }
   }
 
   async claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]> {
