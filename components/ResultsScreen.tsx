@@ -199,11 +199,16 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                   Correct answer:{" "}
                   <span className="font-semibold text-ink">{q.correctAnswer}</span>
                 </div>
-                {g.verdict === "wrong" && (
-                  <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                    {g.meta?.guidance ?? q.explanation}
-                  </div>
-                )}
+                {/* The generic explanation only restates the correct
+                    answer, which already has its own line above — the
+                    box is for guidance that adds something beyond it. */}
+                {g.verdict === "wrong" &&
+                  (g.meta?.guidance ?? q.explanation) !==
+                    `The correct answer is ${q.correctAnswer}.` && (
+                    <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
+                      {g.meta?.guidance ?? q.explanation}
+                    </div>
+                  )}
                 {resolution?.resolution === "wrong" && (
                   <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
                     You marked this wrong. Recorded in {kid.name}&rsquo;s progress.
