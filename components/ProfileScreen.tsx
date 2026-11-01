@@ -50,7 +50,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
 
   return (
     <div className="px-[18px] pb-[26px] pt-[14px]">
-      <ScreenHeader kicker="Practice Sheets" title="Profile" />
+      <ScreenHeader title="Profile" />
 
       <div className={CARD}>
         <p className="mb-[3px] text-[11.5px] font-bold uppercase tracking-[0.12em] text-faint">

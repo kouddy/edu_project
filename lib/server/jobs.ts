@@ -9,7 +9,13 @@
  * the batch from the photos stored on the device.
  */
 
-import type { GradeJobResult, GradeJobStatusValue, PhotoProgress } from "../grade-contract";
+import type {
+  ApiSheetResult,
+  GradeJobResult,
+  GradeJobStatusValue,
+  PhotoOutcome,
+  PhotoProgress,
+} from "../grade-contract";
 
 export interface GradeJob {
   id: string;
@@ -17,6 +23,10 @@ export interface GradeJob {
   step: string;
   /** Live per-photo progress for the Home Marking card. */
   photoProgress: PhotoProgress[];
+  /** Per-photo results published as each photo settles, so clients
+   *  can file finished sheets while the rest are still marking. */
+  partialSheets: ApiSheetResult[];
+  partialOutcomes: PhotoOutcome[];
   result?: GradeJobResult;
   error?: string;
   createdAt: number;
@@ -36,6 +46,8 @@ export function createJob(photoCount = 1): GradeJob {
       index,
       state: "marking" as const,
     })),
+    partialSheets: [],
+    partialOutcomes: [],
     createdAt: Date.now(),
     updatedAt: Date.now(),
   };
@@ -49,6 +61,20 @@ export function updatePhotoProgress(id: string, index: number, patch: Partial<Ph
   const entry = job.photoProgress[index];
   if (!entry) return;
   Object.assign(entry, patch);
+  job.updatedAt = Date.now();
+}
+
+/** Publish one photo's finished outcome (and its sheet result, when
+ *  it graded) for polling clients to file early. */
+export function publishPhotoResult(
+  id: string,
+  outcome: PhotoOutcome,
+  sheet?: ApiSheetResult,
+): void {
+  const job = jobs.get(id);
+  if (!job) return;
+  job.partialOutcomes.push(outcome);
+  if (sheet) job.partialSheets.push(sheet);
   job.updatedAt = Date.now();
 }
 

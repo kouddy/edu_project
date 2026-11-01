@@ -178,18 +178,62 @@ interface SettledBatch {
   lines: string[];
   /** Photo keys returned to the tray for a retake. */
   trayPhotoKeys: string[];
+  /** Photo indices whose graded sheets were filed by this apply. */
+  filedIndices: number[];
+}
+
+/**
+ * File the graded sheets a still-running job has already finished, so
+ * the Homework counts move during marking. Happy path only — a sheet
+ * this device can file whose stored result is not already final.
+ * Duplicates, rejections and the awkward cases wait for the settle
+ * pass, which is the one that reports them. Returns how many sheets
+ * were filed.
+ */
+async function applyPartialResults(
+  job: PendingGradeJob,
+  status: GradeJobStatus,
+): Promise<number> {
+  const partial = status.partialResult;
+  if (!partial) return 0;
+  const applied = new Set(job.appliedIndices ?? []);
+  const fresh = partial.photoOutcomes.filter((o) => {
+    if (o.kind !== "graded" || !o.sheetId || applied.has(o.photoIndex)) return false;
+    if (sheetResultIsFinal(o.sheetId)) return false;
+    if (getSheet(o.sheetId)) return true;
+    return Boolean(partial.sheets.find((s) => s.sheetId === o.sheetId)?.spec);
+  });
+  if (fresh.length === 0) return 0;
+  const batch = await applyJobResult(job, status, {
+    sheets: partial.sheets.filter((s) => fresh.some((o) => o.sheetId === s.sheetId)),
+    photoOutcomes: fresh,
+  });
+  if (batch.filedIndices.length > 0) {
+    updatePendingJob(job.jobId, {
+      appliedIndices: [...applied, ...batch.filedIndices],
+    });
+  }
+  return batch.filedIndices.length;
 }
 
 async function applyJobResult(
   job: PendingGradeJob,
   status: GradeJobStatus,
-  result: GradeJobResult,
+  result: Pick<GradeJobResult, "sheets" | "photoOutcomes">,
+  alreadyApplied: ReadonlySet<number> = new Set(),
 ): Promise<SettledBatch> {
-  const batch: SettledBatch = { jobId: job.jobId, markedSheets: 0, lines: [], trayPhotoKeys: [] };
+  const batch: SettledBatch = {
+    jobId: job.jobId,
+    markedSheets: 0,
+    lines: [],
+    trayPhotoKeys: [],
+    filedIndices: [],
+  };
   const sheetsById = new Map(result.sheets.map((s) => [s.sheetId, s]));
   const progressByIndex = new Map((status.photoProgress ?? []).map((p) => [p.index, p]));
 
   for (const outcome of result.photoOutcomes) {
+    if (alreadyApplied.has(outcome.photoIndex)) continue;
     const photoKey = job.photoKeys[outcome.photoIndex];
     if (!photoKey) continue;
     const progressLabel = progressByIndex.get(outcome.photoIndex)?.sheetLabel;
@@ -228,6 +272,7 @@ async function applyJobResult(
         })),
       });
       batch.markedSheets++;
+      batch.filedIndices.push(outcome.photoIndex);
       continue;
     }
 
@@ -261,6 +306,8 @@ export interface PollResult {
   settled: SettledBatch[];
   /** Latest statuses of jobs still running, for the Marking card. */
   running: GradeJobStatus[];
+  /** Sheets filed early from still-running jobs during this pass. */
+  progressed: number;
 }
 
 /**
@@ -272,6 +319,7 @@ export interface PollResult {
 export async function pollPendingJobs(): Promise<PollResult> {
   const settled: SettledBatch[] = [];
   const running: GradeJobStatus[] = [];
+  let progressed = 0;
 
   for (const job of listPendingJobs()) {
     let status: GradeJobStatus | null = null;
@@ -299,13 +347,17 @@ export async function pollPendingJobs(): Promise<PollResult> {
           markedSheets: 0,
           lines: ["We couldn't mark those sheets just now — the photos are back in your tray to try again."],
           trayPhotoKeys: [...job.photoKeys],
+          filedIndices: [],
         });
       }
       continue;
     }
 
     if (!status || status.status === "running") {
-      if (status) running.push(status);
+      if (status) {
+        progressed += await applyPartialResults(job, status);
+        running.push(status);
+      }
       continue;
     }
 
@@ -316,14 +368,20 @@ export async function pollPendingJobs(): Promise<PollResult> {
         markedSheets: 0,
         lines: ["We couldn't mark those sheets just now — the photos are back in your tray to try again."],
         trayPhotoKeys: [...job.photoKeys],
+        filedIndices: [],
       });
       continue;
     }
 
-    const batch = await applyJobResult(job, status, status.result);
+    const batch = await applyJobResult(
+      job,
+      status,
+      status.result,
+      new Set(job.appliedIndices ?? []),
+    );
     removePendingJob(job.jobId);
     settled.push(batch);
   }
 
-  return { settled, running };
+  return { settled, running, progressed };
 }

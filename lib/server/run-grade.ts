@@ -27,7 +27,7 @@ import type {
   GradeRequestPayload,
   PhotoOutcome,
 } from "../grade-contract";
-import { createJob, updateJob, updatePhotoProgress, type GradeJob } from "./jobs";
+import { createJob, publishPhotoResult, updateJob, updatePhotoProgress, type GradeJob } from "./jobs";
 import { persistGradedJob } from "./account";
 import { findBySheetId } from "./registry";
 import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, validatePiConfig } from "./pi-config";
@@ -226,12 +226,25 @@ async function runBatch(
     else chains.set(photo, [index]);
   });
 
+  // One place where a photo's outcome becomes final: record it,
+  // publish it for clients polling mid-job (so a finished sheet can
+  // be filed while the rest of the batch is still marking), and mark
+  // the photo settled.
+  const settlePhoto = (index: number, outcome: PhotoOutcome) => {
+    outcomes[index] = outcome;
+    const sheet =
+      outcome.kind === "graded" && outcome.sheetId
+        ? sheets.find((s) => s.sheetId === outcome.sheetId)
+        : undefined;
+    publishPhotoResult(jobId, outcome, sheet);
+    updatePhotoProgress(jobId, index, { state: "settled" });
+  };
+
   async function runChain(indices: number[]): Promise<void> {
     let chainSheetId: string | undefined;
     for (const index of indices) {
       if (chainSheetId) {
-        outcomes[index] = { photoIndex: index, kind: "duplicate", sheetId: chainSheetId, attempts: 0 };
-        updatePhotoProgress(jobId, index, { state: "settled" });
+        settlePhoto(index, { photoIndex: index, kind: "duplicate", sheetId: chainSheetId, attempts: 0 });
         continue;
       }
       const { outcome, blockedBySheetId } = await runPhotoWithAttempts(index, payload.photos[index]);
@@ -241,12 +254,11 @@ async function runBatch(
         deferred.push({ index, sheetId: blockedBySheetId, attempts: outcome.attempts });
         continue;
       }
-      outcomes[index] = outcome;
       if (outcome.kind === "graded" && outcome.sheetId) {
         gradedSheetIds.add(outcome.sheetId);
         chainSheetId = outcome.sheetId;
       }
-      updatePhotoProgress(jobId, index, { state: "settled" });
+      settlePhoto(index, outcome);
     }
   }
 
@@ -266,18 +278,17 @@ async function runBatch(
   // if their sheet did get graded, a fresh grading turn if it did not.
   for (const parked of deferred) {
     if (gradedSheetIds.has(parked.sheetId)) {
-      outcomes[parked.index] = {
+      settlePhoto(parked.index, {
         photoIndex: parked.index,
         kind: "duplicate",
         sheetId: parked.sheetId,
         attempts: parked.attempts,
-      };
+      });
     } else {
       const { outcome } = await runPhotoWithAttempts(parked.index, payload.photos[parked.index]);
-      outcomes[parked.index] = outcome;
       if (outcome.kind === "graded" && outcome.sheetId) gradedSheetIds.add(outcome.sheetId);
+      settlePhoto(parked.index, outcome);
     }
-    updatePhotoProgress(jobId, parked.index, { state: "settled" });
   }
 
   // Results come back in photo order regardless of finishing order.

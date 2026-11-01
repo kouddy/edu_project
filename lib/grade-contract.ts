@@ -128,6 +128,10 @@ export interface GradeJobStatus {
   /** Current (or final) step label, in parent language. */
   step: string;
   photoProgress?: PhotoProgress[];
+  /** Outcomes finished so far, present while the job still runs: the
+   *  client files graded sheets as they land, so the Homework counts
+   *  move during marking instead of only when the whole job ends. */
+  partialResult?: { sheets: ApiSheetResult[]; photoOutcomes: PhotoOutcome[] };
   result?: GradeJobResult;
   error?: string;
 }
