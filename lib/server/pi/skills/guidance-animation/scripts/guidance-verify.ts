@@ -287,7 +287,7 @@ export async function inspectAnimation(html: string): Promise<AnimationInspectio
 
 /* --------------------------------------------------------------- the gate */
 
-export function answerMatches(finalText: string, correctAnswer: string): boolean {
+function answerMatches(finalText: string, correctAnswer: string): boolean {
   const norm = (s: string) => s.toLowerCase().replace(/[\s,]+/g, "");
   const f = norm(finalText);
   const a = norm(correctAnswer);

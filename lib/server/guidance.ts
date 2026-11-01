@@ -51,7 +51,7 @@ function storeFor(live: boolean): GuidanceStore {
   return live ? (dbGuidanceStore() ?? memoryGuidanceStore()) : memoryGuidanceStore();
 }
 
-export async function enqueueGuidanceQuestion(
+async function enqueueGuidanceQuestion(
   printedCode: string,
   questionNumber: number,
   opts: { live: boolean; priority?: number; methodText?: string },

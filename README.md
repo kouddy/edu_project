@@ -312,26 +312,28 @@ or fallback provider: every grade is a real model call, in every mode.
 - Providers are file-configured in `lib/server/pi/models.json` (Pi's
   native format; keys referenced as `$ENV_VAR`, never committed). The
   default provider is Meta (`muse-spark-1.3-contributor`); per-subject
-  routing lives in `lib/server/pi/subjects.json`, global settings in
-  `settings.json`. Adding a provider is a models.json edit. Note: a Baseten
+  routing, each agent's runtime values and the shared grading policy
+  live in `lib/server/pi/subjects.json`. Adding a provider is a models.json edit. Note: a Baseten
   provider is defined but its multimodal tool-calling path currently
   hangs, so it is not usable for grading.
 - Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
   versioned key. The registry is exactly the book catalogues in
-  book-data — 2,019 sheets, all with keys.
+  book-data — 2,047 sheets, all with keys.
 
 ## Repo map
 
 ```
 app/            Next.js routes: page, layout, api/grade (+ [jobId]), api/config,
-                api/account (+ resolutions, photos)
-components/     AppShell + screens (Home, Scan, Results, Check, Profile, SignIn), ui.tsx
+                api/guidance, api/account (+ resolutions, photos)
+components/     AppShell + screens (Home, Scan, Results, Check, Help, Profile, SignIn), ui.tsx
 lib/            store.ts (data layer), derive.ts, grading.ts (client),
                 grade-contract.ts (wire types), demo.ts (the demo dataset),
                 live-sync.ts + supabase-client.ts (live mode), account-contract.ts
 lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
-                pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
-                prompts/, context/ error taxonomy), supabase.ts + account.ts
+                pi-harness.ts, pi-guidance.ts, guidance.ts, guidance-store.ts,
+                guidance-worker.ts, pi/ (models.json, subjects.json, prompts/,
+                context/ error taxonomy, skills/ guidance-animation),
+                supabase.ts + account.ts
                 (token verification, account payload, grading persistence),
                 book-data/ (grade 2–5 book catalogues)
 supabase/       local stack config, migrations (accounts schema + RLS),

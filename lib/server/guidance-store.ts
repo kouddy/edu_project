@@ -21,7 +21,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "./supabase";
 
-export type GuidanceViewStatus = "generating" | "ready" | "failed";
+type GuidanceViewStatus = "generating" | "ready" | "failed";
 
 export interface GuidanceView {
   status: GuidanceViewStatus;
@@ -205,7 +205,7 @@ let memorySeq = 0;
 
 const memoryKey = (c: string, q: number, kv: number) => `${c}#${q}#${kv}`;
 
-export class MemoryGuidanceStore implements GuidanceStore {
+class MemoryGuidanceStore implements GuidanceStore {
   async get(printedCode: string, questionNumber: number, keyVersion: number): Promise<GuidanceView | null> {
     const row = memoryRows.get(memoryKey(printedCode, questionNumber, keyVersion));
     return row ? viewOf(row.status, row.html, row.lastError) : null;
