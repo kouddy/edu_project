@@ -424,7 +424,7 @@ function buildTools(
   return [submitIdentification, submitGrade, submitErrorAnalysis, submitGuidance];
 }
 
-async function createModelRuntime(config: PiConfig, providerId: string, apiKey: string | null): Promise<ModelRuntime> {
+export async function createModelRuntime(config: PiConfig, providerId: string, apiKey: string | null): Promise<ModelRuntime> {
   const dir = mkdtempSync(path.join(tmpdir(), "pi-grading-"));
   const modelsCopy = path.join(dir, "models.json");
   copyFileSync(config.modelsPath, modelsCopy);

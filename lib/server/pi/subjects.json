@@ -35,6 +35,20 @@
             "schemaVersion": "A1",
             "status": "active",
             "tokenBudget": 60000
+        },
+        "guidance": {
+            "contextFiles": [],
+            "displaySubjects": [],
+            "maxSteps": 24,
+            "model": "muse-spark-1.3-contributor",
+            "plannedProvider": "meta",
+            "promptFiles": {
+                "guidance": "prompts/guidance.animation.md"
+            },
+            "provider": "meta",
+            "schemaVersion": "A1",
+            "status": "active",
+            "tokenBudget": 90000
         }
     }
 }
