@@ -74,7 +74,11 @@ export async function generateGuidanceWithHarness(args: {
       `Guidance provider "${providerId}" is not available — its API key is not set on the server.`,
     );
   }
-  const modelId = effectiveModel(config, "guidance", providerId);
+  // GUIDANCE_MODEL overrides the manifest's model, so the guidance
+  // model can be switched from .env like the provider, without
+  // editing subjects.json. An id the provider doesn't define fails
+  // at the getModel check below, naming the bad value.
+  const modelId = process.env.GUIDANCE_MODEL ?? effectiveModel(config, "guidance", providerId);
   const apiKey = resolveProviderApiKey(config, providerId);
   const runtime = await createModelRuntime(config, providerId, apiKey);
   const model = runtime.getModel(providerId, modelId);
