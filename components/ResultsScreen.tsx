@@ -78,7 +78,6 @@ export default function ResultsScreen({ st, onNext, onBack, onOpenCheck, onRemov
   // live mode the server owns the record, so there is nothing to
   // remove here — the button only exists in the local demo account.
   const removable = getActiveMode() !== "live";
-  const doneLabel = removable;
 
   const handleRemove = async () => {
     if (!armed) {
@@ -241,10 +240,6 @@ export default function ResultsScreen({ st, onNext, onBack, onOpenCheck, onRemov
           Next sheet ›
         </button>
       )}
-      <button type="button" onClick={onBack} className={`${BTN_SECONDARY} mt-2.5`}>
-        {doneLabel ? "Done" : "Back"}
-      </button>
-
       {removable &&
         (armed ? (
           <p className="mt-3 text-center">
