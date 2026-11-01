@@ -18,10 +18,10 @@ import { bytesToPostgresHex, supabaseForToken, type AuthedParent } from "./supab
 // check resolutions). Client record shapes are the store's own — the
 // device seeds them into its live database unchanged.
 
-function packetEntries(grade: number, week: number): RegistryEntry[] {
-  return BOOK_REGISTRY.filter((e) => e.kidGrade === grade && e.week === week).sort((a, b) =>
-    a.printedCode.localeCompare(b.printedCode),
-  );
+function packetEntries(grade: number, subject: string, week: number): RegistryEntry[] {
+  return BOOK_REGISTRY.filter(
+    (e) => e.kidGrade === grade && e.subject === subject && e.week === week,
+  ).sort((a, b) => a.printedCode.localeCompare(b.printedCode));
 }
 
 function sheetFromEntry(entry: RegistryEntry, kidId: string): Sheet {
@@ -40,6 +40,10 @@ interface KidRow {
   id: string;
   name: string;
   grade: number;
+}
+
+interface EnrollmentRow {
+  kid_id: string;
   subject: string;
   current_week: number;
 }
@@ -55,16 +59,29 @@ export async function buildAccountState(
     .maybeSingle();
   const { data: kidRows } = await db
     .from("kids")
-    .select("id, name, grade, subject, current_week")
+    .select("id, name, grade")
     .eq("parent_id", parent.id)
     .order("created_at");
   const kidsData = (kidRows ?? []) as KidRow[];
+  const { data: enrollmentRows } =
+    kidsData.length > 0
+      ? await db
+          .from("enrollments")
+          .select("kid_id, subject, current_week")
+          .in("kid_id", kidsData.map((k) => k.id))
+          .order("created_at")
+      : { data: [] };
+  const enrollmentsData = (enrollmentRows ?? []) as EnrollmentRow[];
+  const enrollmentsFor = (kidId: string) =>
+    enrollmentsData
+      .filter((e) => e.kid_id === kidId)
+      .map((e) => ({ subject: e.subject, currentWeek: e.current_week }));
   const kids: Kid[] = kidsData.map((k) => ({
     id: k.id,
     parentId: parent.id,
     name: k.name,
     grade: k.grade,
-    subject: k.subject,
+    enrollments: enrollmentsFor(k.id),
   }));
 
   const sheets: Sheet[] = [];
@@ -76,8 +93,14 @@ export async function buildAccountState(
     sheets.push(sheetFromEntry(entry, kidId));
     answerKeys.push({ sheetId: entry.sheetId, questions: entry.questions });
   };
+  // One packet per enrollment: each subject track assigns the packet
+  // for its own current week.
   for (const kid of kidsData) {
-    for (const entry of packetEntries(kid.grade, kid.current_week)) addEntry(entry, kid.id);
+    for (const enrollment of enrollmentsFor(kid.id)) {
+      for (const entry of packetEntries(kid.grade, enrollment.subject, enrollment.currentWeek)) {
+        addEntry(entry, kid.id);
+      }
+    }
   }
 
   const submissions: Submission[] = [];

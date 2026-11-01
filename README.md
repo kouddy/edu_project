@@ -98,13 +98,22 @@ the hosted project instead, skip to
    editor:
 
    ```sql
-   insert into public.kids (parent_id, name, grade, current_week)
-   select id, 'Amy', 3, 40 from public.parents
-   where email = 'you@example.com';
+   with new_kid as (
+     insert into public.kids (parent_id, name, grade)
+     select id, 'Amy', 3 from public.parents
+     where email = 'you@example.com'
+     returning id
+   )
+   insert into public.enrollments (kid_id, subject, current_week)
+   select id, 'Math', 40 from new_kid;
    ```
 
-   Reload the app: the kid appears with the packet for their grade and
-   current week. Grade as usual — results and photos persist server-side
+   One enrollment per subject track — a kid can take several subjects,
+   each on its own current week (weeks 1–40 are the weekly packets;
+   week 41 is the finals week).
+
+   Reload the app: the kid appears with a packet for each enrollment's
+   grade, subject and current week. Grade as usual — results and photos persist server-side
    (check the `submissions`, `grade_results`, `photo_blobs` and
    `check_resolutions` tables in Studio). Signing in from a second
    browser shows the same account, photos included.
@@ -160,10 +169,35 @@ Then run the app exactly as in the local flow (`npm run dev`, enter
 your email, **Email me a sign-in link**) with two differences: the
 magic link arrives as a real email — there is no mail catcher — and
 enrollment happens in the dashboard's SQL Editor, with the same
-`insert into public.kids … select … from public.parents` statement as
-the local step 6. Persisted rows are visible in the dashboard's Table
+kid + enrollment statements as the local step 6. Persisted rows are visible in the dashboard's Table
 Editor (`submissions`, `grade_results`, `photo_blobs`,
 `check_resolutions`).
+
+### Advancing a kid's week
+
+A track's current week moves when the hub hands out the next packet.
+Besides updating `enrollments.current_week` in SQL, there is an
+operator endpoint for it:
+
+```
+POST /api/admin/advance-week
+{ "kidId": "<kid uuid>", "subject": "Math" }
+→ { "kidId": "…", "subject": "Math", "currentWeek": 41 }
+```
+
+```bash
+curl -X POST http://localhost:3000/api/admin/advance-week \
+  -H "x-admin-key: $ADMIN_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{"kidId":"<kid uuid>","subject":"Math"}'
+```
+
+The endpoint exists only when the server has both `ADMIN_API_KEY`
+(a key you choose) and `SUPABASE_SERVICE_ROLE_KEY` (the project's
+Secret key) in its environment; without them it answers 503. It
+advances one week per call, refuses at the finals week (41), and a
+parent's sign-in can never call it — enrollments have no parent
+write policy.
 
 Day to day:
 

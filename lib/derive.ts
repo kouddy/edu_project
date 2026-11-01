@@ -78,19 +78,32 @@ export function loadSnapshot(): Snapshot {
 
 /* ------------------------------------------------------------ per-kid views */
 
-function currentWeek(snap: Snapshot, kid: Kid): number {
+/** The current week of one of the kid's subject tracks. The enrollment
+ *  is the assignment, so it decides; for a subject the kid is not
+ *  enrolled in (a sheet scanned before enrollment, say), the latest
+ *  week among their sheets stands in. Week equality does all the
+ *  filtering homework needs: the finals packet is week 41, so it is
+ *  homework exactly when the track's current week is the finals week. */
+function currentWeek(snap: Snapshot, kid: Kid, subject: string): number {
+  const enrolled = kid.enrollments.find((e) => e.subject === subject);
+  if (enrolled) return enrolled.currentWeek;
   let max = 0;
   for (const st of snap.states.values()) {
-    if (st.kid.id === kid.id) max = Math.max(max, st.sheet.week);
+    if (st.kid.id === kid.id && st.sheet.subject === subject) {
+      max = Math.max(max, st.sheet.week);
+    }
   }
   return max;
 }
 
-/** This week's assigned sheets (the Homework list): weekly packets only. */
+/** This week's assigned sheets (the Homework list): for each subject,
+ *  the sheets of that track's current week. */
 function homeworkStates(snap: Snapshot, kid: Kid): SheetState[] {
-  const week = currentWeek(snap, kid);
   return [...snap.states.values()]
-    .filter((st) => st.kid.id === kid.id && st.sheet.week === week && !st.sheet.setName)
+    .filter(
+      (st) =>
+        st.kid.id === kid.id && st.sheet.week === currentWeek(snap, kid, st.sheet.subject),
+    )
     .sort((a, b) => sheetLabel(a.sheet).localeCompare(sheetLabel(b.sheet)));
 }
 
@@ -234,12 +247,11 @@ export function streakFor(snap: Snapshot, kid: Kid): number {
  */
 export function reviewRetentionText(snap: Snapshot, kid: Kid): string | null {
   if (!kidHasGradedSheet(snap, kid)) return null;
-  const current = currentWeek(snap, kid);
   let total = 0;
   let correct = 0;
   for (const st of snap.states.values()) {
     if (st.kid.id !== kid.id || !st.result || !st.key || !st.score?.isFinal) continue;
-    if (st.sheet.week >= current) continue;
+    if (st.sheet.week >= currentWeek(snap, kid, st.sheet.subject)) continue;
     const resolved = new Map(st.resolutions.map((r) => [r.questionNumber, r.resolution]));
     for (const g of st.result.perQuestion) {
       const q = st.key.questions.find((x) => x.number === g.questionNumber);
