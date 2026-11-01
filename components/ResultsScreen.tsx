@@ -10,7 +10,6 @@ import {
 } from "@/lib/derive";
 import { BackButton, ScoreBadges, ScreenHeader } from "./ui";
 import PhotoViewer from "./PhotoViewer";
-import GuidanceAnimation from "./GuidanceAnimation";
 
 /* Styled directly from the wireframe's Results (.banner, .mockphoto,
    summary card with top-right badges, .qrow list, bottom buttons):
@@ -37,12 +36,14 @@ interface ResultsProps {
    *  is one — saves the trip back to the packet list. */
   onNext?: () => void;
   onBack: () => void;
+  /** Open the help page for one wrong question. */
+  onOpenHelp: (questionNumber: number) => void;
   onOpenCheck: () => void;
   onRemoved: () => void;
   showToast: (msg: string) => void;
 }
 
-export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
+export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHelp, onOpenCheck, onRemoved, showToast }: ResultsProps) {
   const { sheet, kid, key, result, score } = st;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -175,7 +176,6 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
             g.verdict === "unsure"
               ? st.resolutions.find((r) => r.questionNumber === q.number)
               : undefined;
-          const guidance = g.meta?.guidance ?? q.explanation;
           // Row layout: the question line is the display prompt alone
           // (choice questions show their stem, not the printed
           // options); the correct answer gets its own line under what
@@ -217,24 +217,19 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
                 )}
                 </div>
               </div>
-              {/* Guidance slot, full row width under the question
-                  lines: the text guidance shows at once, and a
-                  generated animation swaps in when ready — spanning
-                  the whole card width instead of the indented text
-                  column gives the animation room to lay out. The
-                  generic explanation only restates the correct
-                  answer, which already has its own line above, so
-                  it is passed as null and never shown on its own. */}
+              {/* A wrong answer's teaching lives on its own help
+                  page — the explanation and the animated lesson
+                  together — so the report row carries just this one
+                  action, full row width under the question lines. */}
               {g.verdict === "wrong" && (
-                <GuidanceAnimation
-                  printedCode={sheet.printedCode}
-                  questionNumber={q.number}
-                  guidanceText={
-                    guidance === `The correct answer is ${q.correctAnswer}.`
-                      ? null
-                      : guidance
-                  }
-                />
+                <button
+                  type="button"
+                  onClick={() => onOpenHelp(q.number)}
+                  className="mt-[9px] flex w-full items-center justify-between rounded-[10px] border-[1.5px] border-line bg-card px-[13px] py-[10px] text-[14.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+                >
+                  <span>Help me</span>
+                  <span aria-hidden>›</span>
+                </button>
               )}
             </div>
           );

@@ -14,6 +14,7 @@ import type { Kid } from "@/lib/store";
 import HomeScreen from "./HomeScreen";
 import ScanScreen, { type StagedPhoto } from "./ScanScreen";
 import ResultsScreen, { NotStartedScreen } from "./ResultsScreen";
+import HelpScreen from "./HelpScreen";
 import CheckScreen from "./CheckScreen";
 import PacketScreen from "./PacketScreen";
 import ProfileScreen from "./ProfileScreen";
@@ -30,6 +31,13 @@ type Screen =
   | {
       name: "results";
       sheetId: string;
+      origin: "homework" | "history" | "packet";
+      packet?: { subject: string; week: number; from: "homework" | "history" };
+    }
+  | {
+      name: "help";
+      sheetId: string;
+      questionNumber: number;
       origin: "homework" | "history" | "packet";
       packet?: { subject: string; week: number; from: "homework" | "history" };
     }
@@ -494,6 +502,15 @@ export default function AppShell() {
                       : undefined
                   }
                   onBack={() => backFromSheet(screen.origin, screen.packet)}
+                  onOpenHelp={(questionNumber) =>
+                    setScreen({
+                      name: "help",
+                      sheetId: screen.sheetId,
+                      questionNumber,
+                      origin: screen.origin,
+                      packet: screen.packet,
+                    })
+                  }
                   onOpenCheck={() =>
                     setScreen({
                       name: "check",
@@ -508,6 +525,47 @@ export default function AppShell() {
                     backFromSheet(screen.origin, screen.packet);
                   }}
                   showToast={showToast}
+                />
+              );
+            })()}
+
+          {screen.name === "help" &&
+            (() => {
+              const st = snap.states.get(screen.sheetId);
+              if (!st?.result) return null;
+              const wrongNumbers = st.result.perQuestion
+                .filter((g) => g.verdict === "wrong")
+                .map((g) => g.questionNumber)
+                .sort((a, b) => a - b);
+              const idx = wrongNumbers.indexOf(screen.questionNumber);
+              const nextQ = idx >= 0 ? wrongNumbers[idx + 1] : undefined;
+              return (
+                <HelpScreen
+                  key={`${screen.sheetId}:${screen.questionNumber}`}
+                  st={st}
+                  questionNumber={screen.questionNumber}
+                  onBack={() =>
+                    setScreen({
+                      name: "results",
+                      sheetId: screen.sheetId,
+                      origin: screen.origin,
+                      packet: screen.packet,
+                    })
+                  }
+                  onNext={
+                    nextQ !== undefined
+                      ? () => {
+                          setScreen({
+                            name: "help",
+                            sheetId: screen.sheetId,
+                            questionNumber: nextQ,
+                            origin: screen.origin,
+                            packet: screen.packet,
+                          });
+                          if (scrollRef.current) scrollRef.current.scrollTop = 0;
+                        }
+                      : undefined
+                  }
                 />
               );
             })()}
