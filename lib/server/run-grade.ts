@@ -28,6 +28,7 @@ import type {
   PhotoOutcome,
 } from "../grade-contract";
 import { createJob, publishPhotoResult, updateJob, updatePhotoProgress, type GradeJob } from "./jobs";
+import { enqueueGuidanceForSheet } from "./guidance";
 import { persistGradedJob } from "./account";
 import { findBySheetId } from "./registry";
 import { loadPiConfig, providerDef, providerForAgent, providerKeyEnvName, validatePiConfig } from "./pi-config";
@@ -237,6 +238,9 @@ async function runBatch(
         ? sheets.find((s) => s.sheetId === outcome.sheetId)
         : undefined;
     publishPhotoResult(jobId, outcome, sheet);
+    // Guidance generation queues off the settled sheet — async, so
+    // marking is never blocked waiting for an animation.
+    if (sheet) enqueueGuidanceForSheet(sheet.printedCode, sheet.perQuestion);
     updatePhotoProgress(jobId, index, { state: "settled" });
   };
 
