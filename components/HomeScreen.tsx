@@ -227,7 +227,7 @@ export default function HomeScreen({
             <p className="px-[15px] pb-[14px] text-[13.5px] text-mid">No homework assigned yet.</p>
           )}
           {homeworkRows.some((g) => !g.done) && (
-            <div className="px-[15px] pb-[13px] pt-[2px]">
+            <div className="flex justify-end px-[17px] pb-[13px] pt-[2px]">
               <button
                 type="button"
                 onClick={onScan}
