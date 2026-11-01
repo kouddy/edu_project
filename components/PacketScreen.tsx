@@ -221,7 +221,6 @@ export default function PacketScreen({
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
       <ScreenHeader
-        kicker="Practice Sheets"
         title={`${kid.name} · ${subject} · Week ${week}`}
       />
       <div className="flex flex-col gap-3">{cards}</div>

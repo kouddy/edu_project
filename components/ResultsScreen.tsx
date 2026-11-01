@@ -107,7 +107,6 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
       <ScreenHeader
-        kicker="Practice Sheets"
         title="Results"
         sub={`${kid.name} · ${sheetLabel(sheet)} · ${scannedText(result.gradedAt)}`}
       />
@@ -358,7 +357,7 @@ export function NotStartedScreen({
   return (
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
-      <ScreenHeader kicker="Practice Sheets" title={`${kid.name} · ${sheetLabel(sheet)}`} />
+      <ScreenHeader title={`${kid.name} · ${sheetLabel(sheet)}`} />
       <div className="rounded-[16px] border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center">
         <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
         <h3 className={`${H3} mb-1`}>Not started yet</h3>

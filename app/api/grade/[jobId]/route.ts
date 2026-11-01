@@ -21,6 +21,9 @@ export async function GET(
     status: job.status,
     step: job.step,
     photoProgress: job.photoProgress,
+    ...(!job.result && job.partialOutcomes.length > 0
+      ? { partialResult: { sheets: job.partialSheets, photoOutcomes: job.partialOutcomes } }
+      : {}),
     ...(job.result ? { result: job.result } : {}),
     ...(job.error ? { error: job.error } : {}),
   };

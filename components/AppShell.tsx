@@ -217,8 +217,16 @@ export default function AppShell() {
     }
     pollingRef.current = true;
     try {
-      const { settled, running } = await pollPendingJobs();
+      const { settled, running, progressed } = await pollPendingJobs();
       setRunningJobs(running);
+      if (progressed > 0) {
+        // Sheets filed from still-running jobs: refresh so the
+        // Homework counts move now. No account sync yet — in live
+        // mode the server persists only when the job finishes, and
+        // syncing now would pull the pre-grade account over the
+        // early filing.
+        refresh();
+      }
       if (settled.length > 0) {
         for (const batch of settled) {
           for (const key of batch.trayPhotoKeys) {
@@ -320,9 +328,6 @@ export default function AppShell() {
   if (getActiveMode() === "live" && snap.kids.length === 0) {
     return (
       <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-paper px-[18px] pb-[26px] pt-[52px]">
-        <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
-          Practice Sheets
-        </p>
         <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
           You&rsquo;re signed in
         </h1>

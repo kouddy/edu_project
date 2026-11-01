@@ -72,7 +72,6 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
       <ScreenHeader
-        kicker="Practice Sheets"
         title="Parent check"
         sub="We never guess. If we can’t read an answer, you settle it — it takes seconds."
       />

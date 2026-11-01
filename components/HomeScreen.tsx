@@ -97,13 +97,6 @@ export default function HomeScreen({
 
   return (
     <div className="px-[18px] pb-[26px] pt-[14px]">
-      <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
-        Practice Sheets
-      </p>
-      <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
-        Home
-      </h1>
-
       {/* ---- marking card ---- */}
       {marking && (
         <div className={`${CARD} px-[15px] py-[14px]`}>
@@ -194,7 +187,7 @@ export default function HomeScreen({
                 onClick={() => onSelectKid(k)}
                 className={`rounded-full border-[1.5px] px-[15px] py-2 text-[14px] font-semibold transition-colors ${
                   active
-                    ? "border-tang bg-tang text-[#fff8ec]"
+                    ? "border-tangdeep bg-filldark text-tangdeep"
                     : "border-line bg-card text-mid"
                 }`}
               >
@@ -231,6 +224,11 @@ export default function HomeScreen({
           {homeworkRows.length === 0 && (
             <p className="px-[15px] pb-[14px] text-[13.5px] text-mid">No homework assigned yet.</p>
           )}
+          {homeworkRows.length > 0 && !kidHasGradedSheet(snap, kid) && (
+            <p className="px-[17px] pb-[13px] pt-[2px] text-[12.5px] leading-[1.45] text-faint">
+              Finished a sheet? Tap Scan below and take its photo — we’ll mark it.
+            </p>
+          )}
         </div>
       </section>
 
@@ -242,14 +240,10 @@ export default function HomeScreen({
             <p className="text-[14.5px] font-semibold text-ink">
               ★ {streakFor(snap, kid)}-week streak
             </p>
-            <p className="text-[12.5px] text-mid">Every pack finished, week after week</p>
           </div>
           {retention && (
             <div className="flex items-center justify-between gap-2 border-t border-dashed border-linesoft px-[17px] py-[11px]">
-              <div>
-                <p className="text-[14.5px] font-semibold text-ink">Review from last month</p>
-                <p className="text-[12.5px] text-mid">Last month’s questions, asked again</p>
-              </div>
+              <p className="text-[14.5px] font-semibold text-ink">Review from last month</p>
               <span className={`${PILL} border-linesoft bg-fill text-mid`}>{retention}</span>
             </div>
           )}

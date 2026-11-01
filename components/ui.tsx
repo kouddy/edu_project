@@ -100,19 +100,14 @@ export function BackButton({ onPress }: { onPress: () => void }) {
 }
 
 export function ScreenHeader({
-  kicker,
   title,
   sub,
 }: {
-  kicker: string;
   title: string;
   sub?: string;
 }) {
   return (
     <div>
-      <p className="mb-1.5 mt-0.5 text-[12px] font-bold uppercase tracking-[0.14em] text-tangdeep">
-        {kicker}
-      </p>
       <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
         {title}
       </h1>

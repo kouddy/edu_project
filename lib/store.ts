@@ -387,6 +387,9 @@ export interface PendingGradeJob {
   jobId: string;
   photoKeys: string[];
   submittedAt: number;
+  /** Photo indices already filed from the job's partial results
+   *  while it still runs — the settle pass skips these. */
+  appliedIndices?: number[];
 }
 
 const DEMO_JOBS_KEY = "practice-sheets:jobs:demo:v1";
