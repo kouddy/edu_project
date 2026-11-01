@@ -12,10 +12,11 @@ import GuidanceAnimation from "./GuidanceAnimation";
    the text for lack of room; on its own page both earn their
    place). Generation still starts when the sheet is marked, so the
    animation is usually ready or nearly; the animation slot polls
-   and arrives when it lands. */
+   and arrives when it lands. The page itself is the surface — no
+   card wraps the lesson, so the panels the child sees are only
+   the ones carrying content: the tinted explanation and the
+   animation's own layout. */
 
-const CARD =
-  "rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const BTN_SECONDARY =
   "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const TEXT_BOX =
@@ -50,28 +51,26 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
         sub={`Question ${q.number} · ${kid.name} · ${sheetLabel(sheet)}`}
       />
 
-      <div className={CARD}>
-        <div className="text-[15.5px] font-semibold leading-snug text-ink">
-          {promptForDisplay(q.prompt, q.correctAnswer)}
-        </div>
-        <div className="mt-[3px] text-[13.5px] text-mid">
-          {g.meta?.noAnswer ? "No answer written." : `${kid.name} wrote ${g.readAnswer}`}
-        </div>
-        <div className="mt-[1px] text-[13.5px] text-mid">
-          Correct answer: <span className="font-semibold text-ink">{q.correctAnswer}</span>
-        </div>
-
-        {guidanceText && <div className={TEXT_BOX}>{guidanceText}</div>}
-
-        {/* The animation slot: text lives above it on this page, so
-            the slot carries only the waiting line and, when ready,
-            the animation itself. */}
-        <GuidanceAnimation
-          printedCode={sheet.printedCode}
-          questionNumber={q.number}
-          guidanceText={null}
-        />
+      <div className="text-[15.5px] font-semibold leading-snug text-ink">
+        {promptForDisplay(q.prompt, q.correctAnswer)}
       </div>
+      <div className="mt-[3px] text-[13.5px] text-mid">
+        {g.meta?.noAnswer ? "No answer written." : `${kid.name} wrote ${g.readAnswer}`}
+      </div>
+      <div className="mt-[1px] text-[13.5px] text-mid">
+        Correct answer: <span className="font-semibold text-ink">{q.correctAnswer}</span>
+      </div>
+
+      {guidanceText && <div className={TEXT_BOX}>{guidanceText}</div>}
+
+      {/* The animation slot: text lives above it on this page, so
+          the slot carries only the waiting line and, when ready,
+          the animation itself. */}
+      <GuidanceAnimation
+        printedCode={sheet.printedCode}
+        questionNumber={q.number}
+        guidanceText={null}
+      />
 
       {onNext && (
         <button type="button" onClick={onNext} className={`${BTN_SECONDARY} mt-3`}>

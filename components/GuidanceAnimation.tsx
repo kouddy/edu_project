@@ -94,7 +94,7 @@ export default function GuidanceAnimation({
         title="Watch how it works"
         sandbox="allow-scripts"
         srcDoc={html}
-        className="mt-[7px] h-[380px] w-full rounded-[9px] border-[1.5px] border-linesoft bg-[#fff8ec]"
+        className="mt-[10px] h-[380px] w-full rounded-[9px] bg-[#fff8ec]"
       />
     );
   }

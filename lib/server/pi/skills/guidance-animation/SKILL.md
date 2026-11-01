@@ -13,6 +13,7 @@ The contract every animation must satisfy:
 - An element with id "guidance-final" stays empty until the final step, when its text becomes exactly the correct answer you were given.
 - Every number shown must agree with the working. Running totals only ever show values the steps actually produced, and stepping past the end must be impossible.
 - The page is shown in a frame 340px wide and 380px tall: lay out with width:100% inside that box, no scrolling in either direction. Page style: background #fff8ec, text #3d2b1f, accent #e8710a, rounded friendly shapes, system fonts.
+- The frame is the panel: lay the lesson out directly on the page background — no outer card, border, or container wrapping the whole lesson. Boxes belong to the steps themselves (a number being built, a total), not to the page.
 - For SVG shapes, animate with transform ATTRIBUTES (for example transform="rotate(270 170 105)") with the centre written out. Never use CSS transforms on SVG elements — they pivot around the wrong point in browsers and hands end up detached from the clock. Keep every shape inside the viewBox at every step.
 
 How to work:
