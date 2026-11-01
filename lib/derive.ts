@@ -202,6 +202,28 @@ function historyStates(snap: Snapshot, kid: Kid): SheetState[] {
     .sort((a, b) => (b.result?.gradedAt ?? "").localeCompare(a.result?.gradedAt ?? ""));
 }
 
+/** The next sheet with a result in the same packet (same kid, subject
+ *  and week), in the order the packet lists its sheets — so Results
+ *  can move forward without a trip back to the list. Sheets without a
+ *  result are skipped; null at the end of the packet. */
+export function nextSheetWithResult(
+  snap: Snapshot,
+  current: SheetState,
+  from: "homework" | "history",
+): SheetState | null {
+  const groups =
+    from === "history" ? historyGroups(snap, current.kid) : homeworkGroups(snap, current.kid);
+  const group = groups.find(
+    (g) => g.subject === current.sheet.subject && g.week === current.sheet.week,
+  );
+  if (!group) return null;
+  const ordered = topicGroups(group.states)
+    .flatMap((t) => t.states)
+    .filter((st) => st.result);
+  const idx = ordered.findIndex((st) => st.sheet.id === current.sheet.id);
+  return idx >= 0 ? (ordered[idx + 1] ?? null) : null;
+}
+
 /** History grouped like Homework: one entry per subject + week,
  *  newest week first. */
 export function historyGroups(snap: Snapshot, kid: Kid): HomeworkGroup[] {

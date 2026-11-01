@@ -30,13 +30,16 @@ type Kind = "correct" | "wrong" | "unsure";
 
 interface ResultsProps {
   st: SheetState;
+  /** Move to the next sheet with a result in this packet, when there
+   *  is one — saves the trip back to the packet list. */
+  onNext?: () => void;
   onBack: () => void;
   onOpenCheck: () => void;
   onRemoved: () => void;
   showToast: (msg: string) => void;
 }
 
-export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
+export default function ResultsScreen({ st, onNext, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
   const { sheet, kid, key, result, score } = st;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -227,6 +230,15 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
       {score.unsure > 0 && (
         <button type="button" onClick={onOpenCheck} className={`${BTN} mt-3`}>
           Check the {score.unsure} unsure answer{score.unsure === 1 ? "" : "s"}
+        </button>
+      )}
+      {onNext && (
+        <button
+          type="button"
+          onClick={onNext}
+          className={`${score.unsure > 0 ? BTN_SECONDARY : BTN} mt-2.5`}
+        >
+          Next sheet ›
         </button>
       )}
       <button type="button" onClick={onBack} className={`${BTN_SECONDARY} mt-2.5`}>
