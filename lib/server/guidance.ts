@@ -54,7 +54,7 @@ function storeFor(live: boolean): GuidanceStore {
 export async function enqueueGuidanceQuestion(
   printedCode: string,
   questionNumber: number,
-  opts: { live: boolean; priority?: number },
+  opts: { live: boolean; priority?: number; methodText?: string },
 ): Promise<boolean> {
   const resolved = resolveQuestion(printedCode, questionNumber);
   if (!resolved) return false;
@@ -63,8 +63,19 @@ export async function enqueueGuidanceQuestion(
     questionNumber,
     resolved.entry.keyVersion,
     opts.priority ?? 0,
+    opts.methodText,
   );
   return true;
+}
+
+/** The method part of the guidance text written at grading: everything
+ *  before the "Try one like it" practice prompt. The practice question
+ *  is a different question — its numbers have no place in this
+ *  question's lesson — so only the method rides along. */
+function methodPartOf(guidance: string | undefined): string | undefined {
+  if (!guidance) return undefined;
+  const head = guidance.split(/\bTry one like it\b/i)[0].trim();
+  return head || undefined;
 }
 
 /** Enqueue guidance for every final wrong answer on a settled sheet. */
@@ -78,6 +89,7 @@ export function enqueueGuidanceForSheet(
     void enqueueGuidanceQuestion(printedCode, g.questionNumber, {
       live: opts.live,
       priority: FRESH_PRIORITY,
+      methodText: methodPartOf(g.meta?.guidance),
     }).catch((err) =>
       console.error("guidance enqueue failed:", err instanceof Error ? err.message : err),
     );
@@ -133,6 +145,7 @@ export async function processGuidanceTask(task: GuidanceTask): Promise<string> {
   const html = await generateGuidanceWithHarness({
     questionPrompt: resolved.prompt,
     correctAnswer: resolved.correctAnswer,
+    methodText: task.methodText ?? undefined,
     failureNote:
       task.attempts > 0 && task.lastError ? task.lastError : undefined,
     tag: `guidance ${task.printedCode}#${task.questionNumber}`,

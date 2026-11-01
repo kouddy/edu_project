@@ -39,6 +39,11 @@ export interface GuidanceTask {
   /** The previous attempt's failure — fed back into the next
    *  generation so it can fix exactly that. */
   lastError: string | null;
+  /** The method part of the guidance text written when the sheet
+   *  was graded, captured when the task was queued at settle: the
+   *  animation teaches this same method. Null when the task was
+   *  queued without one (lazy queueing, or grading wrote none). */
+  methodText: string | null;
   claimedBy: string;
 }
 
@@ -46,8 +51,9 @@ export interface GuidanceStore {
   /** The artefact state for one question, or null when no task exists. */
   get(printedCode: string, questionNumber: number, keyVersion: number): Promise<GuidanceView | null>;
   /** Insert-if-absent: enqueueing a question that already has a task
-   *  (in any state) changes nothing. */
-  enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number): Promise<void>;
+   *  (in any state) changes nothing — including its method text,
+   *  which is the first grading's, since the artefact is shared. */
+  enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void>;
   /** Claim up to `limit` due tasks for `workerId`. */
   claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]>;
   complete(task: GuidanceTask, html: string): Promise<void>;
@@ -77,6 +83,7 @@ interface GuidanceRow {
   attempts: number;
   claim_count: number;
   last_error: string | null;
+  method_text: string | null;
   priority: number;
   available_at: string;
   lease_until: string | null;
@@ -105,11 +112,24 @@ class DbGuidanceStore implements GuidanceStore {
     return viewOf(data.status, data.html, data.last_error);
   }
 
-  async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number): Promise<void> {
-    await this.db.from("guidance_animations").upsert(
-      { ...this.triple(printedCode, questionNumber, keyVersion), priority },
-      { onConflict: "printed_code,question_number,key_version", ignoreDuplicates: true },
-    );
+  async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void> {
+    const base = { ...this.triple(printedCode, questionNumber, keyVersion), priority };
+    const opts = { onConflict: "printed_code,question_number,key_version", ignoreDuplicates: true };
+    if (!methodText) {
+      await this.db.from("guidance_animations").upsert(base, opts);
+      return;
+    }
+    const { error } = await this.db
+      .from("guidance_animations")
+      .upsert({ ...base, method_text: methodText }, opts);
+    // Until the method_text migration is pushed, the column does not
+    // exist and the upsert names it in the error — queue without the
+    // text rather than not at all; generation then works as it did
+    // before the text was carried.
+    if (error && /method_text/.test(error.message)) {
+      console.warn("guidance enqueue: method_text column missing — queueing without the method text");
+      await this.db.from("guidance_animations").upsert(base, opts);
+    }
   }
 
   async claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]> {
@@ -129,6 +149,7 @@ class DbGuidanceStore implements GuidanceStore {
       keyVersion: r.key_version,
       attempts: r.attempts,
       lastError: r.last_error,
+      methodText: r.method_text ?? null,
       claimedBy: workerId,
     }));
   }
@@ -170,6 +191,7 @@ interface MemoryRow {
   attempts: number;
   claimCount: number;
   lastError: string | null;
+  methodText: string | null;
   priority: number;
   availableAt: number;
   leaseUntil: number | null;
@@ -189,7 +211,7 @@ export class MemoryGuidanceStore implements GuidanceStore {
     return row ? viewOf(row.status, row.html, row.lastError) : null;
   }
 
-  async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number): Promise<void> {
+  async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void> {
     const key = memoryKey(printedCode, questionNumber, keyVersion);
     if (memoryRows.has(key)) return;
     memoryRows.set(key, {
@@ -202,6 +224,7 @@ export class MemoryGuidanceStore implements GuidanceStore {
       attempts: 0,
       claimCount: 0,
       lastError: null,
+      methodText: methodText ?? null,
       priority,
       availableAt: Date.now(),
       leaseUntil: null,
@@ -240,6 +263,7 @@ export class MemoryGuidanceStore implements GuidanceStore {
         keyVersion: row.keyVersion,
         attempts: row.attempts,
         lastError: row.lastError,
+        methodText: row.methodText,
         claimedBy: workerId,
       };
     });

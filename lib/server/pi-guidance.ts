@@ -49,6 +49,10 @@ const GUIDANCE_TIMEOUT_MS = 240_000;
 export async function generateGuidanceWithHarness(args: {
   questionPrompt: string;
   correctAnswer: string;
+  /** The method part of the guidance text the child was given for
+   *  this question when it was graded — the lesson animates this
+   *  same method rather than inventing its own. */
+  methodText?: string;
   /** A previous attempt's failure, fed back so the agent fixes it. */
   failureNote?: string;
   /** Label for the diagnostic log lines. */
@@ -212,6 +216,11 @@ export async function generateGuidanceWithHarness(args: {
       // body ahead of the task — the agent works from the skill.
       `/skill:guidance-animation Question: ${args.questionPrompt}`,
       `Correct answer: ${args.correctAnswer}`,
+      ...(args.methodText
+        ? [
+            `The child was given this explanation: "${args.methodText}" Animate that same method — do not invent a different strategy.`,
+          ]
+        : []),
       ...(args.failureNote
         ? [`A previous attempt at this lesson failed verification: ${args.failureNote}. Fix exactly that.`]
         : []),
