@@ -25,6 +25,11 @@ create table public.guidance_animations (
   attempts integer not null default 0,
   claim_count integer not null default 0,
   last_error text,
+  -- The method part of the guidance text written when the sheet was
+  -- graded, captured when the task was queued: the generated
+  -- animation teaches this same method. Null for tasks queued
+  -- lazily, which generate from the question and answer alone.
+  method_text text,
   priority integer not null default 0,
   available_at timestamptz not null default now(),
   lease_until timestamptz,

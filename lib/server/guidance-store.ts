@@ -122,7 +122,7 @@ class DbGuidanceStore implements GuidanceStore {
     const { error } = await this.db
       .from("guidance_animations")
       .upsert({ ...base, method_text: methodText }, opts);
-    // Until the method_text migration is pushed, the column does not
+    // Until the guidance migration is pushed, the column does not
     // exist and the upsert names it in the error — queue without the
     // text rather than not at all; generation then works as it did
     // before the text was carried.
