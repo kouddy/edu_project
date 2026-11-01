@@ -349,6 +349,39 @@ function explain(prompt: string, answer: string): string {
   return `The correct answer is ${answer}.`;
 }
 
+const COIN_NAMES: Record<number, [string, string]> = {
+  1: ["penny", "pennies"],
+  5: ["nickel", "nickels"],
+  10: ["dime", "dimes"],
+  25: ["quarter", "quarters"],
+  100: ["loonie", "loonies"],
+  200: ["toonie", "toonies"],
+};
+
+/** A stored answer can be coin pictures — the groups that make an
+ *  amount, marked up as coins-row spans. The grader and the parent
+ *  both need words, not markup: each group becomes its coin counts
+ *  ("2 quarters; 5 dimes"). Anything else passes through unchanged. */
+function answerText(answer: string): string {
+  if (!answer.includes("coins-row")) return answer;
+  const groups = [...answer.matchAll(/<span class="coins-row">([\s\S]*?)<\/span>/g)].map(
+    (row) => {
+      const counts = new Map<number, number>();
+      for (const img of row[1].matchAll(/coin_(\d+)\.png/g)) {
+        const cents = Number(img[1]);
+        counts.set(cents, (counts.get(cents) ?? 0) + 1);
+      }
+      return [...counts.entries()]
+        .map(([cents, n]) => {
+          const names = COIN_NAMES[cents];
+          return names ? `${n} ${names[n === 1 ? 0 : 1]}` : `${n} × ${cents}¢ coins`;
+        })
+        .join(", ");
+    },
+  );
+  return groups.filter(Boolean).join("; ") || answer;
+}
+
 function keyQuestions(
   sheet: WeeklySheet,
   topics: BookFolder["topics"],
@@ -360,11 +393,12 @@ function keyQuestions(
   // of its numbered questions, so it is not part of the key.
   return sheet.questions.map((q, i) => {
     const prompt = promptText(q.body);
+    const correctAnswer = answerText(q.answer);
     return {
       number: i + 1,
       prompt,
-      correctAnswer: q.answer,
-      explanation: explain(prompt, q.answer),
+      correctAnswer,
+      explanation: explain(prompt, correctAnswer),
       topic: topicTitle(topics, grade, q.topic, sheetTopic),
       isReview,
     };
