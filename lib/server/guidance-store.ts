@@ -205,7 +205,9 @@ let memorySeq = 0;
 
 const memoryKey = (c: string, q: number, kv: number) => `${c}#${q}#${kv}`;
 
-class MemoryGuidanceStore implements GuidanceStore {
+/** Exported for the out-of-repo test suites, which construct
+ *  isolated stores per check; the app itself uses the factory below. */
+export class MemoryGuidanceStore implements GuidanceStore {
   async get(printedCode: string, questionNumber: number, keyVersion: number): Promise<GuidanceView | null> {
     const row = memoryRows.get(memoryKey(printedCode, questionNumber, keyVersion));
     return row ? viewOf(row.status, row.html, row.lastError) : null;
