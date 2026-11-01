@@ -30,6 +30,9 @@ type Kind = "correct" | "wrong" | "unsure";
 
 interface ResultsProps {
   st: SheetState;
+  /** This sheet's part within its topic section ("Part 1",
+   *  "Practice C"), or null for a lone sheet. */
+  partLabel: string | null;
   /** Move to the next sheet with a result in this packet, when there
    *  is one — saves the trip back to the packet list. */
   onNext?: () => void;
@@ -39,7 +42,7 @@ interface ResultsProps {
   showToast: (msg: string) => void;
 }
 
-export default function ResultsScreen({ st, onNext, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
+export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
   const { sheet, kid, key, result, score } = st;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -109,8 +112,8 @@ export default function ResultsScreen({ st, onNext, onBack, onOpenCheck, onRemov
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <BackButton onPress={onBack} />
       <ScreenHeader
-        title="Results"
-        sub={`${kid.name} · ${sheetLabel(sheet)} · ${scannedText(result.gradedAt)}`}
+        title={`${kid.name} · ${sheetLabel(sheet)}`}
+        sub={`${sheet.topic}${partLabel ? ` · ${partLabel}` : ""} · ${scannedText(result.gradedAt)}`}
       />
 
       {score.unsure > 0 && (
