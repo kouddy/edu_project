@@ -224,6 +224,11 @@ export default function HomeScreen({
           {homeworkRows.length === 0 && (
             <p className="px-[15px] pb-[14px] text-[13.5px] text-mid">No homework assigned yet.</p>
           )}
+          {homeworkRows.length > 0 && !kidHasGradedSheet(snap, kid) && (
+            <p className="px-[17px] pb-[13px] pt-[2px] text-[12.5px] leading-[1.45] text-faint">
+              Finished a sheet? Tap Scan below and take its photo — we’ll mark it.
+            </p>
+          )}
         </div>
       </section>
 
