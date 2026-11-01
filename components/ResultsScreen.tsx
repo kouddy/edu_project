@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { deletePhoto, deleteSheetRecords, getActiveMode, getPhoto } from "@/lib/store";
 import {
   promptForDisplay,
-  scannedText,
   sheetLabel,
   summaryText,
   type SheetState,
@@ -113,7 +112,7 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
       <BackButton onPress={onBack} />
       <ScreenHeader
         title={`${kid.name} · ${sheetLabel(sheet)}`}
-        sub={`${sheet.topic}${partLabel ? ` · ${partLabel}` : ""} · ${scannedText(result.gradedAt)}`}
+        sub={`${sheet.topic}${partLabel ? ` · ${partLabel}` : ""}`}
       />
 
       {score.unsure > 0 && (
