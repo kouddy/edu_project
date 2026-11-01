@@ -35,6 +35,8 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
   const mountedRef = useRef(true);
   const [camState, setCamState] = useState<"starting" | "on" | "unavailable">("starting");
   const [preview, setPreview] = useState<number | null>(null);
+  const [blink, setBlink] = useState(false);
+  const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startCamera = useCallback(async () => {
     const md = navigator.mediaDevices;
@@ -93,12 +95,19 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
       mountedRef.current = false;
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
+      if (blinkTimer.current) clearTimeout(blinkTimer.current);
     };
   }, [startCamera]);
 
   const capture = () => {
     const video = videoRef.current;
     if (!video || camState !== "on") return;
+    // The shutter blink: a beat of black over the viewfinder, the
+    // feedback camera apps give that a photo was actually taken —
+    // without it the only sign is a thumbnail appearing in the tray.
+    setBlink(true);
+    if (blinkTimer.current) clearTimeout(blinkTimer.current);
+    blinkTimer.current = setTimeout(() => setBlink(false), 170);
     const canvas = document.createElement("canvas");
     canvas.width = video.videoWidth || 1080;
     canvas.height = video.videoHeight || 1440;
@@ -164,6 +173,9 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
         </div>
       )}
 
+      {/* shutter blink: sits over the viewfinder, under the chrome */}
+      {blink && <div className="pointer-events-none absolute inset-0 z-[5] bg-black" aria-hidden="true" />}
+
       {/* frame corners */}
       <span className="absolute left-4 top-16 h-[30px] w-[30px] rounded-tl-[8px] border-l-[3px] border-t-[3px] border-tangdeep opacity-85" />
       <span className="absolute right-4 top-16 h-[30px] w-[30px] rounded-tr-[8px] border-r-[3px] border-t-[3px] border-tangdeep opacity-85" />
@@ -224,7 +236,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
             onClick={capture}
             disabled={camState !== "on"}
             aria-label="Take photo"
-            className="flex h-[72px] w-[72px] items-center justify-center justify-self-center rounded-full border-2 border-white/90 bg-[rgba(255,253,247,0.96)] shadow-[0_4px_14px_rgba(0,0,0,0.38)] disabled:opacity-40"
+            className="flex h-[72px] w-[72px] items-center justify-center justify-self-center rounded-full border-2 border-white/90 bg-[rgba(255,253,247,0.96)] shadow-[0_4px_14px_rgba(0,0,0,0.38)] transition-transform duration-100 active:scale-95 disabled:opacity-40"
           >
             <span className="h-[58px] w-[58px] rounded-full bg-tang shadow-[inset_0_0_0_3px_rgba(255,248,236,0.45)]" />
           </button>
