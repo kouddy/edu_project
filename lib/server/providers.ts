@@ -53,10 +53,11 @@ export interface GradingProvider {
 
 function piProvider(id: string): GradingProvider {
   const config = loadPiConfig();
-  const def = providerDef(config, id);
   return {
     id,
-    model: def?.models[0]?.id ?? "",
+    // The model the trace reports is the one runs actually use —
+    // the env override when set, else the manifest's model.
+    model: process.env.GRADING_MODEL ?? effectiveModel(config, "math", id),
     async runPhoto({ photo, tag, kidContext, onStep, onIdentified, shouldStopAfterIdentify }) {
       const apiKey = resolveProviderApiKey(config, id);
       const { gradePhotoWithPiHarness } = await import("./pi-harness");
@@ -65,7 +66,12 @@ function piProvider(id: string): GradingProvider {
         tag,
         kidContext,
         providerId: id,
-        modelId: effectiveModel(config, "math", id),
+        // GRADING_MODEL overrides the manifest's model, so the
+        // grading model can be switched from .env like the provider,
+        // without editing subjects.json. An id the provider doesn't
+        // define fails at the harness's getModel check, naming the
+        // bad value.
+        modelId: process.env.GRADING_MODEL ?? effectiveModel(config, "math", id),
         apiKey,
         onStep,
         onIdentified,

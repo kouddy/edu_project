@@ -398,14 +398,6 @@ export function shortDate(iso: string): string {
   return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }
 
-export function scannedText(iso: string | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const now = new Date();
-  const sameDay = d.toDateString() === now.toDateString();
-  return sameDay ? "scanned today" : `scanned ${shortDate(iso)}`;
-}
-
 /** One-line summary for a Results screen, in the prototype's voice. */
 export function summaryText(st: SheetState): string {
   if (!st.score || !st.key || !st.result) return "";

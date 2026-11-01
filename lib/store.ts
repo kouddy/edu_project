@@ -29,7 +29,7 @@ export interface Parent {
 
 /** One subject track a kid is enrolled in, with its own current week:
  *  a kid can take several subjects, each advancing on its own week. */
-export interface KidEnrollment {
+interface KidEnrollment {
   subject: string;
   currentWeek: number;
 }

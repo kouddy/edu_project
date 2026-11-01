@@ -15,7 +15,7 @@
 import type { AnswerKeyQuestion } from "../store";
 import { BOOK_REGISTRY } from "./book-catalogue";
 
-export type AgentId = "math" | "english";
+export type AgentId = "math" | "english" | "guidance";
 
 export interface RegistryEntry {
   printedCode: string;

@@ -36,12 +36,14 @@ interface ResultsProps {
    *  is one — saves the trip back to the packet list. */
   onNext?: () => void;
   onBack: () => void;
+  /** Open the help page for one wrong question. */
+  onOpenHelp: (questionNumber: number) => void;
   onOpenCheck: () => void;
   onRemoved: () => void;
   showToast: (msg: string) => void;
 }
 
-export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenCheck, onRemoved, showToast }: ResultsProps) {
+export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHelp, onOpenCheck, onRemoved, showToast }: ResultsProps) {
   const { sheet, kid, key, result, score } = st;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [photoOpen, setPhotoOpen] = useState(false);
@@ -174,7 +176,6 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
             g.verdict === "unsure"
               ? st.resolutions.find((r) => r.questionNumber === q.number)
               : undefined;
-          const guidance = g.meta?.guidance ?? q.explanation;
           // Row layout: the question line is the display prompt alone
           // (choice questions show their stem, not the printed
           // options); the correct answer gets its own line under what
@@ -182,36 +183,28 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
           return (
             <div
               key={q.number}
-              className="flex items-start gap-[11px] border-b border-dashed border-linesoft px-0.5 py-[11px] last:border-b-0"
+              className="border-b border-dashed border-linesoft px-0.5 py-[11px] last:border-b-0"
             >
-              <span className="w-[26px] shrink-0 pt-[3px] text-[12px] font-bold text-faint">
-                Q{q.number}
-              </span>
-              <Badge kind={kind} />
-              <div className="min-w-0 flex-1">
-                <div className="text-[14.5px] font-semibold leading-snug text-ink">
-                  {promptForDisplay(q.prompt, q.correctAnswer)}
-                </div>
-                <div className="mt-[1px] text-[13px] text-mid">
-                  {kind === "unsure"
-                    ? "We couldn't read this one for sure — needs your check."
-                    : g.meta?.noAnswer
-                      ? "No answer written."
-                      : `${kid.name} wrote ${g.readAnswer}`}
-                </div>
-                <div className="mt-[1px] text-[13px] text-mid">
-                  Correct answer:{" "}
-                  <span className="font-semibold text-ink">{q.correctAnswer}</span>
-                </div>
-                {/* The generic explanation only restates the correct
-                    answer, which already has its own line above — the
-                    box is for guidance that adds something beyond it. */}
-                {g.verdict === "wrong" &&
-                  guidance !== `The correct answer is ${q.correctAnswer}.` && (
-                    <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                      {guidance}
-                    </div>
-                  )}
+              <div className="flex items-start gap-[11px]">
+                <span className="w-[26px] shrink-0 pt-[3px] text-[12px] font-bold text-faint">
+                  Q{q.number}
+                </span>
+                <Badge kind={kind} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[14.5px] font-semibold leading-snug text-ink">
+                    {promptForDisplay(q.prompt, q.correctAnswer)}
+                  </div>
+                  <div className="mt-[1px] text-[13px] text-mid">
+                    {kind === "unsure"
+                      ? "We couldn't read this one for sure — needs your check."
+                      : g.meta?.noAnswer
+                        ? "No answer written."
+                        : `${kid.name} wrote ${g.readAnswer}`}
+                  </div>
+                  <div className="mt-[1px] text-[13px] text-mid">
+                    Correct answer:{" "}
+                    <span className="font-semibold text-ink">{q.correctAnswer}</span>
+                  </div>
                 {resolution?.resolution === "wrong" && (
                   <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
                     You marked this wrong. Recorded in {kid.name}&rsquo;s progress.
@@ -222,6 +215,24 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenChe
                     You confirmed {kid.name}&rsquo;s answer was correct.
                   </div>
                 )}
+                {/* A wrong answer's teaching lives on its own help
+                    page — the explanation and the animated lesson
+                    together — so the row carries just this one
+                    action: a small pill inside the question's own
+                    column, sized to its label, so it reads as part
+                    of this question rather than a bar to somewhere
+                    else. */}
+                {g.verdict === "wrong" && (
+                  <button
+                    type="button"
+                    onClick={() => onOpenHelp(q.number)}
+                    className="mt-[9px] inline-flex items-center gap-[5px] rounded-full bg-fill px-[13px] py-[6px] text-[13.5px] font-bold text-tangdeep"
+                  >
+                    <span>Help me</span>
+                    <span aria-hidden>›</span>
+                  </button>
+                )}
+                </div>
               </div>
             </div>
           );
@@ -278,7 +289,7 @@ function Badge({ kind }: { kind: Kind }) {
   const mark = kind === "correct" ? "✓" : kind === "wrong" ? "✗" : "?";
   return (
     <span
-      className={`inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[13px] font-extrabold ${cls}`}
+      className={`-ml-[5px] inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-[1.5px] text-[11px] font-extrabold ${cls}`}
     >
       {mark}
     </span>

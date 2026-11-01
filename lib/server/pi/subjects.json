@@ -1,18 +1,33 @@
 {
+    "grading": {
+        "confidenceThreshold": 0.8
+    },
     "subjects": {
         "english": {
             "contextFiles": [],
             "displaySubjects": [
                 "English"
             ],
-            "maxSteps": 32,
+            "maxRetries": 1,
             "model": "muse-spark-1.3-contributor",
             "plannedProvider": "meta",
             "promptFiles": {},
             "provider": "meta",
             "schemaVersion": "B1",
             "status": "planned",
-            "tokenBudget": 90000
+            "thinkingLevel": "low"
+        },
+        "guidance": {
+            "contextFiles": [],
+            "displaySubjects": [],
+            "maxRetries": 1,
+            "model": "muse-spark-1.3-contributor",
+            "plannedProvider": "meta",
+            "promptFiles": {},
+            "provider": "meta",
+            "schemaVersion": "A1",
+            "status": "active",
+            "thinkingLevel": "medium"
         },
         "math": {
             "contextFiles": [
@@ -22,7 +37,7 @@
                 "Math",
                 "Word Problems"
             ],
-            "maxSteps": 24,
+            "maxRetries": 1,
             "model": "muse-spark-1.3-contributor",
             "plannedProvider": "meta",
             "promptFiles": {
@@ -34,7 +49,7 @@
             "provider": "meta",
             "schemaVersion": "A1",
             "status": "active",
-            "tokenBudget": 60000
+            "thinkingLevel": "low"
         }
     }
 }
