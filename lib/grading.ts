@@ -52,13 +52,16 @@ function blobToDataUrl(blob: Blob): Promise<string> {
 }
 
 async function photosPayload(photoKeys: string[]): Promise<string[] | null> {
-  const photos: string[] = [];
-  for (const key of photoKeys) {
-    const blob = await getPhoto(key);
-    if (!blob) return null;
-    photos.push(await blobToDataUrl(blob));
-  }
-  return photos;
+  // Read and encode the batch in parallel: one at a time, a tray of
+  // full-size photos keeps the Grade tap waiting seconds before the
+  // send even starts.
+  const photos = await Promise.all(
+    photoKeys.map(async (key) => {
+      const blob = await getPhoto(key);
+      return blob ? blobToDataUrl(blob) : null;
+    }),
+  );
+  return photos.some((p) => p === null) ? null : (photos as string[]);
 }
 
 function kidContextPayload() {

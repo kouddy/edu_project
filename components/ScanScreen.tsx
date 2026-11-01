@@ -13,6 +13,9 @@ interface Props {
   onAddBlobs: (blobs: Blob[]) => void;
   onRemoveAt: (index: number) => void;
   onGrade: () => void;
+  /** True while a Grade tap's send is in flight — the button shows
+   *  it and won't take another tap. */
+  grading: boolean;
   onExit: () => void;
 }
 
@@ -39,7 +42,7 @@ function clampView(z: number, cx: number, cy: number): { z: number; cx: number; 
   return { z: zz, cx: clampC(cx), cy: clampC(cy) };
 }
 
-export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, onExit }: Props) {
+export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, grading, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -483,8 +486,20 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
                 </div>
               ))}
             </div>
-            <button type="button" onClick={onGrade} className={BTN}>
-              Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
+            <button type="button" onClick={onGrade} disabled={grading} className={BTN}>
+              {grading ? (
+                <>
+                  <span
+                    className="mr-2 inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white align-[-3px]"
+                    aria-hidden="true"
+                  />
+                  Sending…
+                </>
+              ) : (
+                <>
+                  Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
+                </>
+              )}
             </button>
           </div>
         )}
