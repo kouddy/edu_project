@@ -56,6 +56,7 @@ export default function AppShell() {
     topics: ReadonlySet<string>;
   } | null>(null);
   const [staged, setStaged] = useState<StagedPhoto[]>([]);
+  const [dispatching, setDispatching] = useState(false);
   const [runningJobs, setRunningJobs] = useState<GradeJobStatus[]>([]);
   const [settledLines, setSettledLines] = useState<string[] | null>(null);
   const [toast, setToast] = useState<{ id: number; msg: string } | null>(null);
@@ -263,19 +264,34 @@ export default function AppShell() {
   }, [pollOnce]);
 
   const handleGrade = useCallback(async () => {
+    if (dispatching) return;
     const keys = staged.map((p) => p.key);
     if (keys.length === 0) return;
-    const outcome = await dispatchGrading(keys);
-    if (outcome.failedReason) {
-      // Couldn't even start — keep the staged photos so the parent can retry.
-      showToast(outcome.failedReason);
-      return;
+    // The send (reading the photos back, encoding them, one big
+    // POST) can take seconds at full photo size. Show it from the
+    // tap itself — a still tray and a silent button read as a dead
+    // button, and a second tap would dispatch the batch twice.
+    setDispatching(true);
+    try {
+      const outcome = await dispatchGrading(keys);
+      if (outcome.failedReason) {
+        // Couldn't even start — keep the staged photos so the parent can retry.
+        showToast(outcome.failedReason);
+        return;
+      }
+      // Clear exactly the photos that were sent; anything staged
+      // while the send was in flight stays in the tray.
+      const sent = new Set(keys);
+      setStaged((prev) => {
+        for (const p of prev) if (sent.has(p.key)) URL.revokeObjectURL(p.url);
+        return prev.filter((p) => !sent.has(p.key));
+      });
+      goHome();
+      void pollOnce();
+    } finally {
+      setDispatching(false);
     }
-    staged.forEach((p) => URL.revokeObjectURL(p.url));
-    setStaged([]);
-    goHome();
-    void pollOnce();
-  }, [staged, showToast, goHome, pollOnce]);
+  }, [staged, showToast, goHome, pollOnce, dispatching]);
 
   /* ------------------------------------------------------------ checks */
 
@@ -514,6 +530,7 @@ export default function AppShell() {
               onAddBlobs={addBlobs}
               onRemoveAt={removeStagedAt}
               onGrade={handleGrade}
+              grading={dispatching}
               onExit={() => goHome()}
             />
           </div>
