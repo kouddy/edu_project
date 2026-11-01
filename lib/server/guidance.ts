@@ -10,8 +10,9 @@
  * owns the parts that need the registry: resolving a question,
  * choosing the backend for the caller's mode, gating artefact reads
  * by account ownership in live mode, and the processing unit itself
- * — harness session, then the deterministic gate
- * (lib/server/guidance-verify.ts) — which the worker runs.
+ * — harness session, then the deterministic gate (the
+ * guidance-animation skill's scripts/guidance-verify.ts) — which
+ * the worker runs.
  *
  * Unsure answers never enqueue: guidance built on a misread number
  * would teach the wrong lesson. Enqueueing is fire-and-forget —
@@ -26,7 +27,7 @@ import {
   type GuidanceTask,
   type GuidanceView,
 } from "./guidance-store";
-import { verifyAnimation } from "./guidance-verify";
+import { verifyAnimation } from "./pi/skills/guidance-animation/scripts/guidance-verify";
 import { findByPrintedCode, type RegistryEntry } from "./registry";
 import { supabaseForToken } from "./supabase";
 

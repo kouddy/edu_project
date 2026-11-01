@@ -2,12 +2,15 @@
  * lib/server/pi-guidance.ts — the guidance-animation agent.
  *
  * A sibling of the grading harness (lib/server/pi-harness.ts): one
- * ephemeral Pi session per question, built the same way — system
- * prompt from the configured prompt files, built-in tools suppressed,
- * only our schema-typed tools. Where the grading agent looks at a
+ * ephemeral Pi session per question, built the same way — built-in
+ * tools suppressed, only our schema-typed tools. The animation
+ * contract reaches the agent as the guidance-animation skill
+ * (lib/server/pi/skills/guidance-animation/): the loader registers
+ * it, and the task invokes it, so the harness expands the skill
+ * body into the session. Where the grading agent looks at a
  * photo and submits verdicts, this agent writes an animated lesson
  * and reviews its own draft before submitting: render_preview runs
- * the draft (lib/server/guidance-verify.ts) and hands back what a
+ * the draft (the skill's scripts/guidance-verify.ts) and hands back what a
  * child stepping through it would see — the per-step text trace, the
  * end state, any script errors or shapes outside the picture — so
  * the agent can fix what code review alone cannot catch, like a hand
@@ -21,20 +24,24 @@ import {
   createAgentSession,
   createExtensionRuntime,
   defineTool,
+  loadSkillsFromDir,
   SessionManager,
   SettingsManager,
   type ResourceLoader,
 } from "@earendil-works/pi-coding-agent";
+import path from "node:path";
 import { Type } from "typebox";
-import { inspectAnimation, verifyAnimation } from "./guidance-verify";
 import {
   effectiveModel,
   loadPiConfig,
-  loadPrompt,
   providerKeyAvailable,
   resolveProviderApiKey,
   subjectManifest,
 } from "./pi-config";
+import {
+  inspectAnimation,
+  verifyAnimation,
+} from "./pi/skills/guidance-animation/scripts/guidance-verify";
 import { createModelRuntime } from "./pi-harness";
 
 const GUIDANCE_TIMEOUT_MS = 240_000;
@@ -51,6 +58,17 @@ export async function generateGuidanceWithHarness(args: {
   const manifest = subjectManifest(config, "guidance");
   const providerId =
     process.env.GUIDANCE_PROVIDER ?? manifest.provider ?? config.settings.defaultProvider;
+  // The session's contract is the guidance-animation skill. Fail the
+  // task loudly when it is missing rather than sending the agent in
+  // without it — an unexpanded /skill: invocation passes through as
+  // plain text and the quality loss would be silent.
+  const { skills } = loadSkillsFromDir({
+    dir: path.join(config.configDir, "skills"),
+    source: "practice-sheets",
+  });
+  if (!skills.some((s) => s.name === "guidance-animation")) {
+    throw new Error("The guidance-animation skill is missing from lib/server/pi/skills.");
+  }
   if (!providerKeyAvailable(config, providerId)) {
     throw new Error(
       `Guidance provider "${providerId}" is not available — its API key is not set on the server.`,
@@ -125,14 +143,12 @@ export async function generateGuidanceWithHarness(args: {
     },
   });
 
-  const systemPrompt = [
-    "You are the guidance agent of a children's practice-sheet service. You make one animated lesson for one question a child got wrong, reviewing your own draft with render_preview before you submit it.",
-    loadPrompt(config, "guidance", "guidance"),
-  ].join("\n\n");
+  const systemPrompt =
+    "You are the guidance agent of a children's practice-sheet service. You make one animated lesson for one question a child got wrong, reviewing your own draft with render_preview before you submit it. The task arrives with the guidance-animation skill, which carries the contract your lesson must satisfy.";
 
   const resourceLoader: ResourceLoader = {
     getExtensions: () => ({ extensions: [], errors: [], runtime: createExtensionRuntime() }),
-    getSkills: () => ({ skills: [], diagnostics: [] }),
+    getSkills: () => ({ skills, diagnostics: [] }),
     getPrompts: () => ({ prompts: [], diagnostics: [] }),
     getThemes: () => ({ themes: [], diagnostics: [] }),
     getAgentsFiles: () => ({ agentsFiles: [] }),
@@ -183,7 +199,9 @@ export async function generateGuidanceWithHarness(args: {
 
   try {
     const task = [
-      `Question: ${args.questionPrompt}`,
+      // The /skill: invocation makes the harness inline the skill
+      // body ahead of the task — the agent works from the skill.
+      `/skill:guidance-animation Question: ${args.questionPrompt}`,
       `Correct answer: ${args.correctAnswer}`,
       ...(args.failureNote
         ? [`A previous attempt at this lesson failed verification: ${args.failureNote}. Fix exactly that.`]
