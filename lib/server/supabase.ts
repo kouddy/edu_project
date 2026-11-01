@@ -35,6 +35,22 @@ export function supabaseForToken(token: string): SupabaseClient | null {
   });
 }
 
+/**
+ * A service-role client, for operator actions only — advancing a
+ * kid's week, which no parent may do for their own family. This is
+ * the one deliberate exception to the rule above: parent data access
+ * never uses it, and it exists only when SUPABASE_SERVICE_ROLE_KEY
+ * is set on the server.
+ */
+export function supabaseAdmin(): SupabaseClient | null {
+  const url = supabaseUrl();
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export interface AuthedParent {
   id: string;
   email: string;

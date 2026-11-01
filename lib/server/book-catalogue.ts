@@ -31,7 +31,7 @@ const BOOK_KEY_VERSION = 1;
 /** The finals packet is a track's last week: the weekly packets run
  *  1–40, so the finals sit at week 41, where an enrollment's
  *  current_week can point at them like any other week. */
-const FINALS_WEEK = 41;
+export const FINALS_WEEK = 41;
 
 interface WeeklyQuestion {
   body: string;

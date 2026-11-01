@@ -173,6 +173,32 @@ kid + enrollment statements as the local step 6. Persisted rows are visible in t
 Editor (`submissions`, `grade_results`, `photo_blobs`,
 `check_resolutions`).
 
+### Advancing a kid's week
+
+A track's current week moves when the hub hands out the next packet.
+Besides updating `enrollments.current_week` in SQL, there is an
+operator endpoint for it:
+
+```
+POST /api/admin/advance-week
+{ "kidId": "<kid uuid>", "subject": "Math" }
+→ { "kidId": "…", "subject": "Math", "currentWeek": 41 }
+```
+
+```bash
+curl -X POST http://localhost:3000/api/admin/advance-week \
+  -H "x-admin-key: $ADMIN_API_KEY" \
+  -H "content-type: application/json" \
+  -d '{"kidId":"<kid uuid>","subject":"Math"}'
+```
+
+The endpoint exists only when the server has both `ADMIN_API_KEY`
+(a key you choose) and `SUPABASE_SERVICE_ROLE_KEY` (the project's
+Secret key) in its environment; without them it answers 503. It
+advances one week per call, refuses at the finals week (41), and a
+parent's sign-in can never call it — enrollments have no parent
+write policy.
+
 Day to day:
 
 - **Schema changes** go in a new file under `supabase/migrations/`,
