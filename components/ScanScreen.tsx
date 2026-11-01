@@ -44,12 +44,38 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
     }
     setCamState("starting");
     try {
-      const stream = await md.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      // Ask for the sensor's best: with no size request the browser
+      // hands over a low default stream (often 720p or less), and a
+      // whole sheet at that size reads soft. The ideals never fail a
+      // camera that cannot reach them — it just gives its closest.
+      const stream = await md.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+        },
+        audio: false,
+      });
       if (!mountedRef.current) {
         stream.getTracks().forEach((t) => t.stop());
         return;
       }
       streamRef.current = stream;
+      // Continuous autofocus where the camera offers it (Android
+      // Chrome does; iPhone Safari does not expose it): a sheet at
+      // arm's length is exactly what a one-shot focus hunt gets
+      // wrong. The capability is outside the standard types, hence
+      // the casts; any failure just leaves the default focus.
+      const track = stream.getVideoTracks()[0];
+      const caps = track?.getCapabilities?.() as
+        | (MediaTrackCapabilities & { focusMode?: string[] })
+        | undefined;
+      if (track && caps?.focusMode?.includes("continuous")) {
+        const focus = {
+          advanced: [{ focusMode: "continuous" }],
+        } as unknown as MediaTrackConstraints;
+        track.applyConstraints(focus).catch(() => {});
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
