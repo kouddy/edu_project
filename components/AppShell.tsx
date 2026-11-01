@@ -384,6 +384,7 @@ export default function AppShell() {
               onOpenGroup={(subject, week) => setScreen({ name: "packet", subject, week, from: "homework" })}
               onOpenHistoryGroup={(subject, week) => setScreen({ name: "packet", subject, week, from: "history" })}
               onOpenCheck={() => setScreen({ name: "check", from: "home" })}
+              onScan={() => setScreen({ name: "scan" })}
               scrollSection={scrollSection}
               marking={
                 runningJobs.length > 0 || settledLines
