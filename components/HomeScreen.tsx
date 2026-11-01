@@ -35,7 +35,6 @@ interface Props {
   onOpenGroup: (subject: string, week: number) => void;
   onOpenHistoryGroup: (subject: string, week: number) => void;
   onOpenCheck: () => void;
-  onScan: () => void;
   scrollSection: "homework" | "history" | null;
   marking: MarkingCardData | null;
 }
@@ -58,7 +57,6 @@ export default function HomeScreen({
   onOpenGroup,
   onOpenHistoryGroup,
   onOpenCheck,
-  onScan,
   marking,
 }: Props) {
   const status = statusSlot(snap, kid);
@@ -225,17 +223,6 @@ export default function HomeScreen({
           ))}
           {homeworkRows.length === 0 && (
             <p className="px-[15px] pb-[14px] text-[13.5px] text-mid">No homework assigned yet.</p>
-          )}
-          {homeworkRows.some((g) => !g.done) && (
-            <div className="flex justify-end px-[17px] pb-[13px] pt-[2px]">
-              <button
-                type="button"
-                onClick={onScan}
-                className="inline-block rounded-[10px] border-[1.5px] border-tangdeep bg-transparent px-4 py-2 text-[13.5px] font-bold text-tangdeep"
-              >
-                Scan sheets
-              </button>
-            </div>
           )}
         </div>
       </section>
