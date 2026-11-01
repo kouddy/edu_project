@@ -20,6 +20,8 @@ import ProfileScreen from "./ProfileScreen";
 import SignInScreen from "./SignInScreen";
 import { IconHome, IconScan, IconUser } from "./ui";
 
+const NO_OPEN_TOPICS: ReadonlySet<string> = new Set();
+
 type Screen =
   | { name: "home" }
   | { name: "signin" }
@@ -45,6 +47,14 @@ export default function AppShell() {
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [kidId, setKidId] = useState<string | null>(null);
   const [screen, setScreen] = useState<Screen>({ name: "home" });
+  // A packet's unfolded sections, kept here because opening a sheet
+  // unmounts the packet screen: returning to the packet restores them.
+  // Leaving the packet for Home clears them, so a fresh visit starts
+  // collapsed again.
+  const [packetOpen, setPacketOpen] = useState<{
+    key: string;
+    topics: ReadonlySet<string>;
+  } | null>(null);
   const [staged, setStaged] = useState<StagedPhoto[]>([]);
   const [runningJobs, setRunningJobs] = useState<GradeJobStatus[]>([]);
   const [settledLines, setSettledLines] = useState<string[] | null>(null);
@@ -400,7 +410,21 @@ export default function AppShell() {
                   (g) => g.subject === screen.subject && g.week === screen.week,
                 )?.states ?? []
               }
-              onBack={() => goHome(screen.from)}
+              openTopics={
+                packetOpen?.key === `${kid.id}|${screen.subject}|${screen.week}|${screen.from}`
+                  ? packetOpen.topics
+                  : NO_OPEN_TOPICS
+              }
+              onOpenTopicsChange={(topics) =>
+                setPacketOpen({
+                  key: `${kid.id}|${screen.subject}|${screen.week}|${screen.from}`,
+                  topics,
+                })
+              }
+              onBack={() => {
+                setPacketOpen(null);
+                goHome(screen.from);
+              }}
               onOpenSheet={(sheetId) =>
                 setScreen({
                   name: "results",

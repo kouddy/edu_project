@@ -5,7 +5,7 @@
  * and the versioned key. The client never sends keys with its photos
  * (see lib/grade-contract.ts).
  *
- * The registry is exactly the frozen book catalogues
+ * The registry is exactly the book catalogues loaded from book-data
  * (lib/server/book-catalogue.ts): every printed sheet in the books, with
  * its key. This module is imported ONLY by server code (route handlers
  * and lib/server/*) so keys stay out of the client flow. Later the

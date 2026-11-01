@@ -1,13 +1,15 @@
 /**
  * lib/server/book-catalogue.ts — registry entries for the printed books.
  *
- * The book generators freeze each grade's weekly assignment into
- * weekly_questions.json (every sheet already split, in packet order, with
- * its printed code). Copies live in lib/server/book-data/, organised by
- * region then subject (book-data/on/math/… — see its README). This
- * module discovers those folders and turns every frozen file into
- * registry entries so a photo of any real sheet grades against the
- * book's own answer key.
+ * Each grade's weekly assignment lives in lib/server/book-data/,
+ * organised by region then subject (book-data/on/math/… — see its
+ * README): a weekly file records every sheet already split, in packet
+ * order, with its printed code, holding references into a sibling pools
+ * file instead of copies. The loader resolves those references at
+ * startup against the pools file its sha256 pin names. This module
+ * discovers those folders and turns every weekly file into registry
+ * entries so a photo of any real sheet grades against the book's own
+ * answer key.
  *
  * Book entries are keyed by printed code. They are unbound — no kid is
  * attached at this layer; the client files each result under its own
@@ -18,6 +20,7 @@
  * during grading remains the real explanation for wrong answers.
  */
 
+import { createHash } from "node:crypto";
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import type { AnswerKeyQuestion } from "../store";
@@ -25,34 +28,68 @@ import type { AgentId, RegistryEntry } from "./registry";
 
 const BOOK_KEY_VERSION = 1;
 
-interface FrozenQuestion {
+interface WeeklyQuestion {
   body: string;
   answer: string;
   topic?: number;
 }
 
-interface FrozenSheet {
+interface WeeklySheet {
   code: string;
-  questions: FrozenQuestion[];
+  questions: WeeklyQuestion[];
   star?: { body: string; answer: string };
 }
 
-interface FrozenDoc {
+interface WeeklyDoc {
   curriculum: string;
   subject: string;
   grade: number;
+  version?: number;
   weeks: {
     week: number;
     topics: number[];
-    practice: { topic: number; sheets: FrozenSheet[] }[];
-    reviews: Record<string, { sheets: FrozenSheet[] }>;
+    practice: { topic: number; sheets: WeeklySheet[] }[];
+    reviews: Record<string, { sheets: WeeklySheet[] }>;
   }[];
-  finals: { sheets: FrozenSheet[] };
+  finals: { sheets: WeeklySheet[] };
 }
+
+interface WeeklyRef {
+  topic: number;
+  index: number;
+}
+
+interface WeeklySheetRefs {
+  code: string;
+  refs: (number | WeeklyRef)[];
+  star?: boolean;
+}
+
+interface WeeklyDocRefs {
+  curriculum: string;
+  subject: string;
+  grade: number;
+  version: number;
+  pools_sha256: string;
+  weeks: {
+    week: number;
+    topics: number[];
+    practice: { topic: number; sheets: WeeklySheetRefs[] }[];
+    reviews: Record<string, { sheets: WeeklySheetRefs[] }>;
+  }[];
+  finals: { sheets: WeeklySheetRefs[] };
+}
+
+type PoolsDoc = {
+  num: number;
+  title: string;
+  questions: WeeklyQuestion[];
+  star: WeeklyQuestion;
+}[];
 
 const DATA_DIR = path.join(process.cwd(), "lib", "server", "book-data");
 
-/** One region/subject folder of frozen books. */
+/** One region/subject folder of book data. */
 interface BookFolder {
   region: string;
   subject: string;
@@ -87,11 +124,20 @@ function discoverBookFolders(): BookFolder[] {
       }
       const files = names.filter((f) => /^weekly-questions-g\d+\.json$/.test(f)).sort();
       if (files.length === 0) continue;
-      let topics: BookFolder["topics"] = {};
-      try {
-        topics = JSON.parse(readFileSync(path.join(dir, "topics.json"), "utf8")) as BookFolder["topics"];
-      } catch {
-        /* A subject without a topic map falls back to "Topic N" titles. */
+      // Topic titles live in the pools files — each topic record carries
+      // its title — so no separate topic map exists to keep in sync.
+      const topics: BookFolder["topics"] = {};
+      for (const name of names) {
+        const m = /^questions-g(\d+)\.json$/.exec(name);
+        if (!m) continue;
+        try {
+          const pools = JSON.parse(readFileSync(path.join(dir, name), "utf8")) as PoolsDoc;
+          topics[m[1]] = Object.fromEntries(pools.map((t) => [String(t.num), t.title]));
+        } catch {
+          /* An unreadable pools file leaves its grade on the "Topic N"
+             fallback; the weekly file's pin check is the hard failure
+             for a broken pair. */
+        }
       }
       folders.push({ region, subject, dir, files, topics });
     }
@@ -99,8 +145,72 @@ function discoverBookFolders(): BookFolder[] {
   return folders;
 }
 
-function loadDoc(folder: BookFolder, file: string): FrozenDoc {
-  const doc = JSON.parse(readFileSync(path.join(folder.dir, file), "utf8")) as FrozenDoc;
+/** A weekly file holds references into a sibling pools file
+ *  (questions-g{grade}.json), pinned by the pools file's sha256. Resolve
+ *  them here, on the server, to the full shape the registry builder
+ *  consumes; a pin mismatch is a hard error, never a silent re-point.
+ *  Only the reference form is read — an older file fails the version
+ *  check below. */
+function materializeDoc(folder: BookFolder, file: string, raw: WeeklyDoc): WeeklyDoc {
+  if ((raw.version ?? 2) < 3) {
+    throw new Error(
+      `[book-data] ${file}: not in the reference form — re-sync the weekly file`,
+    );
+  }
+  const refsDoc = raw as unknown as WeeklyDocRefs;
+  const poolsFile = `questions-g${refsDoc.grade}.json`;
+  const poolsBytes = readFileSync(path.join(folder.dir, poolsFile));
+  const digest = createHash("sha256").update(poolsBytes).digest("hex");
+  if (digest !== refsDoc.pools_sha256) {
+    throw new Error(
+      `[book-data] ${file}: ${poolsFile} does not match the weekly file's pools pin — re-sync the pair`,
+    );
+  }
+  const pools = new Map(
+    (JSON.parse(poolsBytes.toString("utf8")) as PoolsDoc).map((t) => [t.num, t]),
+  );
+  const poolQ = (topic: number, index: number): WeeklyQuestion => {
+    const q = pools.get(topic)?.questions[index];
+    if (!q) throw new Error(`[book-data] ${file}: no pool question ${index} in topic ${topic}`);
+    return { body: q.body, answer: q.answer };
+  };
+  const refQ = (ref: WeeklyRef): WeeklyQuestion => ({ ...poolQ(ref.topic, ref.index), topic: ref.topic });
+  const reviewSheet = (s: WeeklySheetRefs): WeeklySheet => ({
+    code: s.code,
+    questions: (s.refs as WeeklyRef[]).map(refQ),
+  });
+  return {
+    curriculum: refsDoc.curriculum,
+    subject: refsDoc.subject,
+    grade: refsDoc.grade,
+    weeks: refsDoc.weeks.map((wk) => ({
+      week: wk.week,
+      topics: wk.topics,
+      practice: wk.practice.map((blk) => ({
+        topic: blk.topic,
+        sheets: blk.sheets.map((s) => {
+          const sheet: WeeklySheet = {
+            code: s.code,
+            questions: (s.refs as number[]).map((i) => poolQ(blk.topic, i)),
+          };
+          const star = pools.get(blk.topic)?.star;
+          if (s.star && star) sheet.star = { body: star.body, answer: star.answer };
+          return sheet;
+        }),
+      })),
+      reviews: Object.fromEntries(
+        Object.entries(wk.reviews).map(([kind, rv]) => [
+          kind,
+          { sheets: rv.sheets.map(reviewSheet) },
+        ]),
+      ),
+    })),
+    finals: { sheets: refsDoc.finals.sheets.map(reviewSheet) },
+  };
+}
+
+function loadDoc(folder: BookFolder, file: string): WeeklyDoc {
+  const doc = JSON.parse(readFileSync(path.join(folder.dir, file), "utf8")) as WeeklyDoc;
   if (
     doc.curriculum?.toLowerCase() !== folder.region ||
     doc.subject?.toLowerCase() !== folder.subject
@@ -110,7 +220,7 @@ function loadDoc(folder: BookFolder, file: string): FrozenDoc {
         `${doc.curriculum}/${doc.subject} — loading it as declared; keep the folder in sync.`,
     );
   }
-  return doc;
+  return materializeDoc(folder, file, doc);
 }
 
 function topicTitle(
@@ -136,12 +246,81 @@ function agentForSubject(display: string): AgentId {
   return display === "English" ? "english" : "math";
 }
 
+/** A stacked (vertical) sum prints as a table: one digit per cell,
+ *  carry/borrow marks in their own row, the rule and the writing row
+ *  empty. Flattened naively it reads as digit soup ("5 8 9 6 − 2 4 8 5"
+ *  with the borrow marks mixed in), so rebuild the expression the
+ *  table shows ("5896 − 2485") and let the generic strip carry it. */
+function stackedText(table: string): string {
+  const rows = [...table.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) =>
+    [...m[1].matchAll(/<td([^>]*)>([\s\S]*?)<\/td>/g)].map((c) => ({
+      cls: c[1],
+      text: c[2].replace(/<[^>]+>/g, "").trim(),
+    })),
+  );
+  // Long-division bracket form: the divisor sits in the sign cell and
+  // the dividend runs across the bracket and top cells.
+  for (const cells of rows) {
+    if (cells.some((c) => c.cls.includes("vs-brk"))) {
+      const divisor = cells.find((c) => c.cls.includes("vs-sign"))?.text ?? "";
+      const dividend = cells
+        .filter((c) => c.cls.includes("vs-brk") || c.cls.includes("vs-top"))
+        .map((c) => c.text)
+        .join("");
+      if (divisor && dividend) return `${dividend} ÷ ${divisor}`;
+    }
+  }
+  const kept: string[] = [];
+  for (const cells of rows) {
+    if (cells.every((c) => c.text === "")) continue; // blank / writing row
+    if (cells.some((c) => c.cls.includes("vs-line"))) continue; // the rule
+    if (cells.every((c) => c.text === "" || c.cls.includes("vs-ann"))) continue; // carry/borrow marks
+    const sign = cells.find((c) => c.cls.includes("vs-sign"))?.text ?? "";
+    const digits = cells
+      .filter((c) => !c.cls.includes("vs-sign"))
+      .map((c) => c.text)
+      .join("");
+    if (digits) kept.push(sign ? `${sign} ${digits}` : digits);
+  }
+  return kept.join(" ");
+}
+
+/** Sheets append an answer blank after a question's own blanks — a
+ *  second blank right after "= ___", or one trailing a hint or a
+ *  finished instruction sentence. That appended blank is not part of
+ *  the question, so drop it when it directly follows another blank or
+ *  a closed sentence, or follows a hint when the question already has
+ *  a blank of its own. Blanks travel through promptText as private
+ *  placeholders and become "_" only at the end. */
+function dropTrailingBlank(s: string): string {
+  // One drop can expose another appended blank ("get? ___ ___"), so
+  // repeat until the end of the text is a blank the rules keep.
+  for (;;) {
+    const m = s.match(/^(.*?)\s*(?:\uE000|\uE001)$/);
+    if (!m) return s;
+    const head = m[1].replace(/\s+$/, "");
+    if (!head) return s;
+    if (/(?:\uE000|\uE001)$/.test(head)) { s = head; continue; }
+    const last = head.slice(-1);
+    if (last === "." || last === "!" || last === "?") { s = head; continue; }
+    if (last === ")" && /(?:\uE000|\uE001)/.test(head)) { s = head; continue; }
+    if (/[0-9A-Za-z]/.test(last) && /(?:\uE000|\uE001)/.test(head)) { s = head; continue; }
+    return s;
+  }
+}
+
 /** The printed question as plain text: picture markup removed, tags
  *  stripped, whitespace collapsed. Empty for purely visual questions —
- *  the photo is the ground truth there. */
+ *  the photo is the ground truth there. A printed blank (the line the
+ *  kid writes on) reads as "_" — the value the parent is looking for —
+ *  except right before sentence punctuation, where the punctuation
+ *  already closes the sentence ("…is 3." in a true/false statement). */
 function promptText(body: string): string {
-  const noSvg = body.replace(/<svg[\s\S]*?<\/svg>/g, " ");
-  const text = noSvg
+  const stacked = body.replace(/<table class="vsub">[\s\S]*?<\/table>/g, (t) => ` ${stackedText(t)} `);
+  const noSvg = stacked.replace(/<svg[\s\S]*?<\/svg>/g, " ");
+  const collapsed = noSvg
+    .replace(/<span class="blank sm">\s*<\/span>/g, " \uE001 ")
+    .replace(/<span class="blank">\s*<\/span>/g, " \uE000 ")
     .replace(/<[^>]+>/g, " ")
     .replace(/&nbsp;/g, " ")
     .replace(/&amp;/g, "&")
@@ -151,6 +330,10 @@ function promptText(body: string): string {
     .replace(/&#39;/g, "'")
     .replace(/\s+/g, " ")
     .trim();
+  const text = dropTrailingBlank(collapsed)
+    .replace(/\s+([?.:,;!])/g, "$1")
+    .replace(/(?:\uE000|\uE001)([?.])/g, "$1")
+    .replace(/(?:\uE000|\uE001)/g, "_");
   return text.length > 180 ? `${text.slice(0, 180)}…` : text;
 }
 
@@ -162,7 +345,7 @@ function explain(prompt: string, answer: string): string {
 }
 
 function keyQuestions(
-  sheet: FrozenSheet,
+  sheet: WeeklySheet,
   topics: BookFolder["topics"],
   grade: number,
   sheetTopic: string,
@@ -206,7 +389,7 @@ function buildBookRegistry(): RegistryEntry[] {
         keyVersion: BOOK_KEY_VERSION,
       };
       const push = (
-        sheet: FrozenSheet,
+        sheet: WeeklySheet,
         week: number,
         topic: string,
         isReview: boolean,

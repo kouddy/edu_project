@@ -255,8 +255,8 @@ or fallback provider: every grade is a real model call, in every mode.
   provider is defined but its multimodal tool-calling path currently
   hangs, so it is not usable for grading.
 - Answer-key registry (`lib/server/registry.ts`): printed code → sheet +
-  versioned key. The registry is exactly the frozen book catalogues —
-  2,019 sheets, all with keys.
+  versioned key. The registry is exactly the book catalogues in
+  book-data — 2,019 sheets, all with keys.
 
 ## Repo map
 
@@ -271,7 +271,7 @@ lib/server/     jobs.ts, run-grade.ts, registry.ts, providers.ts, pi-config.ts,
                 pi-harness.ts, pi/ (models.json, subjects.json, settings.json,
                 prompts/, context/ error taxonomy), supabase.ts + account.ts
                 (token verification, account payload, grading persistence),
-                book-data/ (frozen grade 2–5 book catalogues)
+                book-data/ (grade 2–5 book catalogues)
 supabase/       local stack config, migrations (accounts schema + RLS),
                 seed.sql (staff enrollment examples)
 docs/           stage-3-design.md (grading design), stage-3.5-design.md (result lifecycle), production-plan.md, wireframe/ (design reference)
@@ -286,7 +286,7 @@ docs/           stage-3-design.md (grading design), stage-3.5-design.md (result 
   lifecycle (background marking, per-photo outcomes with retries and
   partial success, blank-answer verdicts, rescan protection —
   `docs/stage-3.5-design.md`); Stage 4 book integration (printed sheet
-  codes, the frozen grade 2–5 catalogues); demo mode; parallel grading;
+  codes, the grade 2–5 catalogues in book-data); demo mode; parallel grading;
   Phase 1 accounts — Supabase magic-link sign-in (live mode) with kids,
   results and photos persisted server-side under row-level security
   (`docs/production-plan.md`); Phase 1.5 — the hosted Supabase project

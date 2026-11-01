@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { deletePhoto, deleteSheetRecords, getActiveMode, getPhoto } from "@/lib/store";
 import {
+  promptForDisplay,
   scannedText,
   sheetLabel,
   summaryText,
@@ -136,7 +137,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
           <img
             src={photoUrls[0]}
             alt={`Your photo of ${kid.name}'s sheet`}
-            className="block h-[220px] w-full object-cover"
+            className="block h-[260px] w-full object-cover object-top"
           />
           <span
             className="absolute bottom-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/55 text-[15px] leading-none text-white"
@@ -170,6 +171,11 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
             g.verdict === "unsure"
               ? st.resolutions.find((r) => r.questionNumber === q.number)
               : undefined;
+          const guidance = g.meta?.guidance ?? q.explanation;
+          // Row layout: the question line is the display prompt alone
+          // (choice questions show their stem, not the printed
+          // options); the correct answer gets its own line under what
+          // the kid wrote.
           return (
             <div
               key={q.number}
@@ -181,7 +187,7 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
               <Badge kind={kind} />
               <div className="min-w-0 flex-1">
                 <div className="text-[14.5px] font-semibold leading-snug text-ink">
-                  {q.prompt} = {q.correctAnswer}
+                  {promptForDisplay(q.prompt, q.correctAnswer)}
                 </div>
                 <div className="mt-[1px] text-[13px] text-mid">
                   {kind === "unsure"
@@ -190,15 +196,22 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                       ? "No answer written."
                       : `${kid.name} wrote ${g.readAnswer}`}
                 </div>
-                {g.verdict === "wrong" && (
-                  <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                    {g.meta?.guidance ?? q.explanation}
-                  </div>
-                )}
+                <div className="mt-[1px] text-[13px] text-mid">
+                  Correct answer:{" "}
+                  <span className="font-semibold text-ink">{q.correctAnswer}</span>
+                </div>
+                {/* The generic explanation only restates the correct
+                    answer, which already has its own line above — the
+                    box is for guidance that adds something beyond it. */}
+                {g.verdict === "wrong" &&
+                  guidance !== `The correct answer is ${q.correctAnswer}.` && (
+                    <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
+                      {guidance}
+                    </div>
+                  )}
                 {resolution?.resolution === "wrong" && (
                   <div className="mt-[7px] rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                    You marked this wrong. Correct answer: {q.correctAnswer}. Recorded in{" "}
-                    {kid.name}&rsquo;s progress.
+                    You marked this wrong. Recorded in {kid.name}&rsquo;s progress.
                   </div>
                 )}
                 {resolution?.resolution === "correct" && (
@@ -273,7 +286,7 @@ function MockPhoto({ st, kindFor }: { st: SheetState; kindFor: (n: number) => Ki
   const first = key.questions.slice(0, 5);
   return (
     <div
-      className="mb-3 h-[220px] overflow-hidden rounded-[16px] border-[1.5px] border-linesoft bg-[#fdfcf6] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
+      className="mb-3 h-[260px] overflow-hidden rounded-[16px] border-[1.5px] border-linesoft bg-[#fdfcf6] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
       role="img"
       aria-label={`Photo of ${kid.name}'s completed ${sheetLabel(sheet)} sheet`}
     >
@@ -304,7 +317,7 @@ function MockPhoto({ st, kindFor }: { st: SheetState; kindFor: (n: number) => Ki
                 className="flex items-baseline justify-between gap-2.5 border-b border-dotted border-[#e3d3ae] py-0.5 text-[11px] leading-[1.25]"
               >
                 <span className="min-w-0 text-[#5a4632]">
-                  Q{q.number}. {q.prompt}
+                  Q{q.number}. {promptForDisplay(q.prompt, q.correctAnswer)}
                 </span>
                 <span
                   className={`whitespace-nowrap text-[11.5px] text-[#2a4a8a] ${
