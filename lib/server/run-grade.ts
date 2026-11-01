@@ -239,8 +239,13 @@ async function runBatch(
         : undefined;
     publishPhotoResult(jobId, outcome, sheet);
     // Guidance generation queues off the settled sheet — async, so
-    // marking is never blocked waiting for an animation.
-    if (sheet) enqueueGuidanceForSheet(sheet.printedCode, sheet.perQuestion);
+    // marking is never blocked waiting for an animation. Live jobs
+    // queue into the database; demo jobs into memory.
+    if (sheet) {
+      enqueueGuidanceForSheet(sheet.printedCode, sheet.perQuestion, {
+        live: Boolean(payload.accountParentId && payload.accountToken),
+      });
+    }
     updatePhotoProgress(jobId, index, { state: "settled" });
   };
 

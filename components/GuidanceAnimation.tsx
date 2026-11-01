@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/supabase-client";
 
 /* The guidance slot under a wrong answer. The text guidance shows
    immediately; a short animation is generated on the server after
@@ -34,8 +35,10 @@ export default function GuidanceAnimation({
     let polls = 0;
     const poll = async () => {
       try {
+        const token = await getAccessToken().catch(() => null);
         const res = await fetch(
           `/api/guidance/${encodeURIComponent(printedCode)}/${questionNumber}`,
+          token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
         );
         if (!live) return;
         if (!res.ok) {
@@ -53,8 +56,10 @@ export default function GuidanceAnimation({
           setPending(false);
           return;
         }
-        // generating / verifying — keep waiting, up to ~2 minutes.
-        if (++polls <= 40) timer = setTimeout(poll, 3000);
+        // generating — the task may sit in a queue behind others,
+        // so keep waiting up to ~5 minutes; anything later still
+        // lands in History for the next visit.
+        if (++polls <= 100) timer = setTimeout(poll, 3000);
         else setPending(false);
       } catch {
         if (live) setPending(false);

@@ -1,158 +1,159 @@
 /**
- * lib/server/guidance.ts — animated guidance for wrong answers,
- * generated on demand and never on the grading path.
+ * lib/server/guidance.ts — animated guidance for wrong answers:
+ * orchestration over the task stores.
  *
- * When a sheet settles with a wrong answer, a guidance job is queued
- * for that question. Generation runs as a Pi harness session
- * (lib/server/pi-guidance.ts): the agent drafts a self-contained HTML
- * animation from the question's own numbers — the registry key is
- * the ground truth — previews its draft through the verifier, fixes
- * what the preview shows, and submits only what passes the gate.
- * The gate (lib/server/guidance-verify.ts) executes the artefact in
- * jsdom and steps it to its end state: no script errors, stepping
- * terminates, the final displayed answer matches the key, shapes
- * stay inside the picture. This module re-runs that gate on whatever
- * the session submits before caching it, so nothing attaches to a
- * result on the agent's say-so alone. A question whose generation
- * fails keeps its text guidance. Verified artefacts are cached per
- * question, so each question is generated at most once per server
- * run.
+ * The lifecycle lives in the stores (lib/server/guidance-store.ts):
+ * a question's task is enqueued when a sheet settles with a wrong
+ * answer (or lazily, when its Results are opened), the worker
+ * (lib/server/guidance-worker.ts) claims and processes it, and a
+ * ready artefact is served from storage from then on. This module
+ * owns the parts that need the registry: resolving a question,
+ * choosing the backend for the caller's mode, gating artefact reads
+ * by account ownership in live mode, and the processing unit itself
+ * — harness session, then the deterministic gate
+ * (lib/server/guidance-verify.ts) — which the worker runs.
+ *
+ * Unsure answers never enqueue: guidance built on a misread number
+ * would teach the wrong lesson. Enqueueing is fire-and-forget —
+ * grading never waits on guidance.
  */
 
 import type { ApiQuestionGrade } from "../grade-contract";
+import {
+  dbGuidanceStore,
+  memoryGuidanceStore,
+  type GuidanceStore,
+  type GuidanceTask,
+  type GuidanceView,
+} from "./guidance-store";
 import { verifyAnimation } from "./guidance-verify";
-import { findByPrintedCode } from "./registry";
+import { findByPrintedCode, type RegistryEntry } from "./registry";
+import { supabaseForToken } from "./supabase";
 
-export type GuidanceStatus = "generating" | "verifying" | "ready" | "failed";
+/** Freshly-graded questions jump the queue over lazy/backfill ones. */
+const FRESH_PRIORITY = 10;
+const REGENERATE_PRIORITY = 5;
 
-export interface GuidanceRecord {
-  key: string;
-  printedCode: string;
-  questionNumber: number;
-  status: GuidanceStatus;
-  html?: string;
-  error?: string;
-  attempts: number;
-  updatedAt: number;
-}
-
-type GlobalWithGuidance = typeof globalThis & {
-  __guidance?: Map<string, GuidanceRecord>;
-};
-const records: Map<string, GuidanceRecord> = ((globalThis as GlobalWithGuidance).__guidance ??=
-  new Map());
-
-const MAX_GENERATION_ATTEMPTS = 2;
-
-export function guidanceKey(printedCode: string, questionNumber: number): string {
-  return `${printedCode}#${questionNumber}`;
-}
-
-export function getGuidance(
+function resolveQuestion(
   printedCode: string,
   questionNumber: number,
-): GuidanceRecord | null {
-  return records.get(guidanceKey(printedCode, questionNumber)) ?? null;
-}
-
-/** Queue generation for one question. No-ops when an artefact is
- *  ready or a job is already running; a failed record re-queues only
- *  when forced (an explicit regenerate request). When `html` is
- *  supplied it skips generation and goes straight to the gate —
- *  the pre-generation and testing path. */
-export function enqueueGuidance(
-  printedCode: string,
-  questionNumber: number,
-  opts?: { html?: string; force?: boolean },
-): GuidanceRecord | null {
+): { entry: RegistryEntry; correctAnswer: string; prompt: string } | null {
   const entry = findByPrintedCode(printedCode);
   const question = entry?.questions.find((q) => q.number === questionNumber);
   if (!entry || !question) return null;
-  const key = guidanceKey(printedCode, questionNumber);
-  const existing = records.get(key);
-  if (
-    existing &&
-    (existing.status === "ready" ||
-      existing.status === "generating" ||
-      existing.status === "verifying" ||
-      (existing.status === "failed" && !opts?.force))
-  ) {
-    return existing;
-  }
-  const record: GuidanceRecord = {
-    key,
-    printedCode,
-    questionNumber,
-    status: opts?.html ? "verifying" : "generating",
-    attempts: 0,
-    updatedAt: Date.now(),
-  };
-  records.set(key, record);
-  void runGuidanceJob(record, question.prompt, question.correctAnswer, opts?.html);
-  return record;
+  return { entry, correctAnswer: question.correctAnswer, prompt: question.prompt };
 }
 
-/** Queue guidance for every final wrong answer on a settled sheet.
- *  Unsure answers wait for the parent's check — guidance built on a
- *  misread number would teach the wrong lesson. Fire-and-forget: a
- *  guidance failure must never surface in grading. */
+function storeFor(live: boolean): GuidanceStore {
+  // Live work belongs in the DB; when the DB backend is unavailable
+  // (no service key on this server) the memory backend keeps the
+  // behaviour sane rather than dropping the task.
+  return live ? (dbGuidanceStore() ?? memoryGuidanceStore()) : memoryGuidanceStore();
+}
+
+export async function enqueueGuidanceQuestion(
+  printedCode: string,
+  questionNumber: number,
+  opts: { live: boolean; priority?: number },
+): Promise<boolean> {
+  const resolved = resolveQuestion(printedCode, questionNumber);
+  if (!resolved) return false;
+  await storeFor(opts.live).enqueue(
+    printedCode,
+    questionNumber,
+    resolved.entry.keyVersion,
+    opts.priority ?? 0,
+  );
+  return true;
+}
+
+/** Enqueue guidance for every final wrong answer on a settled sheet. */
 export function enqueueGuidanceForSheet(
   printedCode: string,
   perQuestion: ApiQuestionGrade[],
+  opts: { live: boolean },
 ): void {
-  try {
-    for (const g of perQuestion) {
-      if (g.verdict === "wrong") enqueueGuidance(printedCode, g.questionNumber);
-    }
-  } catch (err) {
-    console.error("guidance enqueue failed:", err instanceof Error ? err.message : err);
+  for (const g of perQuestion) {
+    if (g.verdict !== "wrong") continue;
+    void enqueueGuidanceQuestion(printedCode, g.questionNumber, {
+      live: opts.live,
+      priority: FRESH_PRIORITY,
+    }).catch((err) =>
+      console.error("guidance enqueue failed:", err instanceof Error ? err.message : err),
+    );
   }
 }
 
-async function runGuidanceJob(
-  record: GuidanceRecord,
-  prompt: string,
-  correctAnswer: string,
-  suppliedHtml?: string,
-): Promise<void> {
-  let failureNote: string | undefined;
-  try {
-    for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {
-      record.attempts = attempt;
-      let html = suppliedHtml;
-      if (!html) {
-        record.status = "generating";
-        record.updatedAt = Date.now();
-        const { generateGuidanceWithHarness } = await import("./pi-guidance");
-        html = await generateGuidanceWithHarness({
-          questionPrompt: prompt,
-          correctAnswer,
-          failureNote,
-          tag: `guidance ${record.key}`,
-        });
-      }
-      record.status = "verifying";
-      record.updatedAt = Date.now();
-      const verdict = await verifyAnimation(html, correctAnswer);
-      if (verdict.ok) {
-        record.html = html;
-        record.status = "ready";
-        record.error = undefined;
-        record.updatedAt = Date.now();
-        console.log(`[guidance] ${record.key} ready (attempt ${attempt})`);
-        return;
-      }
-      failureNote = verdict.detail;
-      console.log(`[guidance] ${record.key} verification failed (attempt ${attempt}): ${verdict.detail}`);
-      if (suppliedHtml) break; // a supplied artefact gets one verdict, no regeneration
-    }
-    record.status = "failed";
-    record.error = failureNote ?? "Guidance generation failed.";
-    record.updatedAt = Date.now();
-  } catch (err) {
-    record.status = "failed";
-    record.error = err instanceof Error ? err.message : "Guidance generation failed.";
-    record.updatedAt = Date.now();
-    console.error(`[guidance] ${record.key} failed:`, record.error);
+export type GuidanceRead =
+  | { kind: "ok"; view: GuidanceView }
+  | { kind: "unknown" }
+  | { kind: "forbidden" };
+
+/** Read one question's guidance state, enqueueing lazily when no
+ *  task exists yet (sheets graded before guidance existed). In live
+ *  mode the artefact itself is returned only when the caller's
+ *  account has a submission for the sheet — the animation contains
+ *  the correct answer. */
+export async function readGuidance(
+  printedCode: string,
+  questionNumber: number,
+  auth: { token: string } | null,
+): Promise<GuidanceRead> {
+  const resolved = resolveQuestion(printedCode, questionNumber);
+  if (!resolved) return { kind: "unknown" };
+  const store = storeFor(auth !== null);
+  let view = await store.get(printedCode, questionNumber, resolved.entry.keyVersion);
+  if (!view) {
+    await store.enqueue(printedCode, questionNumber, resolved.entry.keyVersion, 0);
+    view = { status: "generating" };
   }
+  if (auth && view.status === "ready") {
+    const db = supabaseForToken(auth.token);
+    const { data } = db
+      ? await db.from("submissions").select("id").eq("sheet_code", printedCode).limit(1)
+      : { data: null };
+    if (!data || data.length === 0) return { kind: "forbidden" };
+  }
+  return { kind: "ok", view };
+}
+
+/** Explicit regeneration: a terminally failed task returns to
+ *  pending with its attempts reset. Ready and in-flight tasks are
+ *  untouched — a generated question is not generated again. */
+export async function regenerateGuidance(
+  printedCode: string,
+  questionNumber: number,
+  auth: { token: string } | null,
+): Promise<boolean> {
+  const resolved = resolveQuestion(printedCode, questionNumber);
+  if (!resolved) return false;
+  const store = storeFor(auth !== null);
+  await store.resetFailed(printedCode, questionNumber, resolved.entry.keyVersion);
+  await store.enqueue(printedCode, questionNumber, resolved.entry.keyVersion, REGENERATE_PRIORITY);
+  return true;
+}
+
+/* ------------------------------------------------------- processing */
+
+/** The worker's unit of work: generate one question's animation
+ *  through the harness, then run the gate on what the session
+ *  submitted — nothing is stored on the agent's say-so alone.
+ *  Resolves with the verified HTML; throws with the reason. */
+export async function processGuidanceTask(task: GuidanceTask): Promise<string> {
+  const resolved = resolveQuestion(task.printedCode, task.questionNumber);
+  if (!resolved) throw new Error("The question is no longer in the registry.");
+  if (resolved.entry.keyVersion !== task.keyVersion) {
+    throw new Error("The answer key changed since this task was queued.");
+  }
+  const { generateGuidanceWithHarness } = await import("./pi-guidance");
+  const html = await generateGuidanceWithHarness({
+    questionPrompt: resolved.prompt,
+    correctAnswer: resolved.correctAnswer,
+    failureNote:
+      task.attempts > 0 && task.lastError ? task.lastError : undefined,
+    tag: `guidance ${task.printedCode}#${task.questionNumber}`,
+  });
+  const verdict = await verifyAnimation(html, resolved.correctAnswer);
+  if (!verdict.ok) throw new Error(verdict.detail);
+  return html;
 }
