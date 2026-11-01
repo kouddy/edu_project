@@ -28,6 +28,11 @@ import type { AgentId, RegistryEntry } from "./registry";
 
 const BOOK_KEY_VERSION = 1;
 
+/** The finals packet is a track's last week: the weekly packets run
+ *  1–40, so the finals sit at week 41, where an enrollment's
+ *  current_week can point at them like any other week. */
+const FINALS_WEEK = 41;
+
 interface WeeklyQuestion {
   body: string;
   answer: string;
@@ -416,7 +421,7 @@ function buildBookRegistry(): RegistryEntry[] {
         }
       }
       for (const sheet of doc.finals.sheets) {
-        push(sheet, 0, "Finals Spot-Check", true, "Finals");
+        push(sheet, FINALS_WEEK, "Finals Spot-Check", true, "Finals");
       }
     }
   }

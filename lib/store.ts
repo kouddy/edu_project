@@ -27,19 +27,26 @@ export interface Parent {
   name: string;
 }
 
+/** One subject track a kid is enrolled in, with its own current week:
+ *  a kid can take several subjects, each advancing on its own week. */
+export interface KidEnrollment {
+  subject: string;
+  currentWeek: number;
+}
+
 export interface Kid {
   id: string;
   parentId: string;
   name: string;
   /** School grade, 1–6. */
   grade: number;
-  /** Launch subject track, e.g. "Math". */
-  subject: string;
+  enrollments: KidEnrollment[];
 }
 
-/** "Grade 4 · Math" — how a kid's track is labelled for parents. */
+/** "Grade 4 · Math" — how a kid's tracks are labelled for parents. */
 export function kidTrackLabel(kid: Kid): string {
-  return `Grade ${kid.grade} · ${kid.subject}`;
+  const subjects = kid.enrollments.map((e) => e.subject);
+  return subjects.length > 0 ? `Grade ${kid.grade} · ${subjects.join(" · ")}` : `Grade ${kid.grade}`;
 }
 
 export interface Sheet {
@@ -203,7 +210,27 @@ function readDb(): Db {
     if (!raw) return structuredClone(EMPTY_DB);
     const parsed = JSON.parse(raw) as Db;
     if (parsed.version !== 2) return structuredClone(EMPTY_DB);
-    return { ...structuredClone(EMPTY_DB), ...parsed };
+    // Kid records stored before enrollments carry a single subject and
+    // no enrollments; convert them, taking the track's week from the
+    // kid's latest sheet in the same database.
+    const kids = (parsed.kids ?? []).map((kid) => {
+      if (Array.isArray(kid.enrollments)) return kid;
+      const legacy = kid as Kid & { subject?: string };
+      if (!legacy.subject) return { ...kid, enrollments: [] };
+      const weeks = parsed.sheets
+        .filter((s) => s.kidId === kid.id && s.subject === legacy.subject)
+        .map((s) => s.week);
+      return {
+        id: kid.id,
+        parentId: kid.parentId,
+        name: kid.name,
+        grade: kid.grade,
+        enrollments: [
+          { subject: legacy.subject, currentWeek: weeks.length > 0 ? Math.max(...weeks) : 1 },
+        ],
+      };
+    });
+    return { ...structuredClone(EMPTY_DB), ...parsed, kids };
   } catch {
     return structuredClone(EMPTY_DB);
   }
@@ -238,8 +265,20 @@ const DEMO_PARENT: Parent = {
 };
 
 const DEMO_KIDS: Kid[] = [
-  { id: "kid-amy", parentId: DEMO_PARENT.id, name: "Amy", grade: 3, subject: "Math" },
-  { id: "kid-bob", parentId: DEMO_PARENT.id, name: "Bob", grade: 4, subject: "Math" },
+  {
+    id: "kid-amy",
+    parentId: DEMO_PARENT.id,
+    name: "Amy",
+    grade: 3,
+    enrollments: [{ subject: "Math", currentWeek: 40 }],
+  },
+  {
+    id: "kid-bob",
+    parentId: DEMO_PARENT.id,
+    name: "Bob",
+    grade: 4,
+    enrollments: [{ subject: "Math", currentWeek: 40 }],
+  },
 ];
 
 /** The demo account's sign-in email — a fake address for a fake account. */

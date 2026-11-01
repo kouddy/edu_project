@@ -6,11 +6,18 @@
 -- mail catcher (http://127.0.0.1:54324).
 --
 -- Enrolling a kid is a staff action done in SQL for now. After the
--- parent has signed in once, run something like:
+-- parent has signed in once, add the kid, then one enrollment per
+-- subject track (each track has its own current week; week 41 is the
+-- finals week):
 --
---   insert into public.kids (parent_id, name, grade, current_week)
---   select id, 'Amy', 3, 40 from public.parents
---   where email = 'parent@example.com';
+--   with new_kid as (
+--     insert into public.kids (parent_id, name, grade)
+--     select id, 'Amy', 3 from public.parents
+--     where email = 'parent@example.com'
+--     returning id
+--   )
+--   insert into public.enrollments (kid_id, subject, current_week)
+--   select id, 'Math', 40 from new_kid;
 --
--- The kid then appears in the parent's app on their next sign-in,
--- with the packet for their grade and current week.
+-- The kid then appears in the parent's app on their next sign-in, with
+-- a packet for each enrollment's grade, subject and current week.
