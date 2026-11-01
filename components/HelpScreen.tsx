@@ -63,6 +63,10 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
 
       {guidanceText && <div className={TEXT_BOX}>{guidanceText}</div>}
 
+      {/* A divider marks where the lesson starts, set apart from
+          the question and marking lines above it. */}
+      <div aria-hidden className="mt-[14px] border-t border-dashed border-linesoft" />
+
       {/* The animation slot: text lives above it on this page, so
           the slot carries only the waiting line and, when ready,
           the animation itself. */}
