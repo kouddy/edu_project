@@ -28,6 +28,17 @@ const BTN_SECONDARY =
 const CAMCLOSE =
   "flex h-[42px] w-[42px] items-center justify-center rounded-full border border-white/[0.38] bg-[rgba(20,12,6,0.58)] pb-0.5 text-[26px] leading-none text-white backdrop-blur-[6px]";
 
+const MAX_ZOOM = 3;
+
+/** Clamp a zoom region: z within 1..MAX_ZOOM, and the centre close
+ *  enough to the middle that the region never leaves the view. */
+function clampView(z: number, cx: number, cy: number): { z: number; cx: number; cy: number } {
+  const zz = Math.min(MAX_ZOOM, Math.max(1, z));
+  const half = 1 / (2 * zz);
+  const clampC = (c: number) => Math.min(1 - half, Math.max(half, c));
+  return { z: zz, cx: clampC(cx), cy: clampC(cy) };
+}
+
 export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, onExit }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
@@ -35,6 +46,142 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
   const mountedRef = useRef(true);
   const [camState, setCamState] = useState<"starting" | "on" | "unavailable">("starting");
   const [preview, setPreview] = useState<number | null>(null);
+  const [blink, setBlink] = useState(false);
+  const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Software zoom: the framed region of the un-zoomed view — z is the
+  // magnification, (cx, cy) the region's centre in view fractions.
+  // Pinch, drag and double-tap move it; the capture saves exactly
+  // this region, so what the parent lines up is what gets graded.
+  const [view, setView] = useState({ z: 1, cx: 0.5, cy: 0.5 });
+  const gesture = useRef<{
+    mode: "pinch" | "pan" | null;
+    startDist: number;
+    startZ: number;
+    anchor: { x: number; y: number };
+    last: { x: number; y: number };
+    moved: number;
+    tapAt: number;
+    tapPoint: { x: number; y: number } | null;
+    touchToggleAt: number;
+  }>({
+    mode: null,
+    startDist: 0,
+    startZ: 1,
+    anchor: { x: 0.5, y: 0.5 },
+    last: { x: 0, y: 0 },
+    moved: 0,
+    tapAt: 0,
+    tapPoint: null,
+    touchToggleAt: 0,
+  });
+
+  const viewPoint = (fx: number, fy: number) => ({
+    x: view.cx + (fx - 0.5) / view.z,
+    y: view.cy + (fy - 0.5) / view.z,
+  });
+
+  const toggleZoomAt = (fx: number, fy: number) => {
+    if (view.z > 1.05) {
+      setView({ z: 1, cx: 0.5, cy: 0.5 });
+    } else {
+      const p = viewPoint(fx, fy);
+      setView(clampView(2, p.x, p.y));
+    }
+  };
+
+  const pinchPoint = (e: React.TouchEvent<HTMLDivElement>, t: React.Touch) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    return {
+      x: (t.clientX - rect.left) / Math.max(rect.width, 1),
+      y: (t.clientY - rect.top) / Math.max(rect.height, 1),
+    };
+  };
+
+  const onTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (camState !== "on") return;
+    if ((e.target as HTMLElement).closest("button, input, a")) return;
+    if (e.touches.length === 2) {
+      const a = pinchPoint(e, e.touches[0]);
+      const b = pinchPoint(e, e.touches[1]);
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      gesture.current = {
+        ...gesture.current,
+        mode: "pinch",
+        startDist: Math.max(Math.hypot(a.x - b.x, a.y - b.y), 0.01),
+        startZ: view.z,
+        anchor: viewPoint(mid.x, mid.y),
+        moved: 1,
+      };
+    } else if (e.touches.length === 1) {
+      gesture.current = {
+        ...gesture.current,
+        mode: "pan",
+        last: pinchPoint(e, e.touches[0]),
+        moved: 0,
+      };
+    }
+  };
+
+  const onTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (!g.mode || camState !== "on") return;
+    if (g.mode === "pinch" && e.touches.length === 2) {
+      const a = pinchPoint(e, e.touches[0]);
+      const b = pinchPoint(e, e.touches[1]);
+      const mid = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+      const z = g.startZ * (Math.hypot(a.x - b.x, a.y - b.y) / g.startDist);
+      const s = 1 / Math.min(MAX_ZOOM, Math.max(1, z));
+      // Keep the anchored point of the sheet under the fingers.
+      setView(clampView(z, g.anchor.x - (mid.x - 0.5) * s, g.anchor.y - (mid.y - 0.5) * s));
+    } else if (g.mode === "pan" && e.touches.length === 1) {
+      const p = pinchPoint(e, e.touches[0]);
+      const dx = p.x - g.last.x;
+      const dy = p.y - g.last.y;
+      g.last = p;
+      g.moved += Math.abs(dx) + Math.abs(dy);
+      if (view.z > 1) setView((v) => clampView(v.z, v.cx - dx / v.z, v.cy - dy / v.z));
+    }
+  };
+
+  const onTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    const g = gesture.current;
+    if (
+      g.mode === "pan" &&
+      g.moved < 0.02 &&
+      e.changedTouches.length === 1 &&
+      !(e.target as HTMLElement).closest("button, input, a")
+    ) {
+      const now = Date.now();
+      if (now - g.tapAt < 320 && g.tapPoint) {
+        toggleZoomAt(g.tapPoint.x, g.tapPoint.y);
+        g.touchToggleAt = now;
+        g.tapAt = 0;
+        g.tapPoint = null;
+      } else {
+        g.tapAt = now;
+        g.tapPoint = g.last;
+      }
+    }
+    if (e.touches.length === 0) gesture.current.mode = null;
+  };
+
+  const onDoubleClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (camState !== "on") return;
+    // A touch double-tap can also surface as a synthesized dblclick;
+    // the touch path already handled it, so don't toggle twice.
+    if (Date.now() - gesture.current.touchToggleAt < 700) return;
+    if ((e.target as HTMLElement).closest("button, input, a")) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    toggleZoomAt(
+      (e.clientX - rect.left) / Math.max(rect.width, 1),
+      (e.clientY - rect.top) / Math.max(rect.height, 1),
+    );
+  };
+
+  const onZoomSlider = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const z = Number(e.target.value);
+    setView((v) => clampView(z, v.cx, v.cy));
+  };
 
   const startCamera = useCallback(async () => {
     const md = navigator.mediaDevices;
@@ -44,12 +191,38 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
     }
     setCamState("starting");
     try {
-      const stream = await md.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+      // Ask for the sensor's best: with no size request the browser
+      // hands over a low default stream (often 720p or less), and a
+      // whole sheet at that size reads soft. The ideals never fail a
+      // camera that cannot reach them — it just gives its closest.
+      const stream = await md.getUserMedia({
+        video: {
+          facingMode: "environment",
+          width: { ideal: 3840 },
+          height: { ideal: 2160 },
+        },
+        audio: false,
+      });
       if (!mountedRef.current) {
         stream.getTracks().forEach((t) => t.stop());
         return;
       }
       streamRef.current = stream;
+      // Continuous autofocus where the camera offers it (Android
+      // Chrome does; iPhone Safari does not expose it): a sheet at
+      // arm's length is exactly what a one-shot focus hunt gets
+      // wrong. The capability is outside the standard types, hence
+      // the casts; any failure just leaves the default focus.
+      const track = stream.getVideoTracks()[0];
+      const caps = track?.getCapabilities?.() as
+        | (MediaTrackCapabilities & { focusMode?: string[] })
+        | undefined;
+      if (track && caps?.focusMode?.includes("continuous")) {
+        const focus = {
+          advanced: [{ focusMode: "continuous" }],
+        } as unknown as MediaTrackConstraints;
+        track.applyConstraints(focus).catch(() => {});
+      }
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.play().catch(() => {});
@@ -67,18 +240,63 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
       mountedRef.current = false;
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
+      if (blinkTimer.current) clearTimeout(blinkTimer.current);
     };
   }, [startCamera]);
 
   const capture = () => {
     const video = videoRef.current;
     if (!video || camState !== "on") return;
+    // The shutter blink: a beat of black over the viewfinder, the
+    // feedback camera apps give that a photo was actually taken —
+    // without it the only sign is a thumbnail appearing in the tray.
+    setBlink(true);
+    if (blinkTimer.current) clearTimeout(blinkTimer.current);
+    blinkTimer.current = setTimeout(() => setBlink(false), 170);
     const canvas = document.createElement("canvas");
-    canvas.width = video.videoWidth || 1080;
-    canvas.height = video.videoHeight || 1440;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const vw = video.videoWidth;
+    const vh = video.videoHeight;
+    if (vw > 0 && vh > 0) {
+      // Save what the parent framed: the viewfinder shows the stream
+      // cropped to the screen's shape, zoomed to the chosen region —
+      // so the photo is that same region of the stream. (The framing
+      // transform scales the video element's box, not its shape, so
+      // the box's aspect is the right one to work from.)
+      const box = video.getBoundingClientRect();
+      const aspect = box.width / Math.max(box.height, 1);
+      let rw = vw;
+      let rh = vh;
+      let rx = 0;
+      let ry = 0;
+      if (vw / vh > aspect) {
+        rw = vh * aspect;
+        rx = (vw - rw) / 2;
+      } else {
+        rh = vw / aspect;
+        ry = (vh - rh) / 2;
+      }
+      const w = rw / view.z;
+      const h = rh / view.z;
+      canvas.width = Math.round(w);
+      canvas.height = Math.round(h);
+      ctx.drawImage(
+        video,
+        rx + view.cx * rw - w / 2,
+        ry + view.cy * rh - h / 2,
+        w,
+        h,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      );
+    } else {
+      canvas.width = 1080;
+      canvas.height = 1440;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    }
     canvas.toBlob(
       (blob) => {
         if (blob) onAddBlobs([blob]);
@@ -106,7 +324,13 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
   };
 
   return (
-    <div className="relative h-full overflow-hidden bg-[#1a120b] text-white">
+    <div
+      className="relative h-full touch-none overflow-hidden bg-[#1a120b] text-white"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+      onDoubleClick={onDoubleClick}
+    >
       {/* camera / placeholder */}
       {camState !== "unavailable" && (
         <video
@@ -114,6 +338,10 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
           playsInline
           muted
           className="absolute inset-0 h-full w-full object-cover"
+          style={{
+            transform: `translate(${(0.5 - view.cx) * 100}%, ${(0.5 - view.cy) * 100}%) scale(${view.z})`,
+            transformOrigin: `${view.cx * 100}% ${view.cy * 100}%`,
+          }}
         />
       )}
       {camState !== "on" && (
@@ -137,6 +365,9 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
           </div>
         </div>
       )}
+
+      {/* shutter blink: sits over the viewfinder, under the chrome */}
+      {blink && <div className="pointer-events-none absolute inset-0 z-[5] bg-black" aria-hidden="true" />}
 
       {/* frame corners */}
       <span className="absolute left-4 top-16 h-[30px] w-[30px] rounded-tl-[8px] border-l-[3px] border-t-[3px] border-tangdeep opacity-85" />
@@ -166,6 +397,22 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
 
       {/* bottom stack: controls → hint → grade bar (tray inside the bar, above the button) */}
       <div className="absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-2 bg-[linear-gradient(to_top,rgba(18,10,4,0.72)_0%,rgba(18,10,4,0.46)_62%,transparent_100%)] px-4 pb-4 pt-2.5">
+        {camState === "on" && (
+          <div className="flex items-center gap-2.5 text-white/90 [text-shadow:0_1px_4px_rgba(0,0,0,0.65)]">
+            <span className="text-[11px] font-bold">1×</span>
+            <input
+              type="range"
+              min={1}
+              max={MAX_ZOOM}
+              step={0.01}
+              value={view.z}
+              onChange={onZoomSlider}
+              aria-label="Zoom"
+              className="w-[150px] accent-tang"
+            />
+            <span className="text-[11px] font-bold">{MAX_ZOOM}×</span>
+          </div>
+        )}
         <div className="grid w-full max-w-[360px] grid-cols-[1fr_auto_1fr] items-start">
           <button
             type="button"
@@ -198,7 +445,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, on
             onClick={capture}
             disabled={camState !== "on"}
             aria-label="Take photo"
-            className="flex h-[72px] w-[72px] items-center justify-center justify-self-center rounded-full border-2 border-white/90 bg-[rgba(255,253,247,0.96)] shadow-[0_4px_14px_rgba(0,0,0,0.38)] disabled:opacity-40"
+            className="flex h-[72px] w-[72px] items-center justify-center justify-self-center rounded-full border-2 border-white/90 bg-[rgba(255,253,247,0.96)] shadow-[0_4px_14px_rgba(0,0,0,0.38)] transition-transform duration-100 active:scale-95 disabled:opacity-40"
           >
             <span className="h-[58px] w-[58px] rounded-full bg-tang shadow-[inset_0_0_0_3px_rgba(255,248,236,0.45)]" />
           </button>
