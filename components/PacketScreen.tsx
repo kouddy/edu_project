@@ -13,7 +13,7 @@
  * with the section rows.
  */
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { isDone, topicGroups, type SheetState } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { BackButton, ScreenHeader } from "./ui";
@@ -112,6 +112,8 @@ export default function PacketScreen({
   week,
   states,
   variant = "homework",
+  openTopics,
+  onOpenTopicsChange,
   onBack,
   onOpenSheet,
 }: {
@@ -122,18 +124,21 @@ export default function PacketScreen({
   /** History packets are finished: their sheet rows carry scores
    *  instead of Done pills. */
   variant?: "homework" | "history";
+  /** Which sections are unfolded. Held by the shell, not this screen:
+   *  opening a sheet unmounts the packet, and coming back must find
+   *  the sections as they were left. */
+  openTopics: ReadonlySet<string>;
+  onOpenTopicsChange: (next: ReadonlySet<string>) => void;
   onBack: () => void;
   onOpenSheet: (sheetId: string) => void;
 }) {
   const groups = topicGroups(states);
-  const [openTopics, setOpenTopics] = useState<ReadonlySet<string>>(new Set());
-  const toggle = (topic: string) =>
-    setOpenTopics((prev) => {
-      const next = new Set(prev);
-      if (next.has(topic)) next.delete(topic);
-      else next.add(topic);
-      return next;
-    });
+  const toggle = (topic: string) => {
+    const next = new Set(openTopics);
+    if (next.has(topic)) next.delete(topic);
+    else next.add(topic);
+    onOpenTopicsChange(next);
+  };
 
   // Render in packet order as a stack of cards: runs of section rows
   // share one card; each single-sheet row gets a card of its own.
