@@ -26,10 +26,6 @@ const HAND = '"Segoe Print", "Comic Sans MS", cursive';
 
 type Kind = "correct" | "wrong" | "unsure";
 
-/* The question line is the display prompt alone (choice questions
-   show their stem, not the printed options); the correct answer gets
-   its own line under what the kid wrote. */
-
 /* ------------------------------------------------------------- results */
 
 interface ResultsProps {
@@ -175,6 +171,11 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
             g.verdict === "unsure"
               ? st.resolutions.find((r) => r.questionNumber === q.number)
               : undefined;
+          const guidance = g.meta?.guidance ?? q.explanation;
+          // Row layout: the question line is the display prompt alone
+          // (choice questions show their stem, not the printed
+          // options); the correct answer gets its own line under what
+          // the kid wrote.
           return (
             <div
               key={q.number}
@@ -203,10 +204,9 @@ export default function ResultsScreen({ st, onBack, onOpenCheck, onRemoved, show
                     answer, which already has its own line above — the
                     box is for guidance that adds something beyond it. */}
                 {g.verdict === "wrong" &&
-                  (g.meta?.guidance ?? q.explanation) !==
-                    `The correct answer is ${q.correctAnswer}.` && (
+                  guidance !== `The correct answer is ${q.correctAnswer}.` && (
                     <div className="mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink">
-                      {g.meta?.guidance ?? q.explanation}
+                      {guidance}
                     </div>
                   )}
                 {resolution?.resolution === "wrong" && (
