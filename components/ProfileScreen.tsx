@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+import { useState } from "react";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
 import { getActiveMode, getAuthState, signOut } from "@/lib/store";
 import { getSupabase } from "@/lib/supabase-client";
+import MemberCodeCard from "./MemberCode";
 import { ScreenHeader } from "./ui";
 
 interface Props {
@@ -24,27 +24,8 @@ const BTN_SECONDARY =
 
 export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [email] = useState<string | undefined>(() => getAuthState().email);
   const [mode] = useState(() => getAuthState().mode);
-
-  useEffect(() => {
-    if (!parent) return;
-    // The member code carries the parent's email as well as their id
-    // when the sign-in record has one, so staff scanning it can match
-    // the account by either. Without an email it stays the bare id
-    // form.
-    const payload = email
-      ? `practice-sheets:member:${parent.id}?email=${encodeURIComponent(email)}`
-      : `practice-sheets:member:${parent.id}`;
-    QRCode.toDataURL(payload, {
-      width: 336,
-      margin: 0,
-      color: { dark: "#3d2b1f", light: "#ffffff" },
-    })
-      .then(setQrUrl)
-      .catch(() => setQrUrl(null));
-  }, [parent, email]);
 
   if (!parent) return null;
 
@@ -68,20 +49,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
         </p>
       </div>
 
-      <div className={`${CARD} px-4 pb-4 pt-5 text-center`}>
-        <h3 className="mb-1 font-display text-[16px] font-extrabold text-ink">Your member code</h3>
-        <div className="mx-auto my-3 flex h-[196px] w-[196px] items-center justify-center rounded-[14px] border-[1.5px] border-linesoft bg-white p-[14px] shadow-[0_2px_8px_rgba(146,90,32,0.14)]">
-          {qrUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrUrl} alt="Your member code" className="block h-full w-full" />
-          ) : (
-            <span className="text-[28px] text-faint">▦</span>
-          )}
-        </div>
-        <p className="mx-auto max-w-[280px] text-[13.5px] leading-[1.5] text-mid">
-          Show this code to staff to add a child, or when picking up sheets.
-        </p>
-      </div>
+      <MemberCodeCard parentId={parent.id} email={email} />
 
       <div className={CARD}>
         <h3 className={`${H3} mb-1`}>My kids</h3>
