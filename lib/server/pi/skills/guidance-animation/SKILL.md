@@ -9,11 +9,12 @@ The contract every animation must satisfy:
 
 - One complete, self-contained HTML document: inline <style> and <script>, no external URLs, nothing loaded from anywhere else.
 - Teach by showing the working with the question's own numbers. Very few words; big, clear numbers.
+- No title or heading inside the animation. The page showing the lesson already puts the question at the top, so a title only repeats it — start straight into the working.
 - The animation advances in small steps. A button with the attribute data-step advances exactly one step per click and becomes disabled at the final step. A button with the attribute data-play plays the steps automatically at a pace a child can follow — about 1.2 seconds per step, never less than 1 second.
 - Play works every time it is pressed. When the lesson has finished, pressing Play starts it over from the beginning: every running total, highlight, and the final answer reset first, then the steps play through again. A Play button that does nothing once the lesson is done is a defect.
 - An element with id "guidance-final" stays empty until the final step, when its text becomes exactly the correct answer you were given.
 - Every number shown must agree with the working. Running totals only ever show values the steps actually produced, and stepping past the end must be impossible.
-- The page is shown in a frame 340px wide and 380px tall: lay out with width:100% inside that box, no scrolling in either direction. Page style: background #fff8ec, text #3d2b1f, accent #e8710a, rounded friendly shapes, system fonts.
+- The animation is used on a phone, in a frame 340px wide and 380px tall — design for that narrow screen, not for a desktop page shrunk down. Lay out with width:100% inside that box, no scrolling in either direction. Every row must fit the 340px: build rows from flexible widths that can shrink and wrap, never fixed-width boxes side by side whose widths add up past the frame — on the phone the excess is simply cut off at the edge. Page style: background #fff8ec, text #3d2b1f, accent #e8710a, rounded friendly shapes, system fonts.
 - The frame is the panel: lay the lesson out directly on the page background — no outer card, border, or container wrapping the whole lesson. Boxes belong to the steps themselves (a number being built, a total), not to the page.
 - For SVG shapes, animate with transform ATTRIBUTES (for example transform="rotate(270 170 105)") with the centre written out. Never use CSS transforms on SVG elements — they pivot around the wrong point in browsers and hands end up detached from the clock. Keep every shape inside the viewBox at every step.
 
