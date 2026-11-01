@@ -3,12 +3,17 @@
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/supabase-client";
 
-/* The guidance slot under a wrong answer. The text guidance shows
-   immediately; a short animation is generated on the server after
-   marking (never blocking it), and this slot polls for it and swaps
-   it in when it is ready. The animation runs in a sandboxed frame —
-   generated HTML gets no access to the app. When no animation
-   arrives, the text simply stays. */
+/* The guidance slot under a wrong answer. A short animation is
+   generated on the server after marking (never blocking it), and
+   this slot polls for it. The slot renders nothing until the first
+   poll answers: when the animation is already generated — the
+   usual case on any revisit — the text guidance would otherwise
+   paint for one poll cycle and then be replaced, a visible flash
+   of content the child never needed. Once the state is known, the
+   text guidance shows while generation runs (or for good, when
+   generation has failed), and the animation swaps in when it is
+   ready. The animation runs in a sandboxed frame — generated HTML
+   gets no access to the app. */
 
 const TEXT_BOX =
   "mt-[7px] whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink";
@@ -28,11 +33,17 @@ export default function GuidanceAnimation({
 }: GuidanceAnimationProps) {
   const [html, setHtml] = useState<string | null>(null);
   const [pending, setPending] = useState(true);
+  const [resolved, setResolved] = useState(false);
 
   useEffect(() => {
     let live = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
     let polls = 0;
+    // If the first answer never comes back (a hung request), fall
+    // back to the text rather than leaving the slot blank forever.
+    const fallback = setTimeout(() => {
+      if (live) setResolved(true);
+    }, 8000);
     const poll = async () => {
       try {
         const token = await getAccessToken().catch(() => null);
@@ -41,6 +52,7 @@ export default function GuidanceAnimation({
           token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
         );
         if (!live) return;
+        setResolved(true);
         if (!res.ok) {
           setPending(false);
           return;
@@ -62,12 +74,16 @@ export default function GuidanceAnimation({
         if (++polls <= 100) timer = setTimeout(poll, 3000);
         else setPending(false);
       } catch {
-        if (live) setPending(false);
+        if (live) {
+          setResolved(true);
+          setPending(false);
+        }
       }
     };
     void poll();
     return () => {
       live = false;
+      clearTimeout(fallback);
       if (timer) clearTimeout(timer);
     };
   }, [printedCode, questionNumber]);
@@ -82,6 +98,7 @@ export default function GuidanceAnimation({
       />
     );
   }
+  if (!resolved) return null;
   return (
     <>
       {guidanceText && <div className={TEXT_BOX}>{guidanceText}</div>}
