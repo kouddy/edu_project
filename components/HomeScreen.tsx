@@ -189,7 +189,7 @@ export default function HomeScreen({
                 onClick={() => onSelectKid(k)}
                 className={`rounded-full border-[1.5px] px-[15px] py-2 text-[14px] font-semibold transition-colors ${
                   active
-                    ? "border-tang bg-tang text-[#fff8ec]"
+                    ? "border-tangdeep bg-filldark text-tangdeep"
                     : "border-line bg-card text-mid"
                 }`}
               >
@@ -231,7 +231,7 @@ export default function HomeScreen({
               <button
                 type="button"
                 onClick={onScan}
-                className="inline-block rounded-[10px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-4 py-2 text-[13.5px] font-bold text-[#fff8ec] shadow-[0_2px_6px_rgba(199,91,0,0.25)]"
+                className="inline-block rounded-[10px] border-[1.5px] border-tangdeep bg-transparent px-4 py-2 text-[13.5px] font-bold text-tangdeep"
               >
                 Scan sheets
               </button>
