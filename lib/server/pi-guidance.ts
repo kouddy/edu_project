@@ -56,8 +56,12 @@ export async function generateGuidanceWithHarness(args: {
 }): Promise<string> {
   const config = loadPiConfig();
   const manifest = subjectManifest(config, "guidance");
-  const providerId =
-    process.env.GUIDANCE_PROVIDER ?? manifest.provider ?? config.settings.defaultProvider;
+  const providerId = process.env.GUIDANCE_PROVIDER ?? manifest.provider;
+  if (!providerId) {
+    throw new Error(
+      "No guidance provider is configured — set GUIDANCE_PROVIDER or the guidance manifest's provider in lib/server/pi/subjects.json.",
+    );
+  }
   // The session's contract is the guidance-animation skill. Fail the
   // task loudly when it is missing rather than sending the agent in
   // without it — an unexpanded /skill: invocation passes through as

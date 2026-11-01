@@ -20,7 +20,6 @@ import path from "node:path";
 import type { AgentId } from "./registry";
 
 interface PiSettings {
-  defaultProvider: string;
   thinkingLevel: string;
   confidenceThreshold: number;
   maxStepsPerSheet: number;
@@ -97,11 +96,18 @@ export function subjectManifest(config: PiConfig, agent: AgentId): SubjectManife
 }
 
 /**
- * Which provider grades this agent right now: the GRADING_PROVIDER env var
- * wins, then the subject manifest, then the global default.
+ * Which provider grades this agent right now: the GRADING_PROVIDER env
+ * var wins, then the subject manifest. Those are the only two places a
+ * provider is named — there is no global default behind them.
  */
 export function providerForAgent(config: PiConfig, agent: AgentId): string {
-  return process.env.GRADING_PROVIDER ?? subjectManifest(config, agent).provider ?? config.settings.defaultProvider;
+  const providerId = process.env.GRADING_PROVIDER ?? subjectManifest(config, agent).provider;
+  if (!providerId) {
+    throw new Error(
+      `No grading provider is configured — set GRADING_PROVIDER or the ${agent} manifest's provider in lib/server/pi/subjects.json.`,
+    );
+  }
+  return providerId;
 }
 
 export function providerDef(config: PiConfig, providerId: string): PiProviderDef | null {
