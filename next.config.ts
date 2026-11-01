@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  allowedDevOrigins: ["**.*"],
   // The Pi grading harness (Stage 3) runs only in Node route handlers; it
   // pulls Node/WASI internals Turbopack cannot bundle, so it stays external
   // and is required at runtime.
