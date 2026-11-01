@@ -176,13 +176,13 @@ export async function generateGuidanceWithHarness(args: {
   const { session } = await createAgentSession({
     cwd: process.cwd(),
     model,
-    thinkingLevel: (config.settings.thinkingLevel ?? "medium") as never,
+    thinkingLevel: (manifest.thinkingLevel ?? "medium") as never,
     modelRuntime: runtime,
     resourceLoader,
     sessionManager: SessionManager.inMemory(process.cwd()),
     settingsManager: SettingsManager.inMemory({
       compaction: { enabled: false },
-      retry: { enabled: true, maxRetries: config.settings.maxRetries },
+      retry: { enabled: true, maxRetries: manifest.maxRetries },
     }),
     noTools: "builtin",
     customTools: [renderPreview, submitAnimation],

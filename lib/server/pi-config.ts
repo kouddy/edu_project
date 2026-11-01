@@ -1,9 +1,10 @@
 /**
  * lib/server/pi-config.ts — loads the Pi harness configuration from files.
  *
- * Configuration is file-based, in Pi's style: settings,
- * the per-subject manifest, prompt
- * templates and context files all live under `lib/server/pi/` and are read
+ * Configuration is file-based, in Pi's style: the subject
+ * manifest (subjects.json — each agent's provider, model, prompts, and
+ * runtime values, plus the shared grading policy), prompt templates
+ * and context files all live under `lib/server/pi/` and are read
  * at runtime — never hard-coded, never bundled into client code.
  *
  * Providers and models live in `models.json`, Pi's own native format
@@ -19,12 +20,9 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { AgentId } from "./registry";
 
-interface PiSettings {
-  thinkingLevel: string;
+/** Product-wide grading policy, shared by every grading subject. */
+interface GradingPolicy {
   confidenceThreshold: number;
-  maxStepsPerSheet: number;
-  tokenBudgetPerSheet: number;
-  maxRetries: number;
 }
 
 /** One model entry in models.json (Pi's native models format). */
@@ -58,13 +56,13 @@ export interface SubjectManifest {
   status: "active" | "planned";
   promptFiles: Partial<Record<"identify" | "grade" | "errorAnalysis" | "guidance", string>>;
   contextFiles: string[];
-  maxSteps: number;
-  tokenBudget: number;
+  thinkingLevel: string;
+  maxRetries: number;
 }
 
 export interface PiConfig {
   configDir: string;
-  settings: PiSettings;
+  grading: GradingPolicy;
   subjects: Record<string, SubjectManifest>;
   /** Providers from models.json, keyed by provider id. */
   providers: Record<string, PiProviderDef>;
@@ -77,15 +75,15 @@ let cached: PiConfig | null = null;
 export function loadPiConfig(): PiConfig {
   if (cached) return cached;
   const configDir = process.env.PI_CONFIG_DIR ?? path.join(process.cwd(), "lib", "server", "pi");
-  const settings = JSON.parse(readFileSync(path.join(configDir, "settings.json"), "utf8")) as PiSettings;
   const subjectsDoc = JSON.parse(readFileSync(path.join(configDir, "subjects.json"), "utf8")) as {
+    grading: GradingPolicy;
     subjects: Record<string, SubjectManifest>;
   };
   const modelsPath = path.join(configDir, "models.json");
   const modelsDoc = JSON.parse(readFileSync(modelsPath, "utf8")) as {
     providers: Record<string, PiProviderDef>;
   };
-  cached = { configDir, settings, subjects: subjectsDoc.subjects, providers: modelsDoc.providers, modelsPath };
+  cached = { configDir, grading: subjectsDoc.grading, subjects: subjectsDoc.subjects, providers: modelsDoc.providers, modelsPath };
   return cached;
 }
 

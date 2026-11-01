@@ -6,7 +6,7 @@
  * - a hand-written ResourceLoader whose system prompt is assembled from the
  *   configured prompt files (lib/server/pi/prompts) and whose only context file
  *   is the subject's taxonomy;
- * - SettingsManager.inMemory from lib/server/pi/settings.json values;
+ * - SettingsManager.inMemory from the subject manifest's runtime values;
  * - SessionManager.inMemory — nothing is persisted;
  * - Pi's built-in tools are suppressed (noTools: "builtin"); the only tools
  *   are our schema-typed submit_* tools, whose parameters ARE the result
@@ -463,7 +463,7 @@ async function gradeOnePhoto(args: {
 }): Promise<PhotoOutcome> {
   const { config, runtime, providerId, modelId } = args;
   const manifest = subjectManifest(config, "math");
-  const threshold = config.settings.confidenceThreshold;
+  const threshold = config.grading.confidenceThreshold;
   const taxonomyRel = manifest.contextFiles[0];
   const taxonomy = taxonomyRel ? readFileSync(path.join(config.configDir, taxonomyRel), "utf8") : "";
 
@@ -509,13 +509,13 @@ async function gradeOnePhoto(args: {
   const { session } = await createAgentSession({
     cwd: process.cwd(),
     model,
-    thinkingLevel: (config.settings.thinkingLevel ?? "medium") as never,
+    thinkingLevel: (manifest.thinkingLevel ?? "medium") as never,
     modelRuntime: runtime,
     resourceLoader,
     sessionManager: SessionManager.inMemory(process.cwd()),
     settingsManager: SettingsManager.inMemory({
       compaction: { enabled: false },
-      retry: { enabled: true, maxRetries: config.settings.maxRetries },
+      retry: { enabled: true, maxRetries: manifest.maxRetries },
     }),
     noTools: "builtin",
     customTools: buildTools(captured, threshold, taxonomyCategoryIds(taxonomy), {
@@ -722,7 +722,7 @@ export async function gradePhotoWithPiHarness(args: {
   const notes: string[] = [];
   if (outcome.coercedUnsure.length > 0) {
     notes.push(
-      `Confidence rule enforced server-side: Q${outcome.coercedUnsure.join(", Q")} coerced to unsure (below ${config.settings.confidenceThreshold}).`,
+      `Confidence rule enforced server-side: Q${outcome.coercedUnsure.join(", Q")} coerced to unsure (below ${config.grading.confidenceThreshold}).`,
     );
   }
   if (outcome.analysisSummary.length > 0) {
