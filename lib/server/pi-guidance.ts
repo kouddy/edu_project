@@ -108,6 +108,7 @@ export async function generateGuidanceWithHarness(args: {
         steppingFinished: seen.terminated,
         finalAnswerShown: seen.finalText,
         shapesOutsidePicture: seen.geometry,
+        playback: seen.playback,
         whatTheChildSees: seen.stepTexts,
       };
       return {

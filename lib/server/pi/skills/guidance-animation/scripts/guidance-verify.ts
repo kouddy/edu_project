@@ -45,6 +45,12 @@ export interface AnimationInspection {
   finalText: string | null;
   /** SVG shapes that end up outside their viewBox. */
   geometry: string[];
+  /** What pressing Play at the end state does, or null when there
+   *  is no play control (a lint failure of its own) or stepping
+   *  never terminated. restarted: the lesson visibly starts over.
+   *  firstStepMs: when the first played step lands after the
+   *  restart — the auto-play pace, sampled at the first step. */
+  playback: { restarted: boolean; firstStepMs: number | null } | null;
 }
 
 const MAX_STEPS = 40;
@@ -217,14 +223,62 @@ export async function inspectAnimation(html: string): Promise<AnimationInspectio
     }
     await sleep(500);
     const finalEl = doc.getElementById("guidance-final");
+    const finalText = finalEl ? finalEl.textContent : null;
+    const geometry = geometryIssues(doc);
+
+    // Playback probe: at the end state, press Play. A working Play
+    // starts the lesson over — the final answer clears or an early
+    // step's text returns — and the first played step lands after
+    // a pace a child can follow. A Play that does nothing here, or
+    // races, is a defect the step-through above cannot see.
+    let playback: AnimationInspection["playback"] = null;
+    const playBtn = doc.querySelector("[data-play]") as HTMLButtonElement | null;
+    if (playBtn && terminated) {
+      const snap = () => JSON.stringify(visibleTexts(doc));
+      const endSnap = snap();
+      const endFinal = finalEl?.textContent ?? "";
+      const earlySnaps = new Set(stepTexts.slice(0, 3).map((s) => JSON.stringify(s)));
+      const startedAt = Date.now();
+      playBtn.click();
+      let prev = endSnap;
+      let resetAt: number | null = null;
+      let firstStepMs: number | null = null;
+      let restarted = false;
+      while (Date.now() - startedAt < 3500) {
+        await sleep(80);
+        const now = snap();
+        const finalNow = finalEl?.textContent ?? "";
+        if (now === prev && finalNow === (resetAt === null ? endFinal : finalNow)) continue;
+        if (now !== prev) {
+          const isReset = finalNow !== endFinal || earlySnaps.has(now);
+          if (resetAt === null && isReset) {
+            resetAt = Date.now() - startedAt;
+            restarted = true;
+          } else if (resetAt !== null) {
+            firstStepMs = Date.now() - startedAt - resetAt;
+            break;
+          } else {
+            // A step landed without a visible reset (the reset only
+            // restyled shapes) — its timing is the pace.
+            restarted = true;
+            firstStepMs = Date.now() - startedAt;
+            break;
+          }
+          prev = now;
+        }
+      }
+      playback = { restarted, firstStepMs };
+    }
+
     return {
       lint,
       errors: [...new Set(errors)].slice(0, 4),
       stepTexts,
       stepsTaken,
       terminated,
-      finalText: finalEl ? finalEl.textContent : null,
-      geometry: geometryIssues(doc),
+      finalText,
+      geometry,
+      playback,
     };
   } finally {
     window.close();
@@ -268,6 +322,18 @@ export async function verifyAnimation(
     return {
       ok: false,
       detail: `The animation ends on "${seen.finalText.trim()}" but the correct answer is "${correctAnswer}".`,
+    };
+  }
+  if (seen.playback && !seen.playback.restarted) {
+    return {
+      ok: false,
+      detail: "Pressing Play once the lesson has finished does nothing — Play must start the lesson over from the beginning.",
+    };
+  }
+  if (seen.playback?.firstStepMs != null && seen.playback.firstStepMs < 900) {
+    return {
+      ok: false,
+      detail: `Auto-play runs too fast (the first step lands after about ${seen.playback.firstStepMs}ms) — steps need about 1.2 seconds each so a child can follow.`,
     };
   }
   if (seen.geometry.length > 0) return { ok: false, detail: seen.geometry[0] };
