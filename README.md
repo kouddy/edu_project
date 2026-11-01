@@ -50,6 +50,34 @@ npm start       # serve the production build
 - Grading still needs a provider in every mode: set `META_API_KEY` in
   `.env.local` (see [Grading provider](#grading-provider)).
 
+### Testing on a phone (camera needs HTTPS)
+
+Browsers only allow the camera in a secure context — HTTPS, or HTTP
+on `localhost`. Opening the dev server from a phone over the LAN
+(`http://192.168…:3000`) is neither, so the scan screen falls back to
+its placeholder and no camera starts. Give the dev server a public
+HTTPS address with a Cloudflare quick tunnel instead:
+
+```bash
+brew install cloudflared   # once, macOS
+
+npm run dev                                   # terminal 1: the app, on port 3000
+cloudflared tunnel --url http://127.0.0.1:3000   # terminal 2
+```
+
+Open the `https://…trycloudflare.com` address the tunnel prints on
+the phone; the camera works there. Notes:
+
+- A **502 Bad Gateway** from the tunnel means the dev server is not
+  running (or is on a different port — check its `Local:` line); the
+  tunnel itself is fine.
+- The address changes every run, and while the tunnel is up anyone
+  with the address can reach your dev server — stop it (Ctrl-C) when
+  the session is over.
+- The scan screen's **Upload Photo** button needs none of this: it
+  opens the phone's native camera through the file picker.
+- Hosted deployments are HTTPS, so real users never hit this.
+
 ### Live mode (real accounts on a local Supabase stack)
 
 Live mode adds real parent accounts: magic-link sign-in, with kids,
