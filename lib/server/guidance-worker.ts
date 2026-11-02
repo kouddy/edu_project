@@ -81,8 +81,13 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
       // The topic's guidance image is drawn from this finished lesson, so
       // it starts now — never earlier, and never from raw registry
       // data alone. A guidance image problem must not fail the lesson.
+      // The image persists to the database only when this lesson
+      // lives there — a demo (memory-store) lesson's image stays
+      // out of the database entirely.
       try {
-        startGuidanceImageForQuestion(task.printedCode, task.questionNumber, html);
+        startGuidanceImageForQuestion(task.printedCode, task.questionNumber, html, "lesson finished", {
+          persist: dbGuidanceStore() !== null && store === dbGuidanceStore(),
+        });
       } catch (err) {
         console.log(`[guidance-image ${label} +0.0s] guidance image start failed — ${err instanceof Error ? err.message : err}`);
       }

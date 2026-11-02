@@ -9,7 +9,9 @@
  * every kid and every question in it, so guidance images cache by
  * topic — on disk, so a restart keeps them, and in the database on
  * the seed question's guidance_animations row when Supabase is
- * configured, so a new host keeps them too. The guidance worker's
+ * configured, so a new host keeps them too. That database copy
+ * belongs to live lessons only: a demo lesson's image never reads
+ * or writes it. The guidance worker's
  * poll sweeps those rows for images a crash left unfinished and
  * re-runs them on the lessons' backoff terms, so the generation
  * is as durable as the storage.
@@ -424,9 +426,11 @@ async function dbSaveImage(
       .update(fields)
       .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion });
     if (error) log(`guidance image database save failed — ${error.message}`);
-    // No matching row is silent: the seed lesson lived in the
-    // memory store (demo), so the disk cache stays the image's
-    // only persistent home, as designed.
+    // No matching row is silent: the seed row went away between
+    // the lesson finishing and this save; the disk cache still
+    // holds the image for this server. Saves only happen at all
+    // for lessons that live in the database — a demo lesson's
+    // image never reaches this function.
   } catch (e) {
     log(`guidance image database save failed — ${e instanceof Error ? e.message : String(e)}`);
   }
@@ -525,7 +529,9 @@ export async function sweepGuidanceImages(limit = 2): Promise<number> {
         { label: `${row.printed_code}#${row.question_number}`, t0: Date.now() },
         `guidance image sweep — re-running topic "${topicTitle}" (was ${row.image_status ?? "never started"})`,
       );
-      startGuidanceImageForQuestion(row.printed_code, row.question_number, row.html, "worker sweep");
+      startGuidanceImageForQuestion(row.printed_code, row.question_number, row.html, "worker sweep", {
+        persist: true,
+      });
       started++;
     }
     return started;
@@ -555,6 +561,7 @@ async function runGuidanceImage(
   run: GuidanceImageRun,
   printedCode: string,
   questionNumber: number,
+  persist: boolean,
 ): Promise<void> {
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
@@ -584,7 +591,9 @@ async function runGuidanceImage(
         : ""
     }`,
   );
-  void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "generating", null, null, log);
+  if (persist) {
+    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "generating", null, null, log);
+  }
   try {
     // One request, and that is the whole pipeline: the lesson it
     // feeds on was verified before it finished, and the image
@@ -595,12 +604,16 @@ async function runGuidanceImage(
     if (!made) throw new Error("The image provider returned no image.");
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
-    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", made.dataUrl, null, log);
+    if (persist) {
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", made.dataUrl, null, log);
+    }
     log(`guidance image generation finished — image ${Math.round(made.dataUrl.length / 1024)} KB`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     states.set(key, { state: "failed", error: message });
-    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, log);
+    if (persist) {
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, log);
+    }
     log(`guidance image generation failed — ${message}`);
   }
 }
@@ -614,17 +627,25 @@ async function runGuidanceImage(
  * Guidance images are per topic, so several wrong questions in one
  * topic start at most one run, seeded by whichever lesson finished
  * first.
+ *
+ * `persist` says the seed lesson lives in the database (a live
+ * lesson): only then does the image read or write its database
+ * copy. A demo lesson's image stays out of the database entirely —
+ * memory and the disk cache are its only homes — so demo activity
+ * can neither adopt a live topic's stored image nor overwrite one.
  */
 export function startGuidanceImageForQuestion(
   printedCode: string,
   questionNumber: number,
   guidanceHtml: string,
   source: "lesson finished" | "help read" | "worker sweep" = "lesson finished",
+  opts?: { persist?: boolean },
 ): void {
   const entry = findByPrintedCode(printedCode);
   const question = entry?.questions.find((q) => q.number === questionNumber);
   if (!entry || !question) return;
   if (fixtureGuidanceImage()) return;
+  const persist = opts?.persist ?? false;
   const topicTitle = question.topic || entry.topic;
   const key = guidanceImageKeyFor(entry, topicTitle);
   if (states.has(key)) return;
@@ -633,7 +654,7 @@ export function startGuidanceImageForQuestion(
   if (disk) {
     states.set(key, { state: "ready", dataUrl: disk });
     guidanceImageLog(run, `guidance image ready — disk cache, topic "${topicTitle}"`);
-    if (source === "worker sweep") {
+    if (source === "worker sweep" && persist) {
       // The sweep claimed this seed row because the database has
       // no finished image for the topic; a disk hit heals the row
       // instead of leaving the claim to go stale.
@@ -649,8 +670,10 @@ export function startGuidanceImageForQuestion(
     try {
       // The database may already hold this topic's image — drawn on
       // another host, or before a restart the disk cache did not
-      // survive. Adopt it instead of drawing a second one.
-      const db = await dbLoadImage(key);
+      // survive. Adopt it instead of drawing a second one. Only a
+      // database lesson's image looks: a demo start skips the
+      // database entirely.
+      const db = persist ? await dbLoadImage(key) : null;
       if (db?.state === "ready") {
         writeDisk(key, db.dataUrl);
         states.set(key, { state: "ready", dataUrl: db.dataUrl });
@@ -672,6 +695,7 @@ export function startGuidanceImageForQuestion(
         run,
         printedCode,
         questionNumber,
+        persist,
       );
     } catch (e) {
       // runGuidanceImage settles its own API failures; this catch is
@@ -680,9 +704,11 @@ export function startGuidanceImageForQuestion(
       // working forever in this process.
       const message = e instanceof Error ? e.message : String(e);
       states.set(key, { state: "failed", error: message });
-      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, (m) =>
-        guidanceImageLog(run, m),
-      );
+      if (persist) {
+        void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, (m) =>
+          guidanceImageLog(run, m),
+        );
+      }
       guidanceImageLog(run, `guidance image generation failed — ${message}`);
     }
   })();
@@ -725,27 +751,37 @@ export async function getGuidanceImage(
         { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
         `guidance image ready — disk cache, topic "${topicTitle}"`,
       );
-    } else if ((await settleFromDatabase(key, printedCode, questionNumber, topicTitle)) === "settled") {
-      // The topic's state came from the database; fall through to
-      // the state read below.
     } else {
-      // The guidance image waits for the question's lesson: it is drawn
-      // from that HTML, so until the lesson is ready there is
-      // nothing to draw from, and if the lesson failed there
-      // never will be.
-      const store =
-        auth !== null ? (dbGuidanceStore() ?? memoryGuidanceStore()) : memoryGuidanceStore();
-      const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
-      if (lesson?.status === "ready" && lesson.html) {
-        startGuidanceImageForQuestion(printedCode, questionNumber, lesson.html, "help read");
-      } else if (lesson?.status === "failed") {
-        return {
-          kind: "ok",
-          view: {
-            status: "failed",
-            error: "The lesson for this question could not be made, so no guidance image was drawn.",
-          },
-        };
+      // The lesson store decides the caller's world, as it does for
+      // the lessons themselves: only a database lesson's image may
+      // settle from (or start into) the database — a demo read
+      // never touches it.
+      const dbStore = dbGuidanceStore();
+      const store = auth !== null ? (dbStore ?? memoryGuidanceStore()) : memoryGuidanceStore();
+      const persist = dbStore !== null && store === dbStore;
+      if (
+        persist &&
+        (await settleFromDatabase(key, printedCode, questionNumber, topicTitle)) === "settled"
+      ) {
+        // The topic's state came from the database; fall through to
+        // the state read below.
+      } else {
+        // The guidance image waits for the question's lesson: it is drawn
+        // from that HTML, so until the lesson is ready there is
+        // nothing to draw from, and if the lesson failed there
+        // never will be.
+        const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
+        if (lesson?.status === "ready" && lesson.html) {
+          startGuidanceImageForQuestion(printedCode, questionNumber, lesson.html, "help read", { persist });
+        } else if (lesson?.status === "failed") {
+          return {
+            kind: "ok",
+            view: {
+              status: "failed",
+              error: "The lesson for this question could not be made, so no guidance image was drawn.",
+            },
+          };
+        }
       }
     }
   }
