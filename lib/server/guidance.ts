@@ -27,11 +27,7 @@ import {
   type GuidanceTask,
   type GuidanceView,
 } from "./guidance-store";
-import {
-  validatePracticeQuestions,
-  verifyAnimation,
-} from "./pi/skills/guidance-animation/scripts/guidance-verify";
-import type { PracticeQuestion } from "./guidance-store";
+import { verifyAnimation } from "./pi/skills/guidance-animation/scripts/guidance-verify";
 import { findByPrintedCode, type RegistryEntry } from "./registry";
 import { supabaseForToken } from "./supabase";
 
@@ -136,20 +132,17 @@ export async function readGuidance(
 /* ------------------------------------------------------- processing */
 
 /** The worker's unit of work: generate one question's animation
- *  and its practice questions through the harness, then run the
- *  gate on what the session submitted — nothing is stored on the
- *  agent's say-so alone. Resolves with the verified artefact;
- *  throws with the reason. */
-export async function processGuidanceTask(
-  task: GuidanceTask,
-): Promise<{ html: string; practice: PracticeQuestion[] }> {
+ *  through the harness, then run the gate on what the session
+ *  submitted — nothing is stored on the agent's say-so alone.
+ *  Resolves with the verified HTML; throws with the reason. */
+export async function processGuidanceTask(task: GuidanceTask): Promise<string> {
   const resolved = resolveQuestion(task.printedCode, task.questionNumber);
   if (!resolved) throw new Error("The question is no longer in the registry.");
   if (resolved.entry.keyVersion !== task.keyVersion) {
     throw new Error("The answer key changed since this task was queued.");
   }
   const { generateGuidanceWithHarness } = await import("./pi-guidance");
-  const { html, practice } = await generateGuidanceWithHarness({
+  const html = await generateGuidanceWithHarness({
     questionPrompt: resolved.prompt,
     correctAnswer: resolved.correctAnswer,
     methodText: task.methodText ?? undefined,
@@ -159,7 +152,5 @@ export async function processGuidanceTask(
   });
   const verdict = await verifyAnimation(html, resolved.correctAnswer);
   if (!verdict.ok) throw new Error(verdict.detail);
-  const practiceVerdict = validatePracticeQuestions(practice, resolved.prompt, resolved.correctAnswer);
-  if (!practiceVerdict.ok) throw new Error(practiceVerdict.detail);
-  return { html, practice };
+  return html;
 }

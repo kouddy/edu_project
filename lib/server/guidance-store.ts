@@ -27,20 +27,6 @@ export interface GuidanceView {
   status: GuidanceViewStatus;
   html?: string;
   error?: string;
-  /** The lesson's practice questions, generated and verified with
-   *  it: the child tries them on the Help page, and the app checks
-   *  answers against these. Absent on artefacts generated before
-   *  practice questions existed. */
-  practice?: PracticeQuestion[];
-}
-
-/** One practice question generated with a lesson. The working is
- *  the verified calculation behind the answer — stored as the
- *  audit trail; reads hand the client only prompt and answer. */
-export interface PracticeQuestion {
-  prompt: string;
-  answer: string;
-  working: string;
 }
 
 export interface GuidanceTask {
@@ -70,7 +56,7 @@ export interface GuidanceStore {
   enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void>;
   /** Claim up to `limit` due tasks for `workerId`. */
   claim(workerId: string, limit: number, leaseSeconds: number): Promise<GuidanceTask[]>;
-  complete(task: GuidanceTask, html: string, practice?: PracticeQuestion[]): Promise<void>;
+  complete(task: GuidanceTask, html: string): Promise<void>;
   /** Record a generation failure: attempts + 1, backoff, terminal at
    *  the attempt bound. */
   fail(task: GuidanceTask, error: string): Promise<void>;
@@ -79,15 +65,8 @@ export interface GuidanceStore {
 const MAX_ATTEMPTS = 3;
 const BACKOFF_MS = [5 * 60_000, 30 * 60_000];
 
-function viewOf(
-  status: string,
-  html: string | null,
-  error: string | null,
-  practice?: PracticeQuestion[] | null,
-): GuidanceView {
-  if (status === "ready") {
-    return { status: "ready", html: html ?? undefined, practice: practice ?? undefined };
-  }
+function viewOf(status: string, html: string | null, error: string | null): GuidanceView {
+  if (status === "ready") return { status: "ready", html: html ?? undefined };
   if (status === "failed") return { status: "failed", error: error ?? undefined };
   return { status: "generating" };
 }
@@ -124,34 +103,13 @@ class DbGuidanceStore implements GuidanceStore {
   }
 
   async get(printedCode: string, questionNumber: number, keyVersion: number): Promise<GuidanceView | null> {
-    const withPractice = await this.db
+    const { data } = await this.db
       .from("guidance_animations")
-      .select("status, html, last_error, practice_questions")
+      .select("status, html, last_error")
       .match(this.triple(printedCode, questionNumber, keyVersion))
       .maybeSingle();
-    if (!withPractice.error) {
-      const data = withPractice.data as {
-        status: string;
-        html: string | null;
-        last_error: string | null;
-        practice_questions: PracticeQuestion[] | null;
-      } | null;
-      if (!data) return null;
-      return viewOf(data.status, data.html, data.last_error, data.practice_questions);
-    }
-    // Until the practice migration is pushed, the column does not
-    // exist and the select names it in the error — read without it
-    // rather than not at all.
-    if (/practice_questions/.test(withPractice.error.message)) {
-      const { data } = await this.db
-        .from("guidance_animations")
-        .select("status, html, last_error")
-        .match(this.triple(printedCode, questionNumber, keyVersion))
-        .maybeSingle();
-      if (!data) return null;
-      return viewOf(data.status, data.html, data.last_error);
-    }
-    return null;
+    if (!data) return null;
+    return viewOf(data.status, data.html, data.last_error);
   }
 
   async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void> {
@@ -196,32 +154,11 @@ class DbGuidanceStore implements GuidanceStore {
     }));
   }
 
-  async complete(task: GuidanceTask, html: string, practice?: PracticeQuestion[]): Promise<void> {
-    const base = {
-      status: "ready",
-      html,
-      last_error: null,
-      claimed_by: null,
-      lease_until: null,
-      updated_at: new Date().toISOString(),
-    };
-    const match = { id: task.id, claimed_by: task.claimedBy, status: "processing" };
-    if (!practice) {
-      await this.db.from("guidance_animations").update(base).match(match);
-      return;
-    }
-    const { error } = await this.db
+  async complete(task: GuidanceTask, html: string): Promise<void> {
+    await this.db
       .from("guidance_animations")
-      .update({ ...base, practice_questions: practice })
-      .match(match);
-    // Until the practice migration is pushed, the column does not
-    // exist and the update names it in the error — complete the
-    // lesson without its practice rather than not at all; the
-    // practice set regenerates with the lesson's next generation.
-    if (error && /practice_questions/.test(error.message)) {
-      console.warn("guidance complete: practice_questions column missing — completing without the practice questions");
-      await this.db.from("guidance_animations").update(base).match(match);
-    }
+      .update({ status: "ready", html, last_error: null, claimed_by: null, lease_until: null, updated_at: new Date().toISOString() })
+      .match({ id: task.id, claimed_by: task.claimedBy, status: "processing" });
   }
 
   async fail(task: GuidanceTask, error: string): Promise<void> {
@@ -251,7 +188,6 @@ interface MemoryRow {
   keyVersion: number;
   status: "pending" | "processing" | "ready" | "failed";
   html: string | null;
-  practice: PracticeQuestion[] | null;
   attempts: number;
   claimCount: number;
   lastError: string | null;
@@ -274,7 +210,7 @@ const memoryKey = (c: string, q: number, kv: number) => `${c}#${q}#${kv}`;
 export class MemoryGuidanceStore implements GuidanceStore {
   async get(printedCode: string, questionNumber: number, keyVersion: number): Promise<GuidanceView | null> {
     const row = memoryRows.get(memoryKey(printedCode, questionNumber, keyVersion));
-    return row ? viewOf(row.status, row.html, row.lastError, row.practice) : null;
+    return row ? viewOf(row.status, row.html, row.lastError) : null;
   }
 
   async enqueue(printedCode: string, questionNumber: number, keyVersion: number, priority: number, methodText?: string): Promise<void> {
@@ -287,7 +223,6 @@ export class MemoryGuidanceStore implements GuidanceStore {
       keyVersion,
       status: "pending",
       html: null,
-      practice: null,
       attempts: 0,
       claimCount: 0,
       lastError: null,
@@ -336,12 +271,11 @@ export class MemoryGuidanceStore implements GuidanceStore {
     });
   }
 
-  async complete(task: GuidanceTask, html: string, practice?: PracticeQuestion[]): Promise<void> {
+  async complete(task: GuidanceTask, html: string): Promise<void> {
     const row = this.rowFor(task);
     if (!row) return;
     row.status = "ready";
     row.html = html;
-    if (practice) row.practice = practice;
     row.lastError = null;
     row.claimedBy = null;
     row.leaseUntil = null;

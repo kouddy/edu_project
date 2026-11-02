@@ -9,17 +9,15 @@
  * it, and the task invokes it, so the harness expands the skill
  * body into the session. Where the grading agent looks at a
  * photo and submits verdicts, this agent writes an animated lesson
- * — plus the 5 practice questions that go with it — and reviews
- * its own draft before submitting: render_preview runs
+ * and reviews its own draft before submitting: render_preview runs
  * the draft (the skill's scripts/guidance-verify.ts) and hands back what a
  * child stepping through it would see — the per-step text trace, the
  * end state, any script errors or shapes outside the picture — so
  * the agent can fix what code review alone cannot catch, like a hand
  * rotated around the wrong centre or a counter that runs past its
- * total. submit_animation runs the deterministic gate on both the
- * lesson and the practice questions; an artefact is captured only
- * when the gate passes, and the caller re-runs the gate before
- * caching regardless.
+ * total. submit_animation runs the deterministic gate; an artefact
+ * is captured only when the gate passes, and the caller re-runs the
+ * gate before caching regardless.
  */
 
 import {
@@ -42,11 +40,8 @@ import {
 } from "./pi-config";
 import {
   inspectAnimation,
-  validatePracticeQuestions,
   verifyAnimation,
-  type PracticeQuestionInput,
 } from "./pi/skills/guidance-animation/scripts/guidance-verify";
-import type { PracticeQuestion } from "./guidance-store";
 import { createModelRuntime } from "./pi-harness";
 
 const GUIDANCE_TIMEOUT_MS = 240_000;
@@ -62,7 +57,7 @@ export async function generateGuidanceWithHarness(args: {
   failureNote?: string;
   /** Label for the diagnostic log lines. */
   tag?: string;
-}): Promise<{ html: string; practice: PracticeQuestion[] }> {
+}): Promise<string> {
   const config = loadPiConfig();
   const manifest = subjectManifest(config, "guidance");
   const providerId = process.env.GUIDANCE_PROVIDER ?? manifest.provider;
@@ -99,13 +94,8 @@ export async function generateGuidanceWithHarness(args: {
     throw new Error(`Model ${providerId}/${modelId} is not defined in lib/server/pi/models.json.`);
   }
 
-  const captured: {
-    html: string | null;
-    practice: PracticeQuestion[] | null;
-    submitFailures: number;
-  } = {
+  const captured: { html: string | null; submitFailures: number } = {
     html: null,
-    practice: null,
     submitFailures: 0,
   };
 
@@ -140,22 +130,9 @@ export async function generateGuidanceWithHarness(args: {
     name: "submit_animation",
     label: "Submit the animation",
     description:
-      "Submit the finished animation together with its 5 practice questions. Both must pass verification: the animation (self-contained, step control finishes, final answer matches the key, shapes inside the picture) and the practice set (exactly 5 new questions asking the lesson's question again — same task, same kind of answer; every numeric answer proven by its working — arithmetic statements separated by \"; \", each one true, the last landing on the answer). A rejection explains what to fix.",
+      "Submit the finished animation. It must pass verification (self-contained, step control finishes, final answer matches the key, shapes inside the picture); a rejection explains what to fix.",
     parameters: Type.Object({
       html: Type.String({ description: "The complete HTML document to submit." }),
-      practice: Type.Array(
-        Type.Object({
-          prompt: Type.String({ description: "The practice question, in the child's words." }),
-          answer: Type.String({
-            description: "The final answer alone, in the same form as the correct answer given.",
-          }),
-          working: Type.String({
-            description:
-              "The calculation behind the answer, as arithmetic statements separated by \"; \" — e.g. \"5.00 − 3.00 = 2.00; 2.00 − 0.02 = 1.98\". Every statement must be true and the last must land on the answer. Empty only when the answer is not a number.",
-          }),
-        }),
-        { minItems: 5, maxItems: 5 },
-      ),
     }),
     execute: async (_id, params) => {
       const verdict = await verifyAnimation(params.html, args.correctAnswer);
@@ -171,25 +148,7 @@ export async function generateGuidanceWithHarness(args: {
           details: {},
         };
       }
-      const practiceVerdict = validatePracticeQuestions(params.practice, args.questionPrompt, args.correctAnswer);
-      if (!practiceVerdict.ok) {
-        captured.submitFailures += 1;
-        return {
-          content: [
-            {
-              type: "text" as const,
-              text: `Rejected: ${practiceVerdict.detail} Fix the practice questions, then submit again.`,
-            },
-          ],
-          details: {},
-        };
-      }
       captured.html = params.html;
-      captured.practice = (params.practice as PracticeQuestionInput[]).map((p) => ({
-        prompt: p.prompt.trim(),
-        answer: p.answer.trim(),
-        working: p.working.trim(),
-      }));
       return {
         content: [{ type: "text" as const, text: "Accepted and recorded. Stop here." }],
         details: {},
@@ -265,7 +224,7 @@ export async function generateGuidanceWithHarness(args: {
       ...(args.failureNote
         ? [`A previous attempt at this lesson failed verification: ${args.failureNote}. Fix exactly that.`]
         : []),
-      "Draft the animation, preview it with render_preview, fix what the preview shows, and submit the finished lesson with submit_animation — together with 5 practice questions in the same topic and method, with new numbers, each carrying its working (see the skill).",
+      "Draft the animation, preview it with render_preview, fix what the preview shows, and submit the finished lesson with submit_animation.",
     ].join("\n");
     log(`guidance generation started — ${providerId}/${modelId}`);
     let timer: NodeJS.Timeout | undefined;
@@ -288,8 +247,8 @@ export async function generateGuidanceWithHarness(args: {
     session.dispose();
   }
 
-  if (!captured.html || !captured.practice) {
+  if (!captured.html) {
     throw new Error("The guidance agent finished without an animation that passed verification.");
   }
-  return { html: captured.html, practice: captured.practice };
+  return captured.html;
 }

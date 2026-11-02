@@ -26,7 +26,6 @@ import {
   memoryGuidanceStore,
   type GuidanceStore,
   type GuidanceTask,
-  type PracticeQuestion,
 } from "./guidance-store";
 import { supabaseConfigured } from "./supabase";
 
@@ -36,7 +35,7 @@ type GlobalWithWorker = typeof globalThis & { __guidanceWorkerStarted?: boolean 
 
 export interface GuidanceWorkerOptions {
   stores?: GuidanceStore[];
-  processor?: (task: GuidanceTask) => Promise<{ html: string; practice: PracticeQuestion[] }>;
+  processor?: (task: GuidanceTask) => Promise<string>;
   pollMs?: number;
   concurrency?: number;
 }
@@ -76,8 +75,8 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
   const runTask = async (store: GuidanceStore, task: GuidanceTask) => {
     const label = `${task.printedCode}#${task.questionNumber}`;
     try {
-      const { html, practice } = await processor(task);
-      await store.complete(task, html, practice);
+      const html = await processor(task);
+      await store.complete(task, html);
       console.log(`[guidance] ${label} ready`);
       // The topic's guidance image is drawn from this finished lesson, so
       // it starts now — never earlier, and never from raw registry
