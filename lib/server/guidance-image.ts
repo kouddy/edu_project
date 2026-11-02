@@ -306,10 +306,11 @@ function writeDisk(key: string, dataUrl: string): void {
 
 /* ----- the same image in the database ----- */
 
-/** The image columns live on the seed question's row in
+/** The image columns live on the question's own row in
  *  guidance_animations — the row of the lesson the image was drawn
- *  from — with the topic key denormalized onto the row, so a
- *  topic's image is one indexed lookup rather than a scan of every
+ *  from — matched on the same (printed_code, question_number,
+ *  key_version) triple as the lesson itself, so an image is one
+ *  row lookup rather than a scan of every
  *  sheet the topic appears in. Read and written with the
  *  service-role client, like the lessons: operator machinery, no
  *  parent data. Absent the client (demo without a service key, or
