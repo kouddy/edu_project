@@ -83,22 +83,22 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
     topic
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "poster";
+      .replace(/^-+|-+$/g, "") || "printable";
   return (
     <>
       <div aria-hidden className="mt-[14px] border-t border-dashed border-linesoft" />
       {image ? (
         <>
           <div className="mt-[10px] px-1 text-[13px] text-mid">
-            A printable poster for this topic is ready — save it and print it for more practice.
+            A printable for this topic is ready — save it and print it for more practice.
           </div>
-          <a href={image} download={`poster-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
-            Download the poster
+          <a href={image} download={`printable-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
+            Download the printable
           </a>
         </>
       ) : (
         <div className="mt-[10px] px-1 text-[12px] text-faint">
-          A printable poster for this topic is on its way…
+          A printable for this topic is on its way…
         </div>
       )}
     </>
