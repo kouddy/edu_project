@@ -29,6 +29,7 @@ import {
 } from "./guidance-store";
 import { verifyAnimation } from "./pi/skills/guidance-animation/scripts/guidance-verify";
 import { findByPrintedCode, type RegistryEntry } from "./registry";
+import { startPosterForQuestion } from "./guidance-image";
 import { supabaseForToken } from "./supabase";
 
 /** Freshly-graded questions jump the queue over lazy/backfill ones. */
@@ -86,6 +87,10 @@ export function enqueueGuidanceForSheet(
 ): void {
   for (const g of perQuestion) {
     if (g.verdict !== "wrong") continue;
+    // The topic's poster starts at the same moment, so it is ready
+    // before the Help page is opened; posters are per topic, so
+    // repeats within the sheet start nothing new.
+    startPosterForQuestion(printedCode, g.questionNumber);
     void enqueueGuidanceQuestion(printedCode, g.questionNumber, {
       live: opts.live,
       priority: FRESH_PRIORITY,

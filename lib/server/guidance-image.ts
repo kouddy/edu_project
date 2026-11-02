@@ -436,6 +436,32 @@ async function runPoster(
 }
 
 /**
+ * Start the poster for one question's topic, unless it is already
+ * running, ready, or failed. Called when a sheet settles at
+ * marking time — the same moment the animation queues — so the
+ * poster is usually ready before anyone opens the Help page; the
+ * read below calls it too, as the fallback for sheets marked
+ * before posters existed. Posters are per topic, so several wrong
+ * questions in one topic start at most one run.
+ */
+export function startPosterForQuestion(printedCode: string, questionNumber: number): void {
+  const entry = findByPrintedCode(printedCode);
+  const question = entry?.questions.find((q) => q.number === questionNumber);
+  if (!entry || !question) return;
+  if (fixturePoster()) return;
+  const topicTitle = question.topic || entry.topic;
+  const key = posterKeyFor(entry, topicTitle);
+  if (states.has(key)) return;
+  const disk = readDisk(key);
+  if (disk) {
+    states.set(key, { state: "ready", dataUrl: disk });
+    return;
+  }
+  states.set(key, { state: "working" });
+  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer);
+}
+
+/**
  * The poster for one question's topic. The first read starts
  * generation in the background; the client polls while the status
  * is generating. Live callers are served the image only when their
@@ -457,23 +483,12 @@ export async function getPoster(
 
   // The question's own topic, not the sheet's: a review sheet mixes
   // topics, and its questions still belong to one topic each.
+  // A failed poster stays failed for this server run — like a
+  // terminally failed guidance task, it is not retried on view.
   const topicTitle = question.topic || entry.topic;
   const key = posterKeyFor(entry, topicTitle);
-  let current = states.get(key);
-  if (!current) {
-    const disk = readDisk(key);
-    if (disk) {
-      current = { state: "ready", dataUrl: disk };
-      states.set(key, current);
-    }
-  }
-  if (!current) {
-    // A failed poster stays failed for this server run — like a
-    // terminally failed guidance task, it is not retried on view.
-    states.set(key, { state: "working" });
-    void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer);
-    current = { state: "working" };
-  }
+  startPosterForQuestion(printedCode, questionNumber);
+  const current = states.get(key) ?? { state: "working" as const };
 
   const view: PosterView =
     current.state === "ready"
