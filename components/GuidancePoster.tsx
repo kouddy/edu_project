@@ -7,8 +7,7 @@ import { BTN_SECONDARY } from "./ui";
 /* The concept-poster slot under the Help page's animation: a
    printable poster for the question's topic (four concept panels
    and five fresh practice questions on a white section), drawn on
-   the server from the question's finished lesson and
-   vision-checked before it can report ready. The slot renders
+   the server from the question's finished lesson. The slot renders
    nothing until the first poll answers, shows a quiet waiting
    line while the poster is drawn and checked, and stays empty
    when generation or the check failed — the page already carries

@@ -13,28 +13,19 @@
  * the worker starts it the moment a lesson passes its gate, feeding
  * the lesson's HTML to the image model, so the poster teaches the
  * same concept with the same verified numbers instead of inventing
- * its own. No finished lesson, no poster.
- *
- * An image model draws its numbers as pictures: nothing in a poster
- * can be checked the way the animation gate checks HTML. So a poster
- * reaches a kid only after a vision pass reads it back — every
- * calculation it states is transcribed and re-verified in code, the
- * correct/incorrect examples must be labelled as such, the practice
- * section must hold five unanswered questions on white. A failed
- * check sends the image back once with the problems named; a second
- * failure keeps the poster off the page entirely.
+ * its own. No finished lesson, no poster. One image request is the
+ * whole pipeline — the poster is a rendering of an already-checked
+ * lesson, so there is no second check and no fix pass after it.
  */
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { findByPrintedCode, type RegistryEntry } from "./registry";
 import {
-  effectiveModel,
   imageModelId,
   imageProviderId,
   loadPiConfig,
   providerDef,
-  providerForAgent,
   resolveProviderApiKey,
   type PiConfig,
 } from "./pi-config";
@@ -213,189 +204,6 @@ function imageOf(result: ResponsesResult): { dataUrl: string; responseId?: strin
   return { dataUrl: `data:${mimeOf(bytes)};base64,${item.result}`, responseId: result.id };
 }
 
-function textOf(result: ResponsesResult): string {
-  for (const item of result.output ?? []) {
-    if (item.type !== "message") continue;
-    for (const part of item.content ?? []) {
-      if ((part.type === "output_text" || part.type === "text") && part.text) return part.text;
-    }
-  }
-  return "";
-}
-
-/* ----- the vision check ----- */
-
-/**
- * Every plain calculation statement ("400 + 50 + 8 = 458"),
- * re-done in code: the WHOLE left-hand side is evaluated, with the
- * usual precedence. A statement that is not a bare calculation is
- * left to the vision verdict — code judges only what it can parse
- * completely, because a partial parse once condemned a correct
- * three-term sum by reading only its last two terms. Exported for
- * the out-of-repo test suite, which feeds it known-good and
- * known-bad statements.
- */
-export function arithmeticProblems(statements: string[]): string[] {
-  const problems: string[] = [];
-  for (const raw of statements) {
-    const judged = judgeStatement(raw);
-    if (judged === null) continue;
-    if (!judged.ok) {
-      problems.push(`"${raw.trim()}" is wrong — it should be ${judged.want}`);
-    }
-  }
-  return problems;
-}
-
-/** Evaluate "expr = number" exactly; null when the statement is
- *  not a bare calculation (words, arrows, units, a trailing mark
- *  code cannot account for). */
-function judgeStatement(raw: string): { ok: boolean; want: string } | null {
-  const cleaned = raw.replace(/,/g, "").replace(/[✓✗]\s*$/g, "").trim();
-  const m = cleaned.match(/^(.+?)\s*=\s*(-?\d+(?:\.\d+)?)$/);
-  if (!m) return null;
-  const tokens = tokenizeExpression(m[1]);
-  if (!tokens) return null;
-  const value = evaluateTokens(tokens);
-  if (value === null) return null;
-  const rhs = Number(m[2]);
-  const want = Number.isInteger(value) ? String(value) : String(Math.round(value * 1e6) / 1e6);
-  return { ok: Math.abs(value - rhs) < 1e-9, want };
-}
-
-type Token = { n: number } | { op: "+" | "-" | "*" | "/" };
-
-function tokenizeExpression(expr: string): Token[] | null {
-  const normalized = expr.replace(/−/g, "-").replace(/×/g, "*").replace(/÷/g, "/");
-  const parts = normalized.match(/\d+(?:\.\d+)?|[+\-*/x]/g);
-  if (!parts || parts.join("").replace(/\s/g, "") !== normalized.replace(/\s/g, "")) return null;
-  const tokens: Token[] = [];
-  for (const part of parts) {
-    if (/^\d/.test(part)) tokens.push({ n: Number(part) });
-    else if (part === "x") tokens.push({ op: "*" });
-    else tokens.push({ op: part as "+" | "-" | "*" | "/" });
-  }
-  // A leading minus belongs to the first number.
-  if (tokens.length >= 2 && "op" in tokens[0] && tokens[0].op === "-" && "n" in tokens[1]) {
-    tokens.splice(0, 2, { n: -tokens[1].n });
-  }
-  // The stream must alternate number, op, number, … and end on a number.
-  if (tokens.length < 3 || tokens.length % 2 === 0) return null;
-  for (let i = 0; i < tokens.length; i++) {
-    if (i % 2 === 0 && !("n" in tokens[i])) return null;
-    if (i % 2 === 1 && !("op" in tokens[i])) return null;
-  }
-  return tokens;
-}
-
-function evaluateTokens(tokens: Token[]): number | null {
-  // First pass collapses × and ÷, second pass + and −.
-  const collapsed: Token[] = [tokens[0]];
-  for (let i = 1; i < tokens.length; i += 2) {
-    const op = (tokens[i] as { op: "+" | "-" | "*" | "/" }).op;
-    const rhs = (tokens[i + 1] as { n: number }).n;
-    if (op === "*" || op === "/") {
-      const lhs = (collapsed[collapsed.length - 1] as { n: number }).n;
-      if (op === "/" && rhs === 0) return null;
-      collapsed[collapsed.length - 1] = { n: op === "*" ? lhs * rhs : lhs / rhs };
-    } else {
-      collapsed.push(tokens[i], tokens[i + 1]);
-    }
-  }
-  let value = (collapsed[0] as { n: number }).n;
-  for (let i = 1; i < collapsed.length; i += 2) {
-    const op = (collapsed[i] as { op: "+" | "-" }).op;
-    const rhs = (collapsed[i + 1] as { n: number }).n;
-    value = op === "+" ? value + rhs : value - rhs;
-  }
-  return value;
-}
-
-interface PosterCheck {
-  ok: boolean;
-  /** How many calculations the vision pass transcribed from the
-   *  poster (all of them re-verified in code). */
-  statements: number;
-  /** Hard failures: a calculation code re-did and got wrong, or a
-   *  factual gate (labels, practice count, answers shown, white
-   *  background). Only these send a poster back or keep it hidden. */
-  problems: string[];
-  /** The vision model's free-text critiques. Presentation
-   *  opinions — a step numbered oddly, a cramped panel — are
-   *  logged for a human's eye but never block a poster whose
-   *  facts check out. */
-  warnings: string[];
-}
-
-async function checkPoster(
-  config: PiConfig,
-  dataUrl: string,
-  entry: RegistryEntry,
-  topicTitle: string,
-): Promise<PosterCheck> {
-  const providerId = providerForAgent(config, "math");
-  const model = effectiveModel(config, "math", providerId);
-  const ask = [
-    `You are checking a Grade ${entry.kidGrade} math poster about "${topicTitle}" before a child sees it. Read the poster image carefully and answer with ONLY a JSON object, no other text:`,
-    `{"statements": ["every calculation written on the poster, copied exactly, like \\"300 + 100 = 400\\""], "correctExampleLabelled": true/false (the correct example is clearly marked correct), "incorrectExampleLabelledWrong": true/false (the incorrect example is clearly marked wrong AND its mistake is the one the poster names), "picturesMatchNumbers": true/false (every drawn picture, grid, or diagram shows exactly the quantities the words beside it state — count the squares in any grid: a rectangle labelled length 6, width 5 must be drawn 6 across and 5 down), "practiceCount": the number of practice questions in the bottom section, "practiceAnswersShown": true/false (any of the practice questions has its answer written anywhere, including a practice question that repeats a worked example's numbers), "practiceSound": true/false (every practice question is answerable as printed — the numbers given inside it follow the rule the question itself states, so a starting sequence counted by 50s really does go up by 50 each step), "practiceBackgroundWhite": true/false (the practice section background is white), "problems": ["each wrong calculation, mislabelled example, or unclear item you find, in your own words"]}`,
-    `Judge the incorrect example by its label: a wrong calculation inside it is intended, but only when the poster marks it wrong and names that same mistake.`,
-  ].join("\n");
-  const result = await callResponses(
-    config,
-    providerId,
-    {
-      model,
-      input: [
-        {
-          role: "user",
-          content: [
-            { type: "input_text", text: ask },
-            { type: "input_image", image_url: dataUrl },
-          ],
-        },
-      ],
-    },
-    "vision check",
-    240_000,
-  );
-  const text = textOf(result);
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start < 0 || end <= start) {
-    return { ok: false, statements: 0, problems: ["the vision check could not read the poster"], warnings: [] };
-  }
-  let verdict: {
-    statements?: string[];
-    correctExampleLabelled?: boolean;
-    incorrectExampleLabelledWrong?: boolean;
-    picturesMatchNumbers?: boolean;
-    practiceCount?: number;
-    practiceAnswersShown?: boolean;
-    practiceSound?: boolean;
-    practiceBackgroundWhite?: boolean;
-    problems?: string[];
-  };
-  try {
-    verdict = JSON.parse(text.slice(start, end + 1)) as typeof verdict;
-  } catch {
-    return { ok: false, statements: 0, problems: ["the vision check could not read the poster"], warnings: [] };
-  }
-  const problems: string[] = [...arithmeticProblems(verdict.statements ?? [])];
-  if (verdict.correctExampleLabelled !== true) problems.push("the correct example is not clearly marked correct");
-  if (verdict.incorrectExampleLabelledWrong !== true) problems.push("the incorrect example is not clearly marked wrong with its mistake named");
-  if (verdict.picturesMatchNumbers !== true) problems.push("a drawn picture does not match the numbers stated beside it — redraw it with exactly the stated quantities");
-  if (verdict.practiceCount !== 5) problems.push(`the practice section holds ${verdict.practiceCount ?? 0} questions, not 5`);
-  if (verdict.practiceAnswersShown === true) problems.push("a practice question's answer is shown");
-  if (verdict.practiceSound !== true) problems.push("a practice question's given numbers break the rule it states — fix the givens so the question can be answered");
-  if (verdict.practiceBackgroundWhite !== true) problems.push("the practice section background is not white");
-  return {
-    ok: problems.length === 0,
-    statements: (verdict.statements ?? []).length,
-    problems,
-    warnings: verdict.problems ?? [],
-  };
-}
-
 /* ----- storage: memory in flight, disk when ready ----- */
 
 type PosterState =
@@ -465,51 +273,11 @@ async function runPoster(
     `[poster] ${key}: generating — anchor ${entry.printedCode}#${questionNumber} "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars`,
   );
   try {
-    let made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
+    // One request, and that is the whole pipeline: the lesson it
+    // feeds on was verified before it finished, and the poster
+    // simply renders that lesson as a printable picture.
+    const made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
     if (!made) throw new Error("The image provider returned no image.");
-    let check = await checkPoster(config, made.dataUrl, entry, topicTitle);
-    if (check.warnings.length > 0) {
-      console.log(`[poster] ${key}: check notes, not blocking: ${check.warnings.join("; ")}`);
-    }
-    if (check.ok) {
-      console.log(`[poster] ${key}: check passed — ${check.statements} calculations transcribed and re-verified`);
-    }
-    if (!check.ok) {
-      console.log(`[poster] ${key}: check failed (${check.problems.join("; ")}); sending back for fixes`);
-      const fix = `Fix ONLY these problems in the poster and keep everything else the same: ${check.problems.join("; ")}.`;
-      let fixed: { dataUrl: string; responseId?: string } | null = null;
-      if (made.responseId) {
-        console.log(`[poster] ${key}: fix pass — chained edit of the first drawing`);
-        try {
-          fixed = imageOf(
-            await callResponses(config, providerId, { model, previous_response_id: made.responseId, input: fix }, "poster fix", 420_000),
-          );
-        } catch (e) {
-          console.log(`[poster] ${key}: chained edit failed (${e instanceof Error ? e.message : e}); regenerating with the corrections instead`);
-          fixed = null;
-        }
-      }
-      if (!fixed) {
-        console.log(`[poster] ${key}: fix pass — regenerate with corrections`);
-        fixed = imageOf(
-          await callResponses(config, providerId, { model, input: `${prompt}\nAvoid these mistakes: ${check.problems.join("; ")}.` }, "image generation", 420_000),
-        );
-      }
-      if (!fixed) throw new Error("The image provider returned no image on the fix pass.");
-      made = fixed;
-      check = await checkPoster(config, made.dataUrl, entry, topicTitle);
-      if (check.warnings.length > 0) {
-        console.log(`[poster] ${key}: check notes after the fix pass, not blocking: ${check.warnings.join("; ")}`);
-      }
-      if (check.ok) {
-        console.log(`[poster] ${key}: check passed after the fix pass — ${check.statements} calculations transcribed and re-verified`);
-      }
-      if (!check.ok) {
-        states.set(key, { state: "failed", error: check.problems.join("; ") });
-        console.log(`[poster] ${key}: failed after the fix pass (${check.problems.join("; ")}); total ${total()}`);
-        return;
-      }
-    }
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
     console.log(`[poster] ${key}: ready (total ${total()}, image ${Math.round(made.dataUrl.length / 1024)} KB)`);
