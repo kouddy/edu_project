@@ -190,27 +190,89 @@ function textOf(result: ResponsesResult): string {
 /* ----- the vision check ----- */
 
 /**
- * Every plain "a op b = c" statement, re-done in code. Exported for
+ * Every plain calculation statement ("400 + 50 + 8 = 458"),
+ * re-done in code: the WHOLE left-hand side is evaluated, with the
+ * usual precedence. A statement that is not a bare calculation is
+ * left to the vision verdict — code judges only what it can parse
+ * completely, because a partial parse once condemned a correct
+ * three-term sum by reading only its last two terms. Exported for
  * the out-of-repo test suite, which feeds it known-good and
  * known-bad statements.
  */
 export function arithmeticProblems(statements: string[]): string[] {
   const problems: string[] = [];
-  const re = /(-?\d[\d,]*(?:\.\d+)?)\s*([+\-−×x*÷/])\s*(-?\d[\d,]*(?:\.\d+)?)\s*=\s*(-?\d[\d,]*(?:\.\d+)?)/;
   for (const raw of statements) {
-    const m = raw.replace(/,/g, "").match(re);
-    if (!m) continue;
-    const a = Number(m[1]);
-    const b = Number(m[3]);
-    const c = Number(m[4]);
-    const op = m[2];
-    const want =
-      op === "+" ? a + b : op === "-" || op === "−" ? a - b : op === "×" || op === "x" || op === "*" ? a * b : a / b;
-    if (Math.abs(want - c) > 1e-9) {
-      problems.push(`"${raw.trim()}" is wrong — it should be ${want}`);
+    const judged = judgeStatement(raw);
+    if (judged === null) continue;
+    if (!judged.ok) {
+      problems.push(`"${raw.trim()}" is wrong — it should be ${judged.want}`);
     }
   }
   return problems;
+}
+
+/** Evaluate "expr = number" exactly; null when the statement is
+ *  not a bare calculation (words, arrows, units, a trailing mark
+ *  code cannot account for). */
+function judgeStatement(raw: string): { ok: boolean; want: string } | null {
+  const cleaned = raw.replace(/,/g, "").replace(/[✓✗]\s*$/g, "").trim();
+  const m = cleaned.match(/^(.+?)\s*=\s*(-?\d+(?:\.\d+)?)$/);
+  if (!m) return null;
+  const tokens = tokenizeExpression(m[1]);
+  if (!tokens) return null;
+  const value = evaluateTokens(tokens);
+  if (value === null) return null;
+  const rhs = Number(m[2]);
+  const want = Number.isInteger(value) ? String(value) : String(Math.round(value * 1e6) / 1e6);
+  return { ok: Math.abs(value - rhs) < 1e-9, want };
+}
+
+type Token = { n: number } | { op: "+" | "-" | "*" | "/" };
+
+function tokenizeExpression(expr: string): Token[] | null {
+  const normalized = expr.replace(/−/g, "-").replace(/×/g, "*").replace(/÷/g, "/");
+  const parts = normalized.match(/\d+(?:\.\d+)?|[+\-*/x]/g);
+  if (!parts || parts.join("").replace(/\s/g, "") !== normalized.replace(/\s/g, "")) return null;
+  const tokens: Token[] = [];
+  for (const part of parts) {
+    if (/^\d/.test(part)) tokens.push({ n: Number(part) });
+    else if (part === "x") tokens.push({ op: "*" });
+    else tokens.push({ op: part as "+" | "-" | "*" | "/" });
+  }
+  // A leading minus belongs to the first number.
+  if (tokens.length >= 2 && "op" in tokens[0] && tokens[0].op === "-" && "n" in tokens[1]) {
+    tokens.splice(0, 2, { n: -tokens[1].n });
+  }
+  // The stream must alternate number, op, number, … and end on a number.
+  if (tokens.length < 3 || tokens.length % 2 === 0) return null;
+  for (let i = 0; i < tokens.length; i++) {
+    if (i % 2 === 0 && !("n" in tokens[i])) return null;
+    if (i % 2 === 1 && !("op" in tokens[i])) return null;
+  }
+  return tokens;
+}
+
+function evaluateTokens(tokens: Token[]): number | null {
+  // First pass collapses × and ÷, second pass + and −.
+  const collapsed: Token[] = [tokens[0]];
+  for (let i = 1; i < tokens.length; i += 2) {
+    const op = (tokens[i] as { op: "+" | "-" | "*" | "/" }).op;
+    const rhs = (tokens[i + 1] as { n: number }).n;
+    if (op === "*" || op === "/") {
+      const lhs = (collapsed[collapsed.length - 1] as { n: number }).n;
+      if (op === "/" && rhs === 0) return null;
+      collapsed[collapsed.length - 1] = { n: op === "*" ? lhs * rhs : lhs / rhs };
+    } else {
+      collapsed.push(tokens[i], tokens[i + 1]);
+    }
+  }
+  let value = (collapsed[0] as { n: number }).n;
+  for (let i = 1; i < collapsed.length; i += 2) {
+    const op = (collapsed[i] as { op: "+" | "-" }).op;
+    const rhs = (collapsed[i + 1] as { n: number }).n;
+    value = op === "+" ? value + rhs : value - rhs;
+  }
+  return value;
 }
 
 interface PosterCheck {
