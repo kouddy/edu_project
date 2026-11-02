@@ -287,18 +287,34 @@ function cacheDir(): string {
   return dir;
 }
 
-function readDisk(key: string): string | null {
+/** The disk cache is split by world, like everything else about a
+ *  guidance image: live images cache in the root, demo images in
+ *  the demo subfolder — a demo session must never be served an
+ *  image a live run left behind, or the reverse. */
+function cacheDirFor(persist: boolean): string {
+  const dir = persist ? cacheDir() : path.join(cacheDir(), "demo");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** The states map's key for one question's image in one world —
+ *  the in-memory half of the same split the disk cache makes. */
+function stateKey(persist: boolean, key: string): string {
+  return persist ? key : `demo:${key}`;
+}
+
+function readDisk(key: string, persist: boolean): string | null {
   try {
-    const file = path.join(cacheDir(), `${key}.txt`);
+    const file = path.join(cacheDirFor(persist), `${key}.txt`);
     return existsSync(file) ? readFileSync(file, "utf8").trim() : null;
   } catch {
     return null;
   }
 }
 
-function writeDisk(key: string, dataUrl: string): void {
+function writeDisk(key: string, dataUrl: string, persist: boolean): void {
   try {
-    writeFileSync(path.join(cacheDir(), `${key}.txt`), dataUrl);
+    writeFileSync(path.join(cacheDirFor(persist), `${key}.txt`), dataUrl);
   } catch {
     // A failed cache write only costs a regeneration next boot.
   }
@@ -386,7 +402,7 @@ async function settleFromDatabase(
   const db = await dbLoadImage(printedCode, questionNumber, keyVersion);
   if (!db) return "none";
   if (db.state === "ready") {
-    writeDisk(key, db.dataUrl);
+    writeDisk(key, db.dataUrl, true);
     states.set(key, { state: "ready", dataUrl: db.dataUrl });
     guidanceImageLog(
       { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
@@ -601,15 +617,15 @@ async function runGuidanceImage(
       await callResponses(config, providerId, { model, input }, "image generation", 420_000, log),
     );
     if (!made) throw new Error("The image provider returned no image.");
-    writeDisk(key, made.dataUrl);
-    states.set(key, { state: "ready", dataUrl: made.dataUrl });
+    writeDisk(key, made.dataUrl, persist);
+    states.set(stateKey(persist, key), { state: "ready", dataUrl: made.dataUrl });
     if (persist) {
       void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "ready", made.dataUrl, null, log);
     }
     log(`guidance image generation finished — image ${Math.round(made.dataUrl.length / 1024)} KB`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    states.set(key, { state: "failed", error: message });
+    states.set(stateKey(persist, key), { state: "failed", error: message });
     if (persist) {
       void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "failed", null, message, log);
     }
@@ -629,9 +645,9 @@ async function runGuidanceImage(
  * `persist` says the question's lesson lives in the database (a
  * live lesson): only then does the image read or write its
  * database copy. A demo lesson's image stays out of the database
- * entirely — memory and the disk cache are its only homes — so
- * demo activity can neither adopt a live question's stored image
- * nor overwrite one.
+ * entirely — demo's half of the states map and the demo folder of
+ * the disk cache are its only homes — so demo activity can
+ * neither adopt a live question's stored image nor overwrite one.
  */
 export function startGuidanceImageForQuestion(
   printedCode: string,
@@ -647,11 +663,12 @@ export function startGuidanceImageForQuestion(
   const persist = opts?.persist ?? false;
   const topicTitle = question.topic || entry.topic;
   const key = imageKeyFor(printedCode, questionNumber, entry.keyVersion);
-  if (states.has(key)) return;
+  const sKey = stateKey(persist, key);
+  if (states.has(sKey)) return;
   const run: GuidanceImageRun = { label: `${printedCode}#${questionNumber}`, t0: Date.now() };
-  const disk = readDisk(key);
+  const disk = readDisk(key, persist);
   if (disk) {
-    states.set(key, { state: "ready", dataUrl: disk });
+    states.set(sKey, { state: "ready", dataUrl: disk });
     guidanceImageLog(run, `guidance image ready — disk cache, topic "${topicTitle}"`);
     if (source === "worker sweep" && persist) {
       // The sweep claimed this row because the database has no
@@ -663,7 +680,7 @@ export function startGuidanceImageForQuestion(
     }
     return;
   }
-  states.set(key, { state: "working" });
+  states.set(sKey, { state: "working" });
   guidanceImageLog(run, `guidance image queued — from ${source}, topic "${topicTitle}"`);
   void (async () => {
     try {
@@ -674,13 +691,13 @@ export function startGuidanceImageForQuestion(
       // database entirely.
       const db = persist ? await dbLoadImage(printedCode, questionNumber, entry.keyVersion) : null;
       if (db?.state === "ready") {
-        writeDisk(key, db.dataUrl);
-        states.set(key, { state: "ready", dataUrl: db.dataUrl });
+        writeDisk(key, db.dataUrl, persist);
+        states.set(sKey, { state: "ready", dataUrl: db.dataUrl });
         guidanceImageLog(run, `guidance image ready — database, topic "${topicTitle}"`);
         return;
       }
       if (db?.state === "failed") {
-        states.set(key, { state: "failed", error: db.error });
+        states.set(sKey, { state: "failed", error: db.error });
         guidanceImageLog(run, `guidance image failed — database, topic "${topicTitle}"`);
         return;
       }
@@ -702,7 +719,7 @@ export function startGuidanceImageForQuestion(
       // which must still settle the question instead of leaving it
       // working forever in this process.
       const message = e instanceof Error ? e.message : String(e);
-      states.set(key, { state: "failed", error: message });
+      states.set(sKey, { state: "failed", error: message });
       if (persist) {
         void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "failed", null, message, (m) =>
           guidanceImageLog(run, m),
@@ -742,49 +759,49 @@ export async function getGuidanceImage(
   // sweep owns retries, on the lessons' backoff terms.
   const topicTitle = question.topic || entry.topic;
   const key = imageKeyFor(printedCode, questionNumber, entry.keyVersion);
-  if (!states.has(key)) {
-    const disk = readDisk(key);
+  // The lesson store decides the caller's world, as it does for
+  // the lessons themselves — and the image's caches are split by
+  // that world: only a database lesson's image may settle from (or
+  // start into) the database, and a demo read looks only in demo's
+  // half of the states map and the disk cache.
+  const dbStore = dbGuidanceStore();
+  const store = auth !== null ? (dbStore ?? memoryGuidanceStore()) : memoryGuidanceStore();
+  const persist = dbStore !== null && store === dbStore;
+  const sKey = stateKey(persist, key);
+  if (!states.has(sKey)) {
+    const disk = readDisk(key, persist);
     if (disk) {
-      states.set(key, { state: "ready", dataUrl: disk });
+      states.set(sKey, { state: "ready", dataUrl: disk });
       guidanceImageLog(
         { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
         `guidance image ready — disk cache, topic "${topicTitle}"`,
       );
+    } else if (
+      persist &&
+      (await settleFromDatabase(key, printedCode, questionNumber, entry.keyVersion, topicTitle)) === "settled"
+    ) {
+      // The question's state came from the database; fall through to
+      // the state read below.
     } else {
-      // The lesson store decides the caller's world, as it does for
-      // the lessons themselves: only a database lesson's image may
-      // settle from (or start into) the database — a demo read
-      // never touches it.
-      const dbStore = dbGuidanceStore();
-      const store = auth !== null ? (dbStore ?? memoryGuidanceStore()) : memoryGuidanceStore();
-      const persist = dbStore !== null && store === dbStore;
-      if (
-        persist &&
-        (await settleFromDatabase(key, printedCode, questionNumber, entry.keyVersion, topicTitle)) === "settled"
-      ) {
-        // The question's state came from the database; fall through to
-        // the state read below.
-      } else {
-        // The guidance image waits for the question's lesson: it is drawn
-        // from that HTML, so until the lesson is ready there is
-        // nothing to draw from, and if the lesson failed there
-        // never will be.
-        const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
-        if (lesson?.status === "ready" && lesson.html) {
-          startGuidanceImageForQuestion(printedCode, questionNumber, lesson.html, "help read", { persist });
-        } else if (lesson?.status === "failed") {
-          return {
-            kind: "ok",
-            view: {
-              status: "failed",
-              error: "The lesson for this question could not be made, so no guidance image was drawn.",
-            },
-          };
-        }
+      // The guidance image waits for the question's lesson: it is drawn
+      // from that HTML, so until the lesson is ready there is
+      // nothing to draw from, and if the lesson failed there
+      // never will be.
+      const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
+      if (lesson?.status === "ready" && lesson.html) {
+        startGuidanceImageForQuestion(printedCode, questionNumber, lesson.html, "help read", { persist });
+      } else if (lesson?.status === "failed") {
+        return {
+          kind: "ok",
+          view: {
+            status: "failed",
+            error: "The lesson for this question could not be made, so no guidance image was drawn.",
+          },
+        };
       }
     }
   }
-  const current = states.get(key) ?? { state: "working" as const };
+  const current = states.get(sKey) ?? { state: "working" as const };
 
   const view: GuidanceImageView =
     current.state === "ready"
