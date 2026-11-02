@@ -17,10 +17,9 @@ import { BTN_SECONDARY } from "./ui";
 interface GuidanceImageProps {
   printedCode: string;
   questionNumber: number;
-  topic: string;
 }
 
-export default function GuidanceImage({ printedCode, questionNumber, topic }: GuidanceImageProps) {
+export default function GuidanceImage({ printedCode, questionNumber }: GuidanceImageProps) {
   const [image, setImage] = useState<string | null>(null);
   const [pending, setPending] = useState(true);
   const [resolved, setResolved] = useState(false);
@@ -78,15 +77,10 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
   if (!resolved) return null;
   if (!image && !pending) return null;
   const ext = image?.startsWith("data:image/png") ? "png" : image?.startsWith("data:image/jpeg") ? "jpg" : "webp";
-  const slug =
-    topic
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || "printable";
-  // The download name carries the sheet code and question number
-  // after the topic: images are per question now, so two questions
-  // in one topic must not download under the same name and
-  // overwrite each other in the parent's downloads.
+  // The download is named by the sheet code and question number —
+  // the image's own identity, the same one its cache and database
+  // row use. The topic title is printed on the image itself, so it
+  // does not need to ride in the file name too.
   const codeSlug = printedCode
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -99,7 +93,7 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
           <div className="mt-[10px] px-1 text-[13px] text-mid">
             A printable for this topic is ready — save it and print it.
           </div>
-          <a href={image} download={`printable-${slug}-${codeSlug}-q${questionNumber}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
+          <a href={image} download={`printable-${codeSlug}-q${questionNumber}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
             Download the printable
           </a>
         </>

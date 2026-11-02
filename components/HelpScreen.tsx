@@ -78,7 +78,7 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
       {/* The printable guidance image for this question,
           under the animation: it is the take-away form of the same
           help — print it, and the lesson steps are the keepsake. */}
-      <GuidanceImage printedCode={sheet.printedCode} questionNumber={q.number} topic={q.topic ?? sheet.topic} />
+      <GuidanceImage printedCode={sheet.printedCode} questionNumber={q.number} />
 
       {onNext && (
         <button type="button" onClick={onNext} className={`${BTN_SECONDARY} mt-3`}>
