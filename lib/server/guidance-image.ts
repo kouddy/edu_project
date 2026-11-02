@@ -117,9 +117,9 @@ function buildPosterPrompt(
     `Layout, top to bottom:`,
     `- A title "${topicTitle.toUpperCase()}" and one short subtitle line saying what the idea is.`,
     `- Four numbered panels in a 2 by 2 grid: 1 "What is ${topicTitle}?" in one or two plain sentences. 2 "How It Works" — the rule, with two or three short worked lines. 3 "Correct Example" — a fully worked example, every step right, clearly marked correct. 4 "Incorrect Example" — a worked example with one clear mistake, clearly marked wrong, with one line saying what went wrong.`,
-    `- A bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the poster.`,
+    `- A bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the poster, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away.`,
     `The poster is anchored on this workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}). The examples must teach the same idea the same way.`,
-    `Every number and every calculation on the poster must be exactly right — check each one before rendering it.`,
+    `Every number and every calculation on the poster must be exactly right — check each one before rendering it. Any picture, grid, array, or diagram must show EXACTLY what the words beside it say: a rectangle labelled length 6 and width 5 is drawn with exactly 6 squares across and 5 rows down — count the rows and columns before finishing, because a picture that disagrees with its numbers teaches the wrong lesson.`,
     `Style: dark brown-black text on a warm cream background (#fff8ec), orange (#e8710a) accents, rounded panel corners, simple flat illustration, large clear lettering a young student can read.`,
     `Print rule: the poster must stay fully legible when printed in black and white — all meaning carried by the dark text and outlines; colour is decoration only. Keep fills pale, and never put light text on a coloured fill.`,
     `No buttons, no app controls, no logos, no watermarks. Portrait orientation.`,
@@ -141,6 +141,7 @@ async function callResponses(
   config: PiConfig,
   providerId: string,
   body: Record<string, unknown>,
+  stage: string,
   timeoutMs: number,
 ): Promise<ResponsesResult> {
   const def = providerDef(config, providerId);
@@ -151,16 +152,40 @@ async function callResponses(
       `No API key for provider "${providerId}" — set the key env var named in models.json (META_API_KEY / MODEL_API_KEY).`,
     );
   }
-  const res = await fetch(`${def.baseUrl}/responses`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(timeoutMs),
-  });
-  if (!res.ok) {
-    throw new Error(`Image provider "${providerId}" answered HTTP ${res.status}.`);
+  // A slow stage is retried once before it may fail the poster: the
+  // image model reasons before it renders, and one timeout says
+  // nothing about the poster itself. Every error names its stage,
+  // so the server log says where a run died.
+  for (let attempt = 0; ; attempt++) {
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`${def.baseUrl}/responses`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) {
+        throw new Error(`Provider "${providerId}" answered HTTP ${res.status} during ${stage}.`);
+      }
+      const json = (await res.json()) as ResponsesResult;
+      console.log(`[poster] ${stage} answered in ${Math.round((Date.now() - t0) / 1000)}s`);
+      return json;
+    } catch (e) {
+      const message = e instanceof Error ? e.message : String(e);
+      const timedOut =
+        e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError");
+      if (timedOut && attempt === 0) {
+        console.log(`[poster] ${stage} timed out after ${Math.round(timeoutMs / 1000)}s; retrying once`);
+        continue;
+      }
+      if (timedOut) {
+        throw new Error(`${stage} timed out twice (limit ${Math.round(timeoutMs / 1000)}s per attempt).`);
+      }
+      if (message.startsWith("Provider ")) throw e;
+      throw new Error(`${stage}: ${message}`);
+    }
   }
-  return (await res.json()) as ResponsesResult;
 }
 
 function mimeOf(bytes: Buffer): string {
@@ -277,7 +302,15 @@ function evaluateTokens(tokens: Token[]): number | null {
 
 interface PosterCheck {
   ok: boolean;
+  /** Hard failures: a calculation code re-did and got wrong, or a
+   *  factual gate (labels, practice count, answers shown, white
+   *  background). Only these send a poster back or keep it hidden. */
   problems: string[];
+  /** The vision model's free-text critiques. Presentation
+   *  opinions — a step numbered oddly, a cramped panel — are
+   *  logged for a human's eye but never block a poster whose
+   *  facts check out. */
+  warnings: string[];
 }
 
 async function checkPoster(
@@ -290,7 +323,7 @@ async function checkPoster(
   const model = effectiveModel(config, "math", providerId);
   const ask = [
     `You are checking a Grade ${entry.kidGrade} math poster about "${topicTitle}" before a child sees it. Read the poster image carefully and answer with ONLY a JSON object, no other text:`,
-    `{"statements": ["every calculation written on the poster, copied exactly, like \\"300 + 100 = 400\\""], "correctExampleLabelled": true/false (the correct example is clearly marked correct), "incorrectExampleLabelledWrong": true/false (the incorrect example is clearly marked wrong AND its mistake is the one the poster names), "practiceCount": the number of practice questions in the bottom section, "practiceAnswersShown": true/false (any of the practice questions has its answer written anywhere), "practiceBackgroundWhite": true/false (the practice section background is white), "problems": ["each wrong calculation, mislabelled example, or unclear item you find, in your own words"]}`,
+    `{"statements": ["every calculation written on the poster, copied exactly, like \\"300 + 100 = 400\\""], "correctExampleLabelled": true/false (the correct example is clearly marked correct), "incorrectExampleLabelledWrong": true/false (the incorrect example is clearly marked wrong AND its mistake is the one the poster names), "picturesMatchNumbers": true/false (every drawn picture, grid, or diagram shows exactly the quantities the words beside it state — count the squares in any grid: a rectangle labelled length 6, width 5 must be drawn 6 across and 5 down), "practiceCount": the number of practice questions in the bottom section, "practiceAnswersShown": true/false (any of the practice questions has its answer written anywhere, including a practice question that repeats a worked example's numbers), "practiceBackgroundWhite": true/false (the practice section background is white), "problems": ["each wrong calculation, mislabelled example, or unclear item you find, in your own words"]}`,
     `Judge the incorrect example by its label: a wrong calculation inside it is intended, but only when the poster marks it wrong and names that same mistake.`,
   ].join("\n");
   const result = await callResponses(
@@ -308,18 +341,20 @@ async function checkPoster(
         },
       ],
     },
-    180_000,
+    "vision check",
+    240_000,
   );
   const text = textOf(result);
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start < 0 || end <= start) {
-    return { ok: false, problems: ["the vision check could not read the poster"] };
+    return { ok: false, problems: ["the vision check could not read the poster"], warnings: [] };
   }
   let verdict: {
     statements?: string[];
     correctExampleLabelled?: boolean;
     incorrectExampleLabelledWrong?: boolean;
+    picturesMatchNumbers?: boolean;
     practiceCount?: number;
     practiceAnswersShown?: boolean;
     practiceBackgroundWhite?: boolean;
@@ -328,16 +363,16 @@ async function checkPoster(
   try {
     verdict = JSON.parse(text.slice(start, end + 1)) as typeof verdict;
   } catch {
-    return { ok: false, problems: ["the vision check could not read the poster"] };
+    return { ok: false, problems: ["the vision check could not read the poster"], warnings: [] };
   }
-  const problems: string[] = [...(verdict.problems ?? [])];
-  problems.push(...arithmeticProblems(verdict.statements ?? []));
+  const problems: string[] = [...arithmeticProblems(verdict.statements ?? [])];
   if (verdict.correctExampleLabelled !== true) problems.push("the correct example is not clearly marked correct");
   if (verdict.incorrectExampleLabelledWrong !== true) problems.push("the incorrect example is not clearly marked wrong with its mistake named");
+  if (verdict.picturesMatchNumbers !== true) problems.push("a drawn picture does not match the numbers stated beside it — redraw it with exactly the stated quantities");
   if (verdict.practiceCount !== 5) problems.push(`the practice section holds ${verdict.practiceCount ?? 0} questions, not 5`);
   if (verdict.practiceAnswersShown === true) problems.push("a practice question's answer is shown");
   if (verdict.practiceBackgroundWhite !== true) problems.push("the practice section background is not white");
-  return { ok: problems.length === 0, problems };
+  return { ok: problems.length === 0, problems, warnings: verdict.problems ?? [] };
 }
 
 /* ----- storage: memory in flight, disk when ready ----- */
@@ -395,9 +430,12 @@ async function runPoster(
   const model = imageModelId(config);
   const prompt = buildPosterPrompt(entry, topicTitle, anchorPrompt, anchorAnswer);
   try {
-    let made = imageOf(await callResponses(config, providerId, { model, input: prompt }, 300_000));
+    let made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
     if (!made) throw new Error("The image provider returned no image.");
     let check = await checkPoster(config, made.dataUrl, entry, topicTitle);
+    if (check.warnings.length > 0) {
+      console.log(`[poster] ${key}: check notes, not blocking: ${check.warnings.join("; ")}`);
+    }
     if (!check.ok) {
       console.log(`[poster] ${key}: check failed (${check.problems.join("; ")}); sending back for fixes`);
       const fix = `Fix ONLY these problems in the poster and keep everything else the same: ${check.problems.join("; ")}.`;
@@ -405,7 +443,7 @@ async function runPoster(
       if (made.responseId) {
         try {
           fixed = imageOf(
-            await callResponses(config, providerId, { model, previous_response_id: made.responseId, input: fix }, 300_000),
+            await callResponses(config, providerId, { model, previous_response_id: made.responseId, input: fix }, "poster fix", 420_000),
           );
         } catch {
           fixed = null;
@@ -413,12 +451,15 @@ async function runPoster(
       }
       if (!fixed) {
         fixed = imageOf(
-          await callResponses(config, providerId, { model, input: `${prompt}\nAvoid these mistakes: ${check.problems.join("; ")}.` }, 300_000),
+          await callResponses(config, providerId, { model, input: `${prompt}\nAvoid these mistakes: ${check.problems.join("; ")}.` }, "image generation", 420_000),
         );
       }
       if (!fixed) throw new Error("The image provider returned no image on the fix pass.");
       made = fixed;
       check = await checkPoster(config, made.dataUrl, entry, topicTitle);
+      if (check.warnings.length > 0) {
+        console.log(`[poster] ${key}: check notes after the fix pass, not blocking: ${check.warnings.join("; ")}`);
+      }
       if (!check.ok) {
         states.set(key, { state: "failed", error: check.problems.join("; ") });
         console.log(`[poster] ${key}: failed after the fix pass (${check.problems.join("; ")})`);
