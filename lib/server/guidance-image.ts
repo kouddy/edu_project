@@ -403,7 +403,14 @@ type PosterState =
   | { state: "ready"; dataUrl: string }
   | { state: "failed"; error: string };
 
-const states = new Map<string, PosterState>();
+// The state map lives on globalThis, like the grade jobs and the
+// memory guidance store: Next loads this module once for the
+// worker (instrumentation) and again for the route handlers, and
+// a module-level map would give each copy its own state — the
+// worker's run and the page's polls would track different runs of
+// the same poster, each invisible to the other.
+type GlobalWithPosters = typeof globalThis & { __posterStates?: Map<string, PosterState> };
+const states: Map<string, PosterState> = ((globalThis as GlobalWithPosters).__posterStates ??= new Map());
 
 function cacheDir(): string {
   const dir = path.join(process.cwd(), ".poster-cache");
