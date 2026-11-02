@@ -61,9 +61,11 @@ export interface SubjectManifest {
 }
 
 /** The image model behind guidance images (subjects.json "image"). */
-interface ImagePolicy {
+export interface ImagePolicy {
   provider: string;
   model: string;
+  thinkingLevel?: string;
+  reasoningEffort?: string;
 }
 
 export interface PiConfig {
@@ -113,6 +115,15 @@ export function imageProviderId(config: PiConfig): string {
 
 export function imageModelId(config: PiConfig): string {
   return process.env.IMAGE_MODEL ?? config.image.model;
+}
+
+export function imageReasoningEffort(config: PiConfig): string | undefined {
+  return (
+    process.env.IMAGE_REASONING_EFFORT ??
+    process.env.IMAGE_THINKING_LEVEL ??
+    config.image.thinkingLevel ??
+    config.image.reasoningEffort
+  );
 }
 
 export function subjectManifest(config: PiConfig, agent: AgentId): SubjectManifest {

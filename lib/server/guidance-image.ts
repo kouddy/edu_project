@@ -32,6 +32,7 @@ import { findByPrintedCode, type RegistryEntry } from "./registry";
 import {
   imageModelId,
   imageProviderId,
+  imageReasoningEffort,
   loadPiConfig,
   providerDef,
   resolveProviderApiKey,
@@ -251,18 +252,10 @@ async function callResponses(
   }
 }
 
-function mimeOf(bytes: Buffer): string {
-  if (bytes.length >= 12 && bytes.toString("ascii", 0, 4) === "RIFF") return "image/webp";
-  if (bytes.length >= 4 && bytes[0] === 0x89 && bytes[1] === 0x50) return "image/png";
-  if (bytes.length >= 2 && bytes[0] === 0xff && bytes[1] === 0xd8) return "image/jpeg";
-  return "image/webp";
-}
-
 function imageOf(result: ResponsesResult): { dataUrl: string } | null {
   const item = (result.output ?? []).find((o) => o.type === "image_generation_call" && o.result);
   if (!item?.result) return null;
-  const bytes = Buffer.from(item.result, "base64");
-  return { dataUrl: `data:${mimeOf(bytes)};base64,${item.result}` };
+  return { dataUrl: `data:image/png;base64,${item.result}` };
 }
 
 /* ----- storage: memory in flight, disk and database when ready ----- */
@@ -562,7 +555,7 @@ function fixtureGuidanceImage(): string | null {
   const file = process.env.GUIDANCE_IMAGE_FIXTURE_PATH;
   if (!file || !existsSync(file)) return null;
   const ext = path.extname(file).toLowerCase();
-  const mime = ext === ".png" ? "image/png" : ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/webp";
+  const mime = ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : "image/png";
   return `data:${mime};base64,${readFileSync(file).toString("base64")}`;
 }
 
@@ -581,6 +574,7 @@ async function runGuidanceImage(
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
   const model = imageModelId(config);
+  const reasoningEffort = imageReasoningEffort(config);
   const prompt = buildGuidanceImagePrompt(entry, topicTitle, anchorPrompt, anchorAnswer, guidanceHtml);
   const teacher = teacherFor(entry, topicTitle);
   const portrait = teacher ? teacherPortrait(teacher.species) : null;
@@ -600,7 +594,9 @@ async function runGuidanceImage(
     : prompt;
   const log = (message: string) => guidanceImageLog(run, message);
   log(
-    `guidance image generation started — "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars${
+    `guidance image generation started — "${anchorPrompt}", model ${model} via ${providerId}${
+      reasoningEffort ? ` (reasoning: ${reasoningEffort})` : ""
+    }, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars${
       portrait && teacher
         ? `, teacher reference ${teacher.name} attached (${Math.round(portrait.length / 1024)} KB)`
         : ""
@@ -613,8 +609,14 @@ async function runGuidanceImage(
     // One request, and that is the whole pipeline: the lesson it
     // feeds on was verified before it finished, and the image
     // simply renders that lesson as a printable picture.
+    const body: Record<string, unknown> = {
+      model,
+      input,
+      tools: [{ type: "image_generation", output_format: "png" }],
+      ...(reasoningEffort ? { reasoning: { effort: reasoningEffort } } : {}),
+    };
     const made = imageOf(
-      await callResponses(config, providerId, { model, input }, "image generation", 420_000, log),
+      await callResponses(config, providerId, body, "image generation", 420_000, log),
     );
     if (!made) throw new Error("The image provider returned no image.");
     writeDisk(key, made.dataUrl, persist);

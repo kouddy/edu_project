@@ -76,7 +76,7 @@ export default function GuidanceImage({ printedCode, questionNumber }: GuidanceI
 
   if (!resolved) return null;
   if (!image && !pending) return null;
-  const ext = image?.startsWith("data:image/png") ? "png" : image?.startsWith("data:image/jpeg") ? "jpg" : "webp";
+  const ext = image?.startsWith("data:image/jpeg") ? "jpg" : "png";
   // The download is named by the sheet code and question number —
   // the image's own identity, the same one its cache and database
   // row use. The topic title is printed on the image itself, so it

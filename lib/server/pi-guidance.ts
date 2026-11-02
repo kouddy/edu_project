@@ -94,6 +94,11 @@ export async function generateGuidanceWithHarness(args: {
     throw new Error(`Model ${providerId}/${modelId} is not defined in lib/server/pi/models.json.`);
   }
 
+  let onSubmitted: (() => void) | undefined;
+  const submittedPromise = new Promise<void>((resolve) => {
+    onSubmitted = resolve;
+  });
+
   const captured: { html: string | null; submitFailures: number } = {
     html: null,
     submitFailures: 0,
@@ -149,6 +154,7 @@ export async function generateGuidanceWithHarness(args: {
         };
       }
       captured.html = params.html;
+      onSubmitted?.();
       return {
         content: [{ type: "text" as const, text: "Accepted and recorded. Stop here." }],
         details: {},
@@ -231,15 +237,21 @@ export async function generateGuidanceWithHarness(args: {
     try {
       await Promise.race([
         session.prompt(task),
+        submittedPromise,
         new Promise<never>((_resolve, reject) => {
           timer = setTimeout(() => reject(new Error("Guidance generation timed out.")), GUIDANCE_TIMEOUT_MS);
         }),
       ]);
     } catch (err) {
-      await session.abort().catch(() => {});
-      throw err;
+      if (!captured.html) {
+        await session.abort().catch(() => {});
+        throw err;
+      }
     } finally {
       if (timer) clearTimeout(timer);
+      if (captured.html) {
+        await session.abort().catch(() => {});
+      }
     }
     log("guidance generation finished");
   } finally {

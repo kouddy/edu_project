@@ -38,7 +38,7 @@
                     "thinkingLevelMap": {
                         "minimal": "low",
                         "low": "low",
-                        "medium": "high",
+                        "medium": "medium",
                         "high": "high"
                     }
                 }
@@ -82,7 +82,7 @@
                         "text",
                         "image"
                     ],
-                    "maxTokens": 8192,
+                    "maxTokens": 16384,
                     "name": "Gemini 3.8 Flash",
                     "reasoning": true
                 }
