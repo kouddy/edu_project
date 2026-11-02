@@ -5,7 +5,7 @@ import { kidTrackLabel, type Snapshot } from "@/lib/derive";
 import { getActiveMode, getAuthState, signOut } from "@/lib/store";
 import { getSupabase } from "@/lib/supabase-client";
 import MemberCodeCard from "./MemberCode";
-import { BTN_SECONDARY, ScreenHeader } from "./ui";
+import { BTN_SECONDARY, CARD, CARD_PAD, ScreenHeader } from "./ui";
 
 interface Props {
   snap: Snapshot;
@@ -16,8 +16,6 @@ interface Props {
    .qrcard/.qrbox, .kidrow, .btn.secondary): Sign out uses the same
    12px-radius rectangular secondary button as the other screens —
    not a rounded pill. */
-const CARD =
-  "mb-3 rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
 
 export default function ProfileScreen({ snap, onSignOut }: Props) {
@@ -31,7 +29,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <ScreenHeader title="Profile" />
 
-      <div className={CARD}>
+      <div className={`${CARD} ${CARD_PAD} mb-3`}>
         <p className="mb-[3px] text-[11.5px] font-bold uppercase tracking-[0.12em] text-faint">
           Parent account
         </p>
@@ -49,7 +47,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
 
       <MemberCodeCard parentId={parent.id} email={email} />
 
-      <div className={CARD}>
+      <div className={`${CARD} ${CARD_PAD} mb-3`}>
         <h3 className={`${H3} mb-1`}>My kids</h3>
         {snap.kids.map((kid) => (
           <div

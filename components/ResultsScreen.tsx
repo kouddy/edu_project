@@ -8,14 +8,12 @@ import {
   summaryText,
   type SheetState,
 } from "@/lib/derive";
-import { BackButton, BTN, BTN_SECONDARY, ScoreBadges, ScreenHeader } from "./ui";
+import { BackButton, BTN, BTN_SECONDARY, CARD, CARD_PAD, ScoreBadges, ScreenHeader } from "./ui";
 import PhotoViewer from "./PhotoViewer";
 
 /* Styled directly from the wireframe's Results (.banner, .mockphoto,
    summary card with top-right badges, .qrow list, bottom buttons):
    banner → photo → summary → question by question → actions. */
-const CARD =
-  "rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
 const HAND = '"Segoe Print", "Comic Sans MS", cursive';
 
@@ -155,14 +153,14 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHel
         <PhotoViewer urls={photoUrls} kidName={kid.name} onClose={() => setPhotoOpen(false)} />
       )}
 
-      <div className={`${CARD} mb-3`}>
+      <div className={`${CARD} ${CARD_PAD} mb-3`}>
         <div className="mb-2">
           <ScoreBadges score={score} align="end" />
         </div>
         <p className="text-[13.5px] leading-[1.45] text-mid">{summaryText(st)}</p>
       </div>
 
-      <div className={CARD}>
+      <div className={`${CARD} ${CARD_PAD}`}>
         <h3 className={`${H3} mb-0.5`}>Question by question</h3>
         {key.questions.map((q) => {
           const g = result.perQuestion.find((x) => x.questionNumber === q.number);
@@ -244,7 +242,7 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHel
         <button
           type="button"
           onClick={onNext}
-          className={`${score.unsure > 0 ? BTN_SECONDARY : BTN} mt-2.5`}
+          className={`${score.unsure > 0 ? BTN_SECONDARY : BTN} mt-3`}
         >
           Next sheet ›
         </button>
@@ -261,7 +259,7 @@ export default function ResultsScreen({ st, partLabel, onNext, onBack, onOpenHel
             </button>
           </p>
         ) : (
-          <p className="mt-2.5 text-center">
+          <p className="mt-3 text-center">
             <button
               type="button"
               onClick={handleRemove}

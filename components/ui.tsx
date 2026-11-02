@@ -65,6 +65,17 @@ export const BTN =
 export const BTN_SECONDARY =
   "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
+/* The card surface, defined once: every card in the app shares
+   this radius, border, fill and shadow. A content card composes
+   CARD_PAD for the standard inset; a list shell composes nothing
+   and its rows carry the row inset (17px sides, 11px top/bottom,
+   titles at the content inset). The gap below a card belongs to
+   the stack, never the card: mb-3 at the call site, or a flex
+   gap-3 stack. */
+export const CARD =
+  "rounded-[16px] border-[1.5px] border-linesoft bg-card shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
+export const CARD_PAD = "px-[15px] py-[14px]";
+
 /* The wireframe's .pill set: solid orange for a final score, green
    "correct/graded graded" and amber "N need your check" while checks
    are outstanding. */

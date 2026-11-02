@@ -13,7 +13,7 @@ import {
 } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
 import { Spinner } from "@heroui/react";
-import { BTN } from "./ui";
+import { BTN, CARD, CARD_PAD } from "./ui";
 
 /** The Home Marking card's data, built by the app shell. */
 interface MarkingCardData {
@@ -42,8 +42,6 @@ interface Props {
 
 /* Styled directly from the wireframe's CSS (.card, .btn, .pill, .chip) so
    the screen reads the same, rather than approximated through components. */
-const CARD =
-  "mb-3 rounded-[16px] border-[1.5px] border-linesoft bg-card shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
 const PILL =
   "inline-block shrink-0 rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold";
@@ -98,7 +96,7 @@ export default function HomeScreen({
     <div className="px-[18px] pb-[26px] pt-[14px]">
       {/* ---- marking card ---- */}
       {marking && (
-        <div className={`${CARD} px-[15px] py-[14px]`}>
+        <div className={`${CARD} ${CARD_PAD} mb-3`}>
           {mTotal > 0 && (
             <>
               <div className="flex items-center gap-2">
@@ -147,7 +145,7 @@ export default function HomeScreen({
 
       {/* ---- status slot ---- */}
       {status?.type === "check" && (
-        <div className={`${CARD} px-[15px] py-[14px]`}>
+        <div className={`${CARD} ${CARD_PAD} mb-3`}>
           <div className="flex items-center justify-between gap-2.5">
             <h3 className={H3}>
               {status.count} {status.count === 1 ? "answer needs" : "answers need"} your check
@@ -176,7 +174,7 @@ export default function HomeScreen({
 
       {/* ---- kid switcher ---- */}
       {snap.kids.length > 1 && (
-        <div className="mb-4 mt-1 flex flex-wrap gap-2">
+        <div className="mb-3 mt-1 flex flex-wrap gap-2">
           {snap.kids.map((k) => {
             const active = k.id === kid.id;
             return (
@@ -198,7 +196,7 @@ export default function HomeScreen({
         </div>
       )}
       {snap.kids.length <= 1 && (
-        <p className="mb-4 mt-0.5 font-display text-[16px] font-extrabold text-ink">
+        <p className="mb-3 mt-0.5 font-display text-[16px] font-extrabold text-ink">
           {kid.name}{" "}
           <span className="text-[13.5px] font-semibold text-mid">· Grade {kid.grade}</span>
         </p>
@@ -206,7 +204,7 @@ export default function HomeScreen({
 
       {/* ---- homework ---- */}
       <section id="section-homework" className="scroll-mt-4">
-        <div className={CARD}>
+        <div className={`${CARD} mb-3`}>
           <h3 className={`${H3} px-[15px] pb-2 pt-[14px]`}>Homework</h3>
           {homeworkRows.map((group, i) => (
             <HomeworkRow
@@ -233,7 +231,7 @@ export default function HomeScreen({
 
       {/* ---- progress ---- */}
       {showProgress && (
-        <div className={CARD}>
+        <div className={`${CARD} mb-3`}>
           <h3 className={`${H3} px-[15px] pb-0.5 pt-[14px]`}>Progress</h3>
           <div className="px-[17px] py-[11px]">
             <p className="text-[14.5px] font-semibold text-ink">
@@ -252,7 +250,7 @@ export default function HomeScreen({
       {/* ---- history ---- */}
       {history.length > 0 ? (
         <section id="section-history" className="scroll-mt-4">
-          <div className={CARD}>
+          <div className={`${CARD} mb-3`}>
             <h3 className={`${H3} px-[15px] pb-2 pt-[14px]`}>History</h3>
             {history.map((group, i) => (
               <HomeworkRow

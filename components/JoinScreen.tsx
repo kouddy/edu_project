@@ -36,7 +36,7 @@ export default function JoinScreen({ parentId, parentName, email, onCheckAgain, 
 
       <MemberCodeCard parentId={parentId} email={email} />
 
-      <p className="mb-4 text-center text-[13px] text-mid">
+      <p className="mb-3 text-center text-[13px] text-mid">
         {parentName}
         {email ? ` · ${email}` : ""}
       </p>
