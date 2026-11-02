@@ -8,7 +8,9 @@
  * practice questions with blank answer lines on a white section,
  * drawn by the image model. One guidance image per topic serves
  * every kid and every question in it, so guidance images cache by
- * topic — on disk, so a restart keeps them.
+ * topic — on disk, so a restart keeps them, and in the database on
+ * the seed question's guidance_animations row when Supabase is
+ * configured, so a new host keeps them too.
  *
  * A guidance image is drawn FROM the question's finished animated
  * lesson: the worker starts it the moment a lesson passes its gate,
@@ -32,7 +34,7 @@ import {
   type PiConfig,
 } from "./pi-config";
 import { dbGuidanceStore, memoryGuidanceStore } from "./guidance-store";
-import { supabaseForToken } from "./supabase";
+import { supabaseAdmin, supabaseForToken } from "./supabase";
 
 interface GuidanceImageView {
   status: "generating" | "ready" | "failed";
@@ -264,7 +266,7 @@ function imageOf(result: ResponsesResult): { dataUrl: string; responseId?: strin
   return { dataUrl: `data:${mimeOf(bytes)};base64,${item.result}`, responseId: result.id };
 }
 
-/* ----- storage: memory in flight, disk when ready ----- */
+/* ----- storage: memory in flight, disk and database when ready ----- */
 
 type GuidanceImageState =
   | { state: "working" }
@@ -303,6 +305,116 @@ function writeDisk(key: string, dataUrl: string): void {
   }
 }
 
+/* ----- the same image in the database ----- */
+
+/** The image columns live on the seed question's row in
+ *  guidance_animations — the row of the lesson the image was drawn
+ *  from — with the topic key denormalized onto the row, so a
+ *  topic's image is one indexed lookup rather than a scan of every
+ *  sheet the topic appears in. Read and written with the
+ *  service-role client, like the lessons: operator machinery, no
+ *  parent data. Absent the client (demo without a service key, or
+ *  the migration not yet pushed), the disk cache and memory remain
+ *  the whole store, exactly as before. */
+
+type DbGuidanceImage = { state: "ready"; dataUrl: string } | { state: "failed"; error: string };
+
+let dbImageWarned = false;
+
+async function dbLoadImage(topicKey: string): Promise<DbGuidanceImage | null> {
+  const admin = supabaseAdmin();
+  if (!admin) return null;
+  try {
+    const { data, error } = await admin
+      .from("guidance_animations")
+      .select("image_status, image_data_url, image_error, image_updated_at")
+      .eq("image_topic_key", topicKey)
+      .not("image_status", "is", null)
+      .order("image_updated_at", { ascending: false })
+      .limit(20);
+    if (error) {
+      if (!dbImageWarned) {
+        dbImageWarned = true;
+        console.warn(
+          `[guidance-image] database read unavailable — ${error.message}; using disk and memory only`,
+        );
+      }
+      return null;
+    }
+    const rows = (data ?? []) as {
+      image_status: string | null;
+      image_data_url: string | null;
+      image_error: string | null;
+    }[];
+    const ready = rows.find((r) => r.image_status === "ready" && r.image_data_url);
+    if (ready?.image_data_url) return { state: "ready", dataUrl: ready.image_data_url };
+    const failed = rows.find((r) => r.image_status === "failed");
+    if (failed) {
+      return { state: "failed", error: failed.image_error ?? "The guidance image could not be drawn." };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Settle a topic's in-memory state from its database image, if it
+ *  has one: ready is adopted (and written through to the disk
+ *  cache), failed is adopted as failed. Returns "settled" when the
+ *  database answered the topic one way or the other. */
+async function settleFromDatabase(
+  topicKey: string,
+  printedCode: string,
+  questionNumber: number,
+  topicTitle: string,
+): Promise<"settled" | "none"> {
+  const db = await dbLoadImage(topicKey);
+  if (!db) return "none";
+  if (db.state === "ready") {
+    writeDisk(topicKey, db.dataUrl);
+    states.set(topicKey, { state: "ready", dataUrl: db.dataUrl });
+    guidanceImageLog(
+      { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
+      `guidance image ready — database, topic "${topicTitle}"`,
+    );
+  } else {
+    states.set(topicKey, { state: "failed", error: db.error });
+  }
+  return "settled";
+}
+
+async function dbSaveImage(
+  printedCode: string,
+  questionNumber: number,
+  keyVersion: number,
+  topicKey: string,
+  status: "generating" | "ready" | "failed",
+  dataUrl: string | null,
+  errorText: string | null,
+  log: (message: string) => void,
+): Promise<void> {
+  const admin = supabaseAdmin();
+  if (!admin) return;
+  try {
+    const { error } = await admin
+      .from("guidance_animations")
+      .update({
+        image_topic_key: topicKey,
+        image_status: status,
+        image_data_url: dataUrl,
+        image_error: errorText,
+        image_updated_at: new Date().toISOString(),
+      })
+      .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion });
+    if (error) log(`guidance image database save failed — ${error.message}`);
+    // No matching row is silent: the seed lesson lived in the
+    // memory store (demo), so the disk cache stays the image's
+    // only persistent home, as designed.
+  } catch (e) {
+    log(`guidance image database save failed — ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
 /** UI-test hook: when set, every guidance image request serves this image
  *  file as ready, so the Help-page surface can be exercised without
  *  a provider key. Never set in production. */
@@ -322,6 +434,8 @@ async function runGuidanceImage(
   anchorAnswer: string,
   guidanceHtml: string,
   run: GuidanceImageRun,
+  printedCode: string,
+  questionNumber: number,
 ): Promise<void> {
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
@@ -351,6 +465,7 @@ async function runGuidanceImage(
         : ""
     }`,
   );
+  void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "generating", null, null, log);
   try {
     // One request, and that is the whole pipeline: the lesson it
     // feeds on was verified before it finished, and the image
@@ -361,10 +476,12 @@ async function runGuidanceImage(
     if (!made) throw new Error("The image provider returned no image.");
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
+    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", made.dataUrl, null, log);
     log(`guidance image generation finished — image ${Math.round(made.dataUrl.length / 1024)} KB`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     states.set(key, { state: "failed", error: message });
+    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, log);
     log(`guidance image generation failed — ${message}`);
   }
 }
@@ -401,7 +518,34 @@ export function startGuidanceImageForQuestion(
   }
   states.set(key, { state: "working" });
   guidanceImageLog(run, `guidance image queued — from ${source}, topic "${topicTitle}"`);
-  void runGuidanceImage(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml, run);
+  void (async () => {
+    // The database may already hold this topic's image — drawn on
+    // another host, or before a restart the disk cache did not
+    // survive. Adopt it instead of drawing a second one.
+    const db = await dbLoadImage(key);
+    if (db?.state === "ready") {
+      writeDisk(key, db.dataUrl);
+      states.set(key, { state: "ready", dataUrl: db.dataUrl });
+      guidanceImageLog(run, `guidance image ready — database, topic "${topicTitle}"`);
+      return;
+    }
+    if (db?.state === "failed") {
+      states.set(key, { state: "failed", error: db.error });
+      guidanceImageLog(run, `guidance image failed — database, topic "${topicTitle}"`);
+      return;
+    }
+    await runGuidanceImage(
+      key,
+      entry,
+      topicTitle,
+      question.prompt,
+      question.correctAnswer,
+      guidanceHtml,
+      run,
+      printedCode,
+      questionNumber,
+    );
+  })();
 }
 
 /**
@@ -441,6 +585,9 @@ export async function getGuidanceImage(
         { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
         `guidance image ready — disk cache, topic "${topicTitle}"`,
       );
+    } else if ((await settleFromDatabase(key, printedCode, questionNumber, topicTitle)) === "settled") {
+      // The topic's state came from the database; fall through to
+      // the state read below.
     } else {
       // The guidance image waits for the question's lesson: it is drawn
       // from that HTML, so until the lesson is ready there is
