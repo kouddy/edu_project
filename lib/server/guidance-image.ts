@@ -62,14 +62,21 @@ const TEACHERS: Record<string, string> = {
   bee: "Bella Bee",
 };
 
-const teacherCache = new Map<string, string | null>();
+interface TeacherInfo {
+  name: string;
+  species: string;
+  /** The prompt's phrase for the teacher: "Oliver Owl, a friendly cartoon owl". */
+  label: string;
+}
 
-/** The topic's teacher ("Oliver Owl, a friendly cartoon owl"), read
- *  from the grade's pools file where topics carry their animal. */
-function teacherFor(entry: RegistryEntry, topicTitle: string): string | null {
+const teacherCache = new Map<string, TeacherInfo | null>();
+
+/** The topic's teacher, read from the grade's pools file where
+ *  topics carry their animal. */
+function teacherFor(entry: RegistryEntry, topicTitle: string): TeacherInfo | null {
   const cacheKey = `${entry.kidGrade}|${topicTitle}`;
   if (teacherCache.has(cacheKey)) return teacherCache.get(cacheKey) ?? null;
-  let found: string | null = null;
+  let found: TeacherInfo | null = null;
   try {
     const file = path.join(
       process.cwd(),
@@ -80,17 +87,45 @@ function teacherFor(entry: RegistryEntry, topicTitle: string): string | null {
       entry.subject.toLowerCase(),
       `questions-g${entry.kidGrade}.json`,
     );
-    const pools = JSON.parse(readFileSync(file, "utf8")) as {
-      topics?: { title: string; animal: string }[];
-    };
-    const topic = (pools.topics ?? []).find((t) => t.title === topicTitle);
+    // The pools file is a bare list of topics, not an object
+    // wrapping one — read it as either shape.
+    const parsed = JSON.parse(readFileSync(file, "utf8")) as
+      | { title: string; animal: string }[]
+      | { topics?: { title: string; animal: string }[] };
+    const topics = Array.isArray(parsed) ? parsed : (parsed.topics ?? []);
+    const topic = topics.find((t) => t.title === topicTitle);
     if (topic && TEACHERS[topic.animal]) {
-      found = `${TEACHERS[topic.animal]}, a friendly cartoon ${topic.animal}`;
+      found = {
+        name: TEACHERS[topic.animal],
+        species: topic.animal,
+        label: `${TEACHERS[topic.animal]}, a friendly cartoon ${topic.animal}`,
+      };
     }
   } catch {
     found = null;
   }
   teacherCache.set(cacheKey, found);
+  return found;
+}
+
+const portraitCache = new Map<string, string | null>();
+
+/** The teacher's workbook portrait as a data URL — the reference
+ *  picture sent with a guidance image request, so the drawn teacher
+ *  is the book's teacher and not an improvisation. The portraits
+ *  live in lib/server/teachers/, one PNG per species. */
+function teacherPortrait(species: string): string | null {
+  if (portraitCache.has(species)) return portraitCache.get(species) ?? null;
+  let found: string | null = null;
+  try {
+    const bytes = readFileSync(
+      path.join(process.cwd(), "lib", "server", "teachers", `${species}.png`),
+    );
+    found = `data:image/png;base64,${bytes.toString("base64")}`;
+  } catch {
+    found = null;
+  }
+  portraitCache.set(species, found);
   return found;
 }
 
@@ -110,10 +145,13 @@ function buildGuidanceImagePrompt(
   guidanceHtml: string,
 ): string {
   const teacher = teacherFor(entry, topicTitle);
+  const hasPortrait = teacher ? teacherPortrait(teacher.species) != null : false;
   return [
     `Create ONE portrait educational guidance image for a Grade ${entry.kidGrade} math student. The topic is "${topicTitle}".`,
     teacher
-      ? `Include ${teacher} — the topic's teacher from the student's workbook — small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`
+      ? hasPortrait
+        ? `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, pointing at the lesson. The picture attached to this request is ${teacher.name} exactly as in the workbook: draw the teacher to match that picture — same animal, same colours, same simple flat cartoon style.`
+        : `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`
       : `Include a friendly cartoon animal teacher, small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`,
     `Layout, top to bottom:`,
     `- A title "${topicTitle.toUpperCase()}" and one short subtitle line saying what the idea is.`,
@@ -286,16 +324,36 @@ async function runGuidanceImage(
   const providerId = imageProviderId(config);
   const model = imageModelId(config);
   const prompt = buildGuidanceImagePrompt(entry, topicTitle, anchorPrompt, anchorAnswer, guidanceHtml);
+  const teacher = teacherFor(entry, topicTitle);
+  const portrait = teacher ? teacherPortrait(teacher.species) : null;
+  // With a portrait, the request becomes a message carrying the
+  // prompt text plus the portrait as a reference picture; without
+  // one it stays the plain text prompt it has always been.
+  const input: unknown = portrait
+    ? [
+        {
+          role: "user",
+          content: [
+            { type: "input_text", text: prompt },
+            { type: "input_image", image_url: portrait },
+          ],
+        },
+      ]
+    : prompt;
   const log = (message: string) => guidanceImageLog(run, message);
   log(
-    `guidance image generation started — "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars`,
+    `guidance image generation started — "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars${
+      portrait && teacher
+        ? `, teacher reference ${teacher.name} attached (${Math.round(portrait.length / 1024)} KB)`
+        : ""
+    }`,
   );
   try {
     // One request, and that is the whole pipeline: the lesson it
     // feeds on was verified before it finished, and the image
     // simply renders that lesson as a printable picture.
     const made = imageOf(
-      await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000, log),
+      await callResponses(config, providerId, { model, input }, "image generation", 420_000, log),
     );
     if (!made) throw new Error("The image provider returned no image.");
     writeDisk(key, made.dataUrl);
