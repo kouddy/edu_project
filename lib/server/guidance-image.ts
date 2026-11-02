@@ -5,11 +5,11 @@
  * guidance image for the question's topic: the lesson's method laid
  * out as 4 to 6 steps in the lesson's own visual form — its numbers,
  * boxes and short captions, not added prose — drawn by the image
- * model. One guidance image per topic serves
- * every kid and every question in it, so guidance images cache by
- * topic — on disk, so a restart keeps them, and in the database on
- * the seed question's guidance_animations row when Supabase is
- * configured, so a new host keeps them too. That database copy
+ * model. A guidance image goes with one question's guidance:
+ * drawn from that question's lesson, it is cached by that question
+ * — in memory and on disk, so a restart keeps it — and stored on
+ * that lesson's own guidance_animations row when Supabase is
+ * configured, so a new host keeps it too. That database copy
  * belongs to live lessons only: a demo lesson's image never reads
  * or writes it. The guidance worker's
  * poll sweeps those rows for images a crash left unfinished and
@@ -135,12 +135,13 @@ function teacherPortrait(species: string): string | null {
   return found;
 }
 
-function guidanceImageKeyFor(entry: RegistryEntry, topicTitle: string): string {
-  const slug = topicTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return `g${entry.kidGrade}-${entry.subject.toLowerCase()}-${slug}`;
+/** The cache identity of one question's guidance image. The image
+ *  goes with the guidance itself — drawn from one question's
+ *  lesson and stored on that lesson's row — so the states map and
+ *  the disk cache key on the question's own identity (the same
+ *  triple the database row is matched on), never on the topic. */
+function imageKeyFor(printedCode: string, questionNumber: number, keyVersion: number): string {
+  return `${printedCode.toLowerCase()}-q${questionNumber}-kv${keyVersion}`;
 }
 
 function buildGuidanceImagePrompt(
@@ -328,17 +329,22 @@ const IMAGE_MAX_ATTEMPTS = 3;
 
 let dbImageWarned = false;
 
-async function dbLoadImage(topicKey: string): Promise<DbGuidanceImage | null> {
+/** Read one question's own image from its guidance row — the row
+ *  is matched on the same triple as the lesson itself. A row still
+ *  generating answers null: only ready and failed settle a read. */
+async function dbLoadImage(
+  printedCode: string,
+  questionNumber: number,
+  keyVersion: number,
+): Promise<DbGuidanceImage | null> {
   const admin = supabaseAdmin();
   if (!admin) return null;
   try {
     const { data, error } = await admin
       .from("guidance_animations")
-      .select("image_status, image_data_url, image_error, image_updated_at")
-      .eq("image_topic_key", topicKey)
-      .not("image_status", "is", null)
-      .order("image_updated_at", { ascending: false })
-      .limit(20);
+      .select("image_status, image_data_url, image_error")
+      .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion })
+      .maybeSingle();
     if (error) {
       if (!dbImageWarned) {
         dbImageWarned = true;
@@ -348,16 +354,16 @@ async function dbLoadImage(topicKey: string): Promise<DbGuidanceImage | null> {
       }
       return null;
     }
-    const rows = (data ?? []) as {
+    const row = data as {
       image_status: string | null;
       image_data_url: string | null;
       image_error: string | null;
-    }[];
-    const ready = rows.find((r) => r.image_status === "ready" && r.image_data_url);
-    if (ready?.image_data_url) return { state: "ready", dataUrl: ready.image_data_url };
-    const failed = rows.find((r) => r.image_status === "failed");
-    if (failed) {
-      return { state: "failed", error: failed.image_error ?? "The guidance image could not be drawn." };
+    } | null;
+    if (row?.image_status === "ready" && row.image_data_url) {
+      return { state: "ready", dataUrl: row.image_data_url };
+    }
+    if (row?.image_status === "failed") {
+      return { state: "failed", error: row.image_error ?? "The guidance image could not be drawn." };
     }
     return null;
   } catch {
@@ -365,27 +371,28 @@ async function dbLoadImage(topicKey: string): Promise<DbGuidanceImage | null> {
   }
 }
 
-/** Settle a topic's in-memory state from its database image, if it
- *  has one: ready is adopted (and written through to the disk
- *  cache), failed is adopted as failed. Returns "settled" when the
- *  database answered the topic one way or the other. */
+/** Settle a question's in-memory state from its own row's database
+ *  image, if it has one: ready is adopted (and written through to
+ *  the disk cache), failed is adopted as failed. Returns "settled"
+ *  when the database answered the question one way or the other. */
 async function settleFromDatabase(
-  topicKey: string,
+  key: string,
   printedCode: string,
   questionNumber: number,
+  keyVersion: number,
   topicTitle: string,
 ): Promise<"settled" | "none"> {
-  const db = await dbLoadImage(topicKey);
+  const db = await dbLoadImage(printedCode, questionNumber, keyVersion);
   if (!db) return "none";
   if (db.state === "ready") {
-    writeDisk(topicKey, db.dataUrl);
-    states.set(topicKey, { state: "ready", dataUrl: db.dataUrl });
+    writeDisk(key, db.dataUrl);
+    states.set(key, { state: "ready", dataUrl: db.dataUrl });
     guidanceImageLog(
       { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
       `guidance image ready — database, topic "${topicTitle}"`,
     );
   } else {
-    states.set(topicKey, { state: "failed", error: db.error });
+    states.set(key, { state: "failed", error: db.error });
   }
   return "settled";
 }
@@ -394,7 +401,6 @@ async function dbSaveImage(
   printedCode: string,
   questionNumber: number,
   keyVersion: number,
-  topicKey: string,
   status: "generating" | "ready" | "failed",
   dataUrl: string | null,
   errorText: string | null,
@@ -404,7 +410,6 @@ async function dbSaveImage(
   if (!admin) return;
   try {
     const fields: Record<string, unknown> = {
-      image_topic_key: topicKey,
       image_status: status,
       image_data_url: dataUrl,
       image_error: errorText,
@@ -440,8 +445,8 @@ interface SweepRow {
   id: string;
   printed_code: string;
   question_number: number;
+  key_version: number;
   html: string;
-  image_topic_key: string | null;
   image_status: string | null;
   image_attempts: number | null;
   image_updated_at: string | null;
@@ -478,7 +483,7 @@ export async function sweepGuidanceImages(limit = 2): Promise<number> {
     const { data, error } = await admin
       .from("guidance_animations")
       .select(
-        "id, printed_code, question_number, html, image_topic_key, image_status, image_attempts, image_updated_at",
+        "id, printed_code, question_number, key_version, html, image_status, image_attempts, image_updated_at",
       )
       .eq("status", "ready")
       .not("html", "is", null)
@@ -486,30 +491,23 @@ export async function sweepGuidanceImages(limit = 2): Promise<number> {
       .limit(100);
     if (error || !data) return 0;
     const now = Date.now();
-    // One candidate per topic: the first eligible seed row wins,
-    // and the start it triggers settles the whole topic.
-    const candidates = new Map<string, { row: SweepRow; topicTitle: string }>();
+    // Each row is its own candidate: an image goes with its own
+    // guidance, so one question's finished image says nothing
+    // about another's — eligibility is read off the row itself.
+    let started = 0;
     for (const row of data as SweepRow[]) {
+      if (started >= limit) break;
       if (!sweepEligible(row, now)) continue;
       const entry = findByPrintedCode(row.printed_code);
       const question = entry?.questions.find((q) => q.number === row.question_number);
       if (!entry || !question) continue;
       const topicTitle = question.topic || entry.topic;
-      const key = row.image_topic_key ?? guidanceImageKeyFor(entry, topicTitle);
-      if (!candidates.has(key)) candidates.set(key, { row, topicTitle });
-    }
-    let started = 0;
-    for (const [key, { row, topicTitle }] of candidates) {
-      if (started >= limit) break;
+      const key = imageKeyFor(row.printed_code, row.question_number, row.key_version);
       const current = states.get(key);
       if (current?.state === "working" || current?.state === "ready") continue;
-      // A topic another row already finished needs no run — the
-      // start below would only adopt it — so leave its rows alone.
-      if ((await dbLoadImage(key))?.state === "ready") continue;
       let claim = admin
         .from("guidance_animations")
         .update({
-          image_topic_key: key,
           image_status: "generating",
           image_updated_at: new Date().toISOString(),
         })
@@ -592,7 +590,7 @@ async function runGuidanceImage(
     }`,
   );
   if (persist) {
-    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "generating", null, null, log);
+    void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "generating", null, null, log);
   }
   try {
     // One request, and that is the whole pipeline: the lesson it
@@ -605,34 +603,34 @@ async function runGuidanceImage(
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
     if (persist) {
-      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", made.dataUrl, null, log);
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "ready", made.dataUrl, null, log);
     }
     log(`guidance image generation finished — image ${Math.round(made.dataUrl.length / 1024)} KB`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     states.set(key, { state: "failed", error: message });
     if (persist) {
-      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, log);
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "failed", null, message, log);
     }
     log(`guidance image generation failed — ${message}`);
   }
 }
 
 /**
- * Start the guidance image for one question's topic, unless it is
- * already running, ready, or failed. The caller supplies the
- * question's finished lesson HTML — the image is drawn from it —
- * so this is called by the guidance worker the moment a lesson
- * passes its gate, and by the read below once the lesson is ready.
- * Guidance images are per topic, so several wrong questions in one
- * topic start at most one run, seeded by whichever lesson finished
- * first.
+ * Start the guidance image for one question, unless it is already
+ * running, ready, or failed. The caller supplies the question's
+ * finished lesson HTML — the image is drawn from it — so this is
+ * called by the guidance worker the moment a lesson passes its
+ * gate, and by the read below once the lesson is ready. The image
+ * goes with this question's guidance alone: another question in
+ * the same topic gets its own, drawn from its own lesson.
  *
- * `persist` says the seed lesson lives in the database (a live
- * lesson): only then does the image read or write its database
- * copy. A demo lesson's image stays out of the database entirely —
- * memory and the disk cache are its only homes — so demo activity
- * can neither adopt a live topic's stored image nor overwrite one.
+ * `persist` says the question's lesson lives in the database (a
+ * live lesson): only then does the image read or write its
+ * database copy. A demo lesson's image stays out of the database
+ * entirely — memory and the disk cache are its only homes — so
+ * demo activity can neither adopt a live question's stored image
+ * nor overwrite one.
  */
 export function startGuidanceImageForQuestion(
   printedCode: string,
@@ -647,7 +645,7 @@ export function startGuidanceImageForQuestion(
   if (fixtureGuidanceImage()) return;
   const persist = opts?.persist ?? false;
   const topicTitle = question.topic || entry.topic;
-  const key = guidanceImageKeyFor(entry, topicTitle);
+  const key = imageKeyFor(printedCode, questionNumber, entry.keyVersion);
   if (states.has(key)) return;
   const run: GuidanceImageRun = { label: `${printedCode}#${questionNumber}`, t0: Date.now() };
   const disk = readDisk(key);
@@ -658,7 +656,7 @@ export function startGuidanceImageForQuestion(
       // The sweep claimed this seed row because the database has
       // no finished image for the topic; a disk hit heals the row
       // instead of leaving the claim to go stale.
-      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", disk, null, (m) =>
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "ready", disk, null, (m) =>
         guidanceImageLog(run, m),
       );
     }
@@ -673,7 +671,7 @@ export function startGuidanceImageForQuestion(
       // survive. Adopt it instead of drawing a second one. Only a
       // database lesson's image looks: a demo start skips the
       // database entirely.
-      const db = persist ? await dbLoadImage(key) : null;
+      const db = persist ? await dbLoadImage(printedCode, questionNumber, entry.keyVersion) : null;
       if (db?.state === "ready") {
         writeDisk(key, db.dataUrl);
         states.set(key, { state: "ready", dataUrl: db.dataUrl });
@@ -705,7 +703,7 @@ export function startGuidanceImageForQuestion(
       const message = e instanceof Error ? e.message : String(e);
       states.set(key, { state: "failed", error: message });
       if (persist) {
-        void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, (m) =>
+        void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "failed", null, message, (m) =>
           guidanceImageLog(run, m),
         );
       }
@@ -715,7 +713,7 @@ export function startGuidanceImageForQuestion(
 }
 
 /**
- * The guidance image for one question's topic. The worker normally
+ * The guidance image for one question. The worker normally
  * starts it when the question's lesson finishes; a read starts it
  * too once that lesson is ready (sheets graded before guidance
  * images fed on lessons), and reports generating while the lesson
@@ -742,7 +740,7 @@ export async function getGuidanceImage(
   // A failed guidance image is not retried on view; the worker's
   // sweep owns retries, on the lessons' backoff terms.
   const topicTitle = question.topic || entry.topic;
-  const key = guidanceImageKeyFor(entry, topicTitle);
+  const key = imageKeyFor(printedCode, questionNumber, entry.keyVersion);
   if (!states.has(key)) {
     const disk = readDisk(key);
     if (disk) {
@@ -761,7 +759,7 @@ export async function getGuidanceImage(
       const persist = dbStore !== null && store === dbStore;
       if (
         persist &&
-        (await settleFromDatabase(key, printedCode, questionNumber, topicTitle)) === "settled"
+        (await settleFromDatabase(key, printedCode, questionNumber, entry.keyVersion, topicTitle)) === "settled"
       ) {
         // The topic's state came from the database; fall through to
         // the state read below.

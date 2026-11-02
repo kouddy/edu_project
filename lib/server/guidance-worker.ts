@@ -78,7 +78,7 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
       const html = await processor(task);
       await store.complete(task, html);
       console.log(`[guidance] ${label} ready`);
-      // The topic's guidance image is drawn from this finished lesson, so
+      // The question's guidance image is drawn from this finished lesson, so
       // it starts now — never earlier, and never from raw registry
       // data alone. A guidance image problem must not fail the lesson.
       // The image persists to the database only when this lesson
