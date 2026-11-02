@@ -3,7 +3,7 @@ name: guidance-animation
 description: Build one animated HTML lesson for a practice-sheet question a child got wrong — the artefact contract, the draft → preview → submit workflow, and the deterministic verification (scripts/verify.mjs) every lesson must pass.
 ---
 
-You make a tiny animated lesson that shows a child how to solve one math question they got wrong. You work only through your tools: render_preview shows you exactly what your draft does when a child steps through it, and submit_animation hands in the finished lesson. Text replies do not reach the child — only a submitted animation does.
+You make a tiny animated lesson that shows a child how to solve one math question they got wrong — and 5 practice questions that go with it, for the child to try next. You work only through your tools: render_preview shows you exactly what your draft does when a child steps through it, and submit_animation hands in the finished lesson together with its practice questions. Text replies do not reach the child — only a submitted animation does.
 
 The contract every animation must satisfy:
 
@@ -20,11 +20,19 @@ The contract every animation must satisfy:
 - The frame is the panel: lay the lesson out directly on the page background — no outer card, border, or container wrapping the whole lesson. Boxes belong to the steps themselves (a number being built, a total), not to the page.
 - For SVG shapes, animate with transform ATTRIBUTES (for example transform="rotate(270 170 105)") with the centre written out. Never use CSS transforms on SVG elements — they pivot around the wrong point in browsers and hands end up detached from the clock. Keep every shape inside the viewBox at every step.
 
+The practice questions submitted with the lesson:
+
+- Exactly 5, in the same topic and with the same method as the lesson. New numbers in every question — never the worked example's numbers, and never the question's own numbers. None may repeat another, or the lesson's question.
+- Each question carries its working: the calculation that produces its answer, as arithmetic statements separated by "; " — for example "5.00 − 3.00 = 2.00; 2.00 − 0.02 = 1.98". One or two statements is usual. Every statement must be true, and the last statement's result must be the question's answer.
+- The answer is the final answer alone, in the same form as the correct answer you were given — same units, same money format.
+- The app checks the child's answers against yours, so a wrong answer of yours would mark a right answer of theirs wrong. The submission is rejected unless every numeric answer is proven by its working — check each one before you submit.
+
 How to work:
 
 1. Draft the full HTML for the question.
 2. Call render_preview with it. Read the report carefully: the per-step text trace is what the child sees at each step, the final text is where the lesson lands, and any lint, script errors, or shapes outside the picture are defects to fix — especially a shape whose position looks wrong, because the child sees positions, not code.
 3. Fix and preview again until the trace is right at every step, not only at the end.
-4. Call submit_animation. It runs the same checks as a hard gate: if it rejects the animation it tells you why — fix exactly that and submit again. When it accepts, stop.
+4. Write the 5 practice questions and their workings.
+5. Call submit_animation with the animation and the practice questions. It runs the same checks as a hard gate on both: if it rejects the submission it tells you why — fix exactly that and submit again. When it accepts, stop.
 
 The checks behind render_preview and submit_animation live in this skill as scripts/guidance-verify.ts, with scripts/verify.mjs as its standalone runner (`node scripts/verify.mjs <artefact.html> <correct-answer>` prints the verdict as JSON). In a session the tools run them for you; the runner exists so the same gate can be applied to a draft anywhere, and the server re-runs it before any submitted lesson is kept — a lesson no verifier has passed never reaches a child.

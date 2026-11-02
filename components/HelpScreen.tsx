@@ -4,6 +4,7 @@ import { promptForDisplay, sheetLabel, type SheetState } from "@/lib/derive";
 import { BackButton, BTN_SECONDARY, ScreenHeader } from "./ui";
 import GuidanceAnimation from "./GuidanceAnimation";
 import GuidanceImage from "./GuidanceImage";
+import PracticeQuestions from "./PracticeQuestions";
 
 /* The help page for one wrong answer, reached from the Results
    "Help me" button: a focused view for working through the miss
@@ -79,6 +80,11 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
           under the animation: it is the take-away form of the same
           help — print it, and the practice section is a worksheet. */}
       <GuidanceImage printedCode={sheet.printedCode} questionNumber={q.number} topic={q.topic ?? sheet.topic} />
+
+      {/* The lesson's own practice questions, for the child to try
+          on the spot and check right here. Renders only when the
+          lesson carries a set. */}
+      <PracticeQuestions printedCode={sheet.printedCode} questionNumber={q.number} />
 
       {onNext && (
         <button type="button" onClick={onNext} className={`${BTN_SECONDARY} mt-3`}>

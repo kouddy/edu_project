@@ -339,3 +339,169 @@ export async function verifyAnimation(
   if (seen.geometry.length > 0) return { ok: false, detail: seen.geometry[0] };
   return { ok: true, detail: "verified" };
 }
+
+/* ------------------------------------------------- practice questions */
+
+/** One practice question submitted with a lesson: the question, its
+ *  answer, and the working — the calculation behind the answer, as
+ *  arithmetic statements separated by "; ". The working is the
+ *  evidence for the answer: the gate evaluates every statement, so
+ *  a set is kept only when its own arithmetic proves its answers. */
+export interface PracticeQuestionInput {
+  prompt: string;
+  answer: string;
+  working: string;
+}
+
+/** Evaluate a small arithmetic expression (+ − × ÷, decimals,
+ *  parentheses, $ and commas tolerated) or return null. A tiny
+ *  recursive-descent parser — no eval, nothing executed. */
+function evalArith(raw: string): number | null {
+  const s = raw.replace(/−/g, "-").replace(/×/g, "*").replace(/÷/g, "/").replace(/[$,]/g, "");
+  let i = 0;
+  const skip = () => {
+    while (s[i] === " ") i++;
+  };
+  function parseExpr(): number | null {
+    let v = parseTerm();
+    if (v === null) return null;
+    for (;;) {
+      skip();
+      if (s[i] !== "+" && s[i] !== "-") return v;
+      const op = s[i++];
+      const r = parseTerm();
+      if (r === null) return null;
+      v = op === "+" ? v + r : v - r;
+    }
+  }
+  function parseTerm(): number | null {
+    let v = parseFactor();
+    if (v === null) return null;
+    for (;;) {
+      skip();
+      if (s[i] !== "*" && s[i] !== "/" && s[i] !== "x" && s[i] !== "X") return v;
+      const op = s[i++];
+      const r = parseFactor();
+      if (r === null) return null;
+      v = op === "/" ? v / r : v * r;
+    }
+  }
+  function parseFactor(): number | null {
+    skip();
+    if (s[i] === "(") {
+      i++;
+      const v = parseExpr();
+      skip();
+      if (v === null || s[i] !== ")") return null;
+      i++;
+      return v;
+    }
+    if (s[i] === "-") {
+      i++;
+      const v = parseFactor();
+      return v === null ? null : -v;
+    }
+    const m = /^\d+(?:\.\d+)?/.exec(s.slice(i));
+    if (!m) return null;
+    i += m[0].length;
+    return parseFloat(m[0]);
+  }
+  const v = parseExpr();
+  skip();
+  return v !== null && i >= s.length ? v : null;
+}
+
+/** The numeric value an answer carries, or null when it has none
+ *  ("$1.98" → 1.98, "26 cm" → 26, "B" → null). */
+function numericValueOf(text: string): number | null {
+  const m = text.replace(/,/g, "").match(/-?\d+(?:\.\d+)?/);
+  return m ? parseFloat(m[0]) : null;
+}
+
+const PRACTICE_TOLERANCE = 0.011;
+
+/**
+ * The deterministic gate for a lesson's practice questions. The app
+ * checks a child's answers against these, so a wrong answer here
+ * would mark a right answer wrong: fail-closed, like the lesson
+ * gate. Exactly 5 questions, none repeating another or the lesson's
+ * own question; every question whose answer is a number must carry
+ * a working whose every statement is true and whose last statement
+ * lands exactly on the answer. A question whose answer is not a
+ * number cannot be proven this way and is accepted on its face —
+ * the generator is steered to computable questions.
+ */
+export function validatePracticeQuestions(
+  practice: unknown,
+  anchorPrompt: string,
+): { ok: boolean; detail: string } {
+  if (!Array.isArray(practice) || practice.length !== 5) {
+    return { ok: false, detail: "Submit exactly 5 practice questions with the lesson." };
+  }
+  const normPrompt = (s: string) => s.toLowerCase().replace(/\s+/g, " ").trim();
+  const seen = new Set<string>([normPrompt(anchorPrompt)]);
+  for (let idx = 0; idx < practice.length; idx++) {
+    const item = practice[idx] as Partial<PracticeQuestionInput> | null;
+    const label = `Practice question ${idx + 1}`;
+    if (!item || typeof item.prompt !== "string" || typeof item.answer !== "string") {
+      return { ok: false, detail: `${label} is missing its prompt or answer.` };
+    }
+    const prompt = item.prompt.trim();
+    const answer = item.answer.trim();
+    if (prompt.length < 3 || prompt.length > 240) {
+      return { ok: false, detail: `${label}'s prompt is empty or too long.` };
+    }
+    if (answer.length < 1 || answer.length > 48) {
+      return { ok: false, detail: `${label}'s answer is empty or too long.` };
+    }
+    if (seen.has(normPrompt(prompt))) {
+      return {
+        ok: false,
+        detail: `${label} repeats another question (or the lesson's own question) — every practice question must be its own question.`,
+      };
+    }
+    seen.add(normPrompt(prompt));
+    const answerValue = numericValueOf(answer);
+    if (answerValue === null) continue;
+    const working = typeof item.working === "string" ? item.working : "";
+    const statements = working.split(/[;\n]+/).map((x) => x.trim()).filter(Boolean);
+    if (statements.length === 0) {
+      return {
+        ok: false,
+        detail: `${label} ("${prompt}") has the numeric answer "${answer}" but no working — submit the calculation behind it, as statements separated by "; ".`,
+      };
+    }
+    let lastResult: number | null = null;
+    for (const statement of statements) {
+      const parts = statement.split("=");
+      if (parts.length !== 2 || !/[+\-−×x*÷/]/.test(parts[0])) {
+        return {
+          ok: false,
+          detail: `${label}'s working statement "${statement}" is not a calculation of the form "6 + 3 = 9".`,
+        };
+      }
+      const lhs = evalArith(parts[0]);
+      const rhs = numericValueOf(parts[1]);
+      if (lhs === null || rhs === null) {
+        return {
+          ok: false,
+          detail: `${label}'s working statement "${statement}" could not be evaluated — keep the working to plain arithmetic.`,
+        };
+      }
+      if (Math.abs(lhs - rhs) > PRACTICE_TOLERANCE) {
+        return {
+          ok: false,
+          detail: `${label}'s working says "${statement}" but the left side comes to ${Math.round(lhs * 100) / 100}. Fix the working or the answer.`,
+        };
+      }
+      lastResult = rhs;
+    }
+    if (lastResult === null || Math.abs(lastResult - answerValue) > PRACTICE_TOLERANCE) {
+      return {
+        ok: false,
+        detail: `${label}'s working ends at ${lastResult} but its answer is "${answer}" — the last statement of the working must land on the answer.`,
+      };
+    }
+  }
+  return { ok: true, detail: "verified" };
+}

@@ -41,6 +41,12 @@ export async function GET(
   return NextResponse.json({
     status: read.view.status,
     ...(read.view.status === "ready" ? { html: read.view.html } : {}),
+    // The lesson's practice questions ride the same read: prompt
+    // and answer only — the working behind each answer stays on
+    // the server, as the audit trail it is.
+    ...(read.view.status === "ready" && read.view.practice
+      ? { practice: read.view.practice.map((p) => ({ prompt: p.prompt, answer: p.answer })) }
+      : {}),
     ...(read.view.error ? { error: read.view.error } : {}),
   });
 }
