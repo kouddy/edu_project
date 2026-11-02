@@ -16,7 +16,7 @@
  */
 
 import { processGuidanceTask } from "./guidance";
-import { startPosterForQuestion } from "./guidance-image";
+import { startPosterForQuestion } from "./guidance-poster";
 import {
   dbGuidanceStore,
   memoryGuidanceStore,

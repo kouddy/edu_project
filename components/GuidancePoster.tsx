@@ -37,7 +37,7 @@ export default function GuidancePoster({ printedCode, questionNumber, topic }: G
       try {
         const token = await getAccessToken().catch(() => null);
         const res = await fetch(
-          `/api/guidance-image/${encodeURIComponent(printedCode)}/${questionNumber}`,
+          `/api/guidance-poster/${encodeURIComponent(printedCode)}/${questionNumber}`,
           token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
         );
         if (!live) return;
