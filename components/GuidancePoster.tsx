@@ -7,13 +7,14 @@ import { BTN_SECONDARY } from "./ui";
 /* The concept-poster slot under the Help page's animation: a
    printable poster for the question's topic (four concept panels
    and five fresh practice questions on a white section), drawn on
-   the server and vision-checked before it can report ready. The
-   slot renders nothing until the first poll answers, shows a
-   quiet waiting line while the poster is drawn and checked, and
-   stays empty when generation or the check failed — the page
-   already carries the text and the animation either way. When the
-   poster is ready it shows in full with a Download button: the
-   poster is a picture, so saving and printing it is the point. */
+   the server from the question's finished lesson and
+   vision-checked before it can report ready. The slot renders
+   nothing until the first poll answers, shows a quiet waiting
+   line while the poster is drawn and checked, and stays empty
+   when generation or the check failed — the page already carries
+   the text and the animation either way. The poster itself is
+   never displayed: it is a printout, so a ready poster offers
+   only a Download button. */
 
 interface GuidancePosterProps {
   printedCode: string;
@@ -89,13 +90,10 @@ export default function GuidancePoster({ printedCode, questionNumber, topic }: G
       <div aria-hidden className="mt-[14px] border-t border-dashed border-linesoft" />
       {image ? (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={image}
-            alt={`Printable poster explaining ${topic}, with five practice questions`}
-            className="mt-[10px] w-full rounded-[9px] border-[1.5px] border-linesoft"
-          />
-          <a href={image} download={`poster-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-3`}>
+          <div className="mt-[10px] px-1 text-[13px] text-mid">
+            A printable poster for this topic is ready — save it and print it for more practice.
+          </div>
+          <a href={image} download={`poster-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
             Download the poster
           </a>
         </>

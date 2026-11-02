@@ -313,6 +313,9 @@ function evaluateTokens(tokens: Token[]): number | null {
 
 interface PosterCheck {
   ok: boolean;
+  /** How many calculations the vision pass transcribed from the
+   *  poster (all of them re-verified in code). */
+  statements: number;
   /** Hard failures: a calculation code re-did and got wrong, or a
    *  factual gate (labels, practice count, answers shown, white
    *  background). Only these send a poster back or keep it hidden. */
@@ -359,7 +362,7 @@ async function checkPoster(
   const start = text.indexOf("{");
   const end = text.lastIndexOf("}");
   if (start < 0 || end <= start) {
-    return { ok: false, problems: ["the vision check could not read the poster"], warnings: [] };
+    return { ok: false, statements: 0, problems: ["the vision check could not read the poster"], warnings: [] };
   }
   let verdict: {
     statements?: string[];
@@ -375,7 +378,7 @@ async function checkPoster(
   try {
     verdict = JSON.parse(text.slice(start, end + 1)) as typeof verdict;
   } catch {
-    return { ok: false, problems: ["the vision check could not read the poster"], warnings: [] };
+    return { ok: false, statements: 0, problems: ["the vision check could not read the poster"], warnings: [] };
   }
   const problems: string[] = [...arithmeticProblems(verdict.statements ?? [])];
   if (verdict.correctExampleLabelled !== true) problems.push("the correct example is not clearly marked correct");
@@ -385,7 +388,12 @@ async function checkPoster(
   if (verdict.practiceAnswersShown === true) problems.push("a practice question's answer is shown");
   if (verdict.practiceSound !== true) problems.push("a practice question's given numbers break the rule it states — fix the givens so the question can be answered");
   if (verdict.practiceBackgroundWhite !== true) problems.push("the practice section background is not white");
-  return { ok: problems.length === 0, problems, warnings: verdict.problems ?? [] };
+  return {
+    ok: problems.length === 0,
+    statements: (verdict.statements ?? []).length,
+    problems,
+    warnings: verdict.problems ?? [],
+  };
 }
 
 /* ----- storage: memory in flight, disk when ready ----- */
@@ -438,11 +446,17 @@ async function runPoster(
   anchorPrompt: string,
   anchorAnswer: string,
   guidanceHtml: string,
+  questionNumber: number,
 ): Promise<void> {
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
   const model = imageModelId(config);
   const prompt = buildPosterPrompt(entry, topicTitle, anchorPrompt, anchorAnswer, guidanceHtml);
+  const t0 = Date.now();
+  const total = () => `${Math.round((Date.now() - t0) / 1000)}s`;
+  console.log(
+    `[poster] ${key}: generating — anchor ${entry.printedCode}#${questionNumber} "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars`,
+  );
   try {
     let made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
     if (!made) throw new Error("The image provider returned no image.");
@@ -450,20 +464,26 @@ async function runPoster(
     if (check.warnings.length > 0) {
       console.log(`[poster] ${key}: check notes, not blocking: ${check.warnings.join("; ")}`);
     }
+    if (check.ok) {
+      console.log(`[poster] ${key}: check passed — ${check.statements} calculations transcribed and re-verified`);
+    }
     if (!check.ok) {
       console.log(`[poster] ${key}: check failed (${check.problems.join("; ")}); sending back for fixes`);
       const fix = `Fix ONLY these problems in the poster and keep everything else the same: ${check.problems.join("; ")}.`;
       let fixed: { dataUrl: string; responseId?: string } | null = null;
       if (made.responseId) {
+        console.log(`[poster] ${key}: fix pass — chained edit of the first drawing`);
         try {
           fixed = imageOf(
             await callResponses(config, providerId, { model, previous_response_id: made.responseId, input: fix }, "poster fix", 420_000),
           );
-        } catch {
+        } catch (e) {
+          console.log(`[poster] ${key}: chained edit failed (${e instanceof Error ? e.message : e}); regenerating with the corrections instead`);
           fixed = null;
         }
       }
       if (!fixed) {
+        console.log(`[poster] ${key}: fix pass — regenerate with corrections`);
         fixed = imageOf(
           await callResponses(config, providerId, { model, input: `${prompt}\nAvoid these mistakes: ${check.problems.join("; ")}.` }, "image generation", 420_000),
         );
@@ -474,19 +494,22 @@ async function runPoster(
       if (check.warnings.length > 0) {
         console.log(`[poster] ${key}: check notes after the fix pass, not blocking: ${check.warnings.join("; ")}`);
       }
+      if (check.ok) {
+        console.log(`[poster] ${key}: check passed after the fix pass — ${check.statements} calculations transcribed and re-verified`);
+      }
       if (!check.ok) {
         states.set(key, { state: "failed", error: check.problems.join("; ") });
-        console.log(`[poster] ${key}: failed after the fix pass (${check.problems.join("; ")})`);
+        console.log(`[poster] ${key}: failed after the fix pass (${check.problems.join("; ")}); total ${total()}`);
         return;
       }
     }
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
-    console.log(`[poster] ${key}: ready`);
+    console.log(`[poster] ${key}: ready (total ${total()}, image ${Math.round(made.dataUrl.length / 1024)} KB)`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     states.set(key, { state: "failed", error: message });
-    console.log(`[poster] ${key}: failed (${message})`);
+    console.log(`[poster] ${key}: failed (${message}); total ${total()}`);
   }
 }
 
@@ -503,6 +526,7 @@ export function startPosterForQuestion(
   printedCode: string,
   questionNumber: number,
   guidanceHtml: string,
+  source: "lesson finished" | "help read" = "lesson finished",
 ): void {
   const entry = findByPrintedCode(printedCode);
   const question = entry?.questions.find((q) => q.number === questionNumber);
@@ -514,10 +538,12 @@ export function startPosterForQuestion(
   const disk = readDisk(key);
   if (disk) {
     states.set(key, { state: "ready", dataUrl: disk });
+    console.log(`[poster] ${key}: ready from the disk cache`);
     return;
   }
   states.set(key, { state: "working" });
-  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml);
+  console.log(`[poster] ${key}: queued from ${source} — ${printedCode}#${questionNumber}, topic "${topicTitle}"`);
+  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml, questionNumber);
 }
 
 /**
@@ -552,6 +578,7 @@ export async function getPoster(
     const disk = readDisk(key);
     if (disk) {
       states.set(key, { state: "ready", dataUrl: disk });
+      console.log(`[poster] ${key}: ready from the disk cache`);
     } else {
       // The poster waits for the question's lesson: it is drawn
       // from that HTML, so until the lesson is ready there is
@@ -561,7 +588,7 @@ export async function getPoster(
         auth !== null ? (dbGuidanceStore() ?? memoryGuidanceStore()) : memoryGuidanceStore();
       const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
       if (lesson?.status === "ready" && lesson.html) {
-        startPosterForQuestion(printedCode, questionNumber, lesson.html);
+        startPosterForQuestion(printedCode, questionNumber, lesson.html, "help read");
       } else if (lesson?.status === "failed") {
         return {
           kind: "ok",
