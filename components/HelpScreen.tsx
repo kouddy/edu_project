@@ -3,7 +3,7 @@
 import { promptForDisplay, sheetLabel, type SheetState } from "@/lib/derive";
 import { BackButton, BTN_SECONDARY, ScreenHeader } from "./ui";
 import GuidanceAnimation from "./GuidanceAnimation";
-import GuidancePoster from "./GuidancePoster";
+import GuidanceImage from "./GuidanceImage";
 
 /* The help page for one wrong answer, reached from the Results
    "Help me" button: a focused view for working through the miss
@@ -75,10 +75,10 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
         guidanceText={null}
       />
 
-      {/* The printable concept poster for this question's topic,
+      {/* The printable guidance image for this question's topic,
           under the animation: it is the take-away form of the same
           help — print it, and the practice section is a worksheet. */}
-      <GuidancePoster printedCode={sheet.printedCode} questionNumber={q.number} topic={q.topic ?? sheet.topic} />
+      <GuidanceImage printedCode={sheet.printedCode} questionNumber={q.number} topic={q.topic ?? sheet.topic} />
 
       {onNext && (
         <button type="button" onClick={onNext} className={`${BTN_SECONDARY} mt-3`}>

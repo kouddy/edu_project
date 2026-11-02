@@ -60,7 +60,7 @@ export interface SubjectManifest {
   maxRetries: number;
 }
 
-/** The image model behind guidance posters (subjects.json "image"). */
+/** The image model behind guidance images (subjects.json "image"). */
 interface ImagePolicy {
   provider: string;
   model: string;
@@ -103,7 +103,7 @@ export function loadPiConfig(): PiConfig {
 }
 
 /**
- * Which provider/model draws guidance posters: the IMAGE_PROVIDER /
+ * Which provider/model draws guidance images: the IMAGE_PROVIDER /
  * IMAGE_MODEL env vars win, then the subjects.json "image" block —
  * the same two-place rule as grading and guidance naming.
  */

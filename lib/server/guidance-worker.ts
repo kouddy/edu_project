@@ -16,7 +16,7 @@
  */
 
 import { processGuidanceTask } from "./guidance";
-import { startPosterForQuestion } from "./guidance-poster";
+import { startGuidanceImageForQuestion } from "./guidance-image";
 import {
   dbGuidanceStore,
   memoryGuidanceStore,
@@ -74,13 +74,13 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
       const html = await processor(task);
       await store.complete(task, html);
       console.log(`[guidance] ${label} ready`);
-      // The topic's poster is drawn from this finished lesson, so
+      // The topic's guidance image is drawn from this finished lesson, so
       // it starts now — never earlier, and never from raw registry
-      // data alone. A poster problem must not fail the lesson.
+      // data alone. A guidance image problem must not fail the lesson.
       try {
-        startPosterForQuestion(task.printedCode, task.questionNumber, html);
+        startGuidanceImageForQuestion(task.printedCode, task.questionNumber, html);
       } catch (err) {
-        console.log(`[poster ${label} +0.0s] poster start failed — ${err instanceof Error ? err.message : err}`);
+        console.log(`[guidance-image ${label} +0.0s] guidance image start failed — ${err instanceof Error ? err.message : err}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Guidance generation failed.";

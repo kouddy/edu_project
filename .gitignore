@@ -46,5 +46,5 @@ supabase/snippets/
 *.tsbuildinfo
 next-env.d.ts
 
-# generated guidance posters (server cache)
-/.poster-cache
+# generated guidance images (server cache)
+/.guidance-image-cache
