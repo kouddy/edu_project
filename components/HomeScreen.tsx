@@ -172,35 +172,29 @@ export default function HomeScreen({
         </div>
       )}
 
-      {/* ---- kid switcher ---- */}
-      {snap.kids.length > 1 && (
-        <div className="mb-3 mt-1 flex flex-wrap gap-2">
-          {snap.kids.map((k) => {
-            const active = k.id === kid.id;
-            return (
-              <button
-                key={k.id}
-                type="button"
-                onClick={() => onSelectKid(k)}
-                className={`rounded-full border-[1.5px] px-[15px] py-2 text-[14px] font-semibold transition-colors ${
-                  active
-                    ? "border-tangdeep bg-filldark text-tangdeep"
-                    : "border-line bg-card text-mid"
-                }`}
-              >
-                {k.name}{" "}
-                <span className="text-[11.5px] font-medium opacity-75">· Grade {k.grade}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-      {snap.kids.length <= 1 && (
-        <p className="mb-3 mt-0.5 font-display text-[16px] font-extrabold text-ink">
-          {kid.name}{" "}
-          <span className="text-[13.5px] font-semibold text-mid">· Grade {kid.grade}</span>
-        </p>
-      )}
+      {/* ---- kid switcher: the chip is the kid's identity on this
+           screen, so it renders the same for one child as for
+           several — a single chip simply has nothing to switch to. */}
+      <div className="mb-3 mt-1 flex flex-wrap gap-2">
+        {snap.kids.map((k) => {
+          const active = k.id === kid.id;
+          return (
+            <button
+              key={k.id}
+              type="button"
+              onClick={() => onSelectKid(k)}
+              className={`rounded-full border-[1.5px] px-[15px] py-2 text-[14px] font-semibold transition-colors ${
+                active
+                  ? "border-tangdeep bg-filldark text-tangdeep"
+                  : "border-line bg-card text-mid"
+              }`}
+            >
+              {k.name}{" "}
+              <span className="text-[11.5px] font-medium opacity-75">· Grade {k.grade}</span>
+            </button>
+          );
+        })}
+      </div>
 
       {/* ---- homework ---- */}
       <section id="section-homework" className="scroll-mt-4">
