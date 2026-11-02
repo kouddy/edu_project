@@ -147,23 +147,26 @@ function buildGuidanceImagePrompt(
   const teacher = teacherFor(entry, topicTitle);
   const hasPortrait = teacher ? teacherPortrait(teacher.species) != null : false;
   return [
-    `Create ONE portrait educational guidance image for a Grade ${entry.kidGrade} math student. The topic is "${topicTitle}".`,
+    `Create ONE portrait printable guidance image for a Grade ${entry.kidGrade} math student: a still-picture version of the animated lesson below, for the topic "${topicTitle}".`,
     teacher
       ? hasPortrait
         ? `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, pointing at the lesson. The picture attached to this request is ${teacher.name} exactly as in the workbook: draw the teacher to match that picture — same animal, same colours, same simple flat cartoon style.`
         : `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`
       : `Include a friendly cartoon animal teacher, small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`,
-    `Layout, top to bottom:`,
-    `- A title "${topicTitle.toUpperCase()}" and one short subtitle line saying what the idea is.`,
-    `- Four numbered panels in a 2 by 2 grid: 1 "What is ${topicTitle}?" in one or two plain sentences. 2 "How It Works" — the rule, with two or three short worked lines. 3 "Correct Example" — a fully worked example, every step right, clearly marked correct. 4 "Incorrect Example" — a worked example with one clear mistake, clearly marked wrong, with one line saying what went wrong.`,
-    `- A bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the image, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away. Any numbers printed inside a practice question as givens must themselves be right: a starting sequence must follow its own counting rule exactly, or the question cannot be answered.`,
-    `The guidance image is anchored on this workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}). The examples must teach the same idea the same way.`,
+    `At the top, the title "${topicTitle.toUpperCase()}" — and nothing else above the lesson.`,
+    `Then draw the lesson itself as one still picture, top to bottom:`,
+    `- Keep the lesson's steps in the lesson's order, with the lesson's numbers, boxes, arrows and diagrams drawn the way the lesson draws them.`,
+    `- Use the lesson's own words — its short labels and one-line captions — and no others. Do not add explanations, paragraphs, panels or headings the lesson does not have. Like the lesson, the picture is mostly numbers and boxes, with very few words.`,
+    `- If the lesson shows a wrong step, keep it shown and marked wrong the way the lesson marks it. The lesson's final answer appears at the end, as it does in the lesson.`,
+    `- Leave out the lesson's Next and Play buttons — they belong to the animation only.`,
+    `This lesson works the workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}).`,
+    `- Below the lesson, a bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the image, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away. Any numbers printed inside a practice question as givens must themselves be right: a starting sequence must follow its own counting rule exactly, or the question cannot be answered.`,
     `Every number and every calculation on the image must be exactly right — check each one before rendering it. Any picture, grid, array, or diagram must show EXACTLY what the words beside it say: a rectangle labelled length 6 and width 5 is drawn with exactly 6 squares across and 5 rows down — count the rows and columns before finishing, because a picture that disagrees with its numbers teaches the wrong lesson.`,
-    `Style: dark brown-black text on a warm cream background (#fff8ec), orange (#e8710a) accents, rounded panel corners, simple flat illustration, large clear lettering a young student can read.`,
+    `Style: dark brown-black text on a warm cream background (#fff8ec), orange (#e8710a) accents, rounded corners, simple flat illustration, large clear lettering a young student can read.`,
     `Print rule: the image must stay fully legible when printed in black and white — all meaning carried by the dark text and outlines; colour is decoration only. Keep fills pale, and never put light text on a coloured fill.`,
     `No buttons, no app controls, no logos, no watermarks. Portrait orientation.`,
     ``,
-    `Below is the verified animated lesson for this question, as HTML. It has already been checked: its numbers, steps, and examples are right. Teach the SAME concept the SAME way — the "What is" and "How It Works" panels explain what the lesson explains, the Correct Example is the correct working the lesson shows, and the Incorrect Example is the mistake the lesson highlights, with the same numbers throughout. Do not invent different numbers or a different example. The lesson's buttons and controls belong to the animation only — the guidance image is a still picture and shows none of them.`,
+    `The lesson, as verified HTML — its numbers, steps and examples are right; follow it exactly:`,
     guidanceHtml,
   ].join("\n");
 }
