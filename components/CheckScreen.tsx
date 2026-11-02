@@ -129,16 +129,16 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
             {photoOpen && photoUrls.length > 0 && (
               <PhotoViewer urls={photoUrls} kidName={item.kid.name} onClose={() => setPhotoOpen(false)} />
             )}
-            <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
+            <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid">
               {item.readAnswer ? (
                 <>
                   We think this looks like &ldquo;{item.readAnswer}&rdquo;. Was {item.kid.name}
-                  &rsquo;s final answer <strong>{item.correctAnswer}</strong>?
+                  &rsquo;s answer correct?
                 </>
               ) : (
                 <>
-                  We couldn&rsquo;t read this answer at all. Was {item.kid.name}&rsquo;s final
-                  answer <strong>{item.correctAnswer}</strong>?
+                  We couldn&rsquo;t read this answer at all. Was {item.kid.name}&rsquo;s answer
+                  correct?
                 </>
               )}
             </p>
