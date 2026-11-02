@@ -83,6 +83,14 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "") || "printable";
+  // The download name carries the sheet code and question number
+  // after the topic: images are per question now, so two questions
+  // in one topic must not download under the same name and
+  // overwrite each other in the parent's downloads.
+  const codeSlug = printedCode
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
   return (
     <>
       <div aria-hidden className="mt-[14px] border-t border-dashed border-linesoft" />
@@ -91,7 +99,7 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
           <div className="mt-[10px] px-1 text-[13px] text-mid">
             A printable for this topic is ready — save it and print it.
           </div>
-          <a href={image} download={`printable-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
+          <a href={image} download={`printable-${slug}-${codeSlug}-q${questionNumber}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
             Download the printable
           </a>
         </>
