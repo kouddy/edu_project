@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import QRCode from "qrcode";
+import { useState } from "react";
 import { kidTrackLabel, type Snapshot } from "@/lib/derive";
 import { getActiveMode, getAuthState, signOut } from "@/lib/store";
 import { getSupabase } from "@/lib/supabase-client";
-import { ScreenHeader } from "./ui";
+import MemberCodeCard from "./MemberCode";
+import { BTN_SECONDARY, CARD, CARD_PAD, ScreenHeader } from "./ui";
 
 interface Props {
   snap: Snapshot;
@@ -16,35 +16,12 @@ interface Props {
    .qrcard/.qrbox, .kidrow, .btn.secondary): Sign out uses the same
    12px-radius rectangular secondary button as the other screens —
    not a rounded pill. */
-const CARD =
-  "mb-3 rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 export default function ProfileScreen({ snap, onSignOut }: Props) {
   const parent = snap.parent;
-  const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [email] = useState<string | undefined>(() => getAuthState().email);
   const [mode] = useState(() => getAuthState().mode);
-
-  useEffect(() => {
-    if (!parent) return;
-    // The member code carries the parent's email as well as their id
-    // when the sign-in record has one, so staff scanning it can match
-    // the account by either. Without an email it stays the bare id
-    // form.
-    const payload = email
-      ? `practice-sheets:member:${parent.id}?email=${encodeURIComponent(email)}`
-      : `practice-sheets:member:${parent.id}`;
-    QRCode.toDataURL(payload, {
-      width: 336,
-      margin: 0,
-      color: { dark: "#3d2b1f", light: "#ffffff" },
-    })
-      .then(setQrUrl)
-      .catch(() => setQrUrl(null));
-  }, [parent, email]);
 
   if (!parent) return null;
 
@@ -52,7 +29,7 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
     <div className="px-[18px] pb-[26px] pt-[14px]">
       <ScreenHeader title="Profile" />
 
-      <div className={CARD}>
+      <div className={`${CARD} ${CARD_PAD} mb-3`}>
         <p className="mb-[3px] text-[11.5px] font-bold uppercase tracking-[0.12em] text-faint">
           Parent account
         </p>
@@ -68,22 +45,9 @@ export default function ProfileScreen({ snap, onSignOut }: Props) {
         </p>
       </div>
 
-      <div className={`${CARD} px-4 pb-4 pt-5 text-center`}>
-        <h3 className="mb-1 font-display text-[16px] font-extrabold text-ink">Your member code</h3>
-        <div className="mx-auto my-3 flex h-[196px] w-[196px] items-center justify-center rounded-[14px] border-[1.5px] border-linesoft bg-white p-[14px] shadow-[0_2px_8px_rgba(146,90,32,0.14)]">
-          {qrUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={qrUrl} alt="Your member code" className="block h-full w-full" />
-          ) : (
-            <span className="text-[28px] text-faint">▦</span>
-          )}
-        </div>
-        <p className="mx-auto max-w-[280px] text-[13.5px] leading-[1.5] text-mid">
-          Show this code to staff to add a child, or when picking up sheets.
-        </p>
-      </div>
+      <MemberCodeCard parentId={parent.id} email={email} />
 
-      <div className={CARD}>
+      <div className={`${CARD} ${CARD_PAD} mb-3`}>
         <h3 className={`${H3} mb-1`}>My kids</h3>
         {snap.kids.map((kid) => (
           <div

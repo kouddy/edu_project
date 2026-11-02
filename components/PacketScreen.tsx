@@ -16,10 +16,8 @@
 import { type ReactNode } from "react";
 import { isDone, partLabelFor, topicGroups, type SheetState } from "@/lib/derive";
 import type { Kid } from "@/lib/store";
-import { BackButton, ScreenHeader } from "./ui";
+import { BackButton, CARD, ScreenHeader } from "./ui";
 
-const CARD =
-  "rounded-[16px] border-[1.5px] border-linesoft bg-card shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const PILL =
   "inline-block shrink-0 rounded-full border-[1.5px] px-2.5 py-[3px] text-[12px] font-bold";
 

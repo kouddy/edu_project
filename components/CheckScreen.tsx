@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { promptForDisplay, sheetLabel, type CheckItem, type Snapshot } from "@/lib/derive";
 import { getPhoto, type Sheet } from "@/lib/store";
-import { BackButton, ScreenHeader } from "./ui";
+import { BackButton, BTN, BTN_SECONDARY, CARD, CARD_PAD, ScreenHeader } from "./ui";
 import PhotoViewer from "./PhotoViewer";
 
 interface Props {
@@ -20,13 +20,7 @@ interface Props {
    the app's consolidated cross-kid queue. The wireframe's dashed
    "zoomed answer" box is only the no-photo fallback here: when the
    submission has the real uploaded photo, that is what shows. */
-const CARD =
-  "rounded-[16px] border-[1.5px] border-linesoft bg-card px-[15px] py-[14px] shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const H3 = "font-display text-[15.5px] font-extrabold text-ink";
-const BTN =
-  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 export default function CheckScreen({ snap, items, from, onBack, onDone, onResolve }: Props) {
   const [resolved, setResolved] = useState<
@@ -77,7 +71,7 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
       />
 
       {!item && resolved.length === 0 && (
-        <div className={`${CARD} text-center`}>
+        <div className={`${CARD} ${CARD_PAD} text-center`}>
           <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
           <h3 className={`${H3} mb-1`}>All checked — nice work</h3>
           <p className="text-[13.5px] leading-[1.45] text-mid">Nothing needs your check right now.</p>
@@ -93,7 +87,7 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
           <p className="mb-3 text-center text-[13px] font-semibold tracking-[0.05em] text-mid">
             {resolved.length + 1} of {total}
           </p>
-          <div className={CARD}>
+          <div className={`${CARD} ${CARD_PAD}`}>
             <h3 className={`${H3} mb-1`}>
               {item.kid.name} · {shortLabel(item.sheet)} · Q{item.questionNumber}
             </h3>
@@ -135,16 +129,16 @@ export default function CheckScreen({ snap, items, from, onBack, onDone, onResol
             {photoOpen && photoUrls.length > 0 && (
               <PhotoViewer urls={photoUrls} kidName={item.kid.name} onClose={() => setPhotoOpen(false)} />
             )}
-            <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid [&_strong]:text-ink">
+            <p className="mt-2.5 text-[13.5px] leading-[1.45] text-mid">
               {item.readAnswer ? (
                 <>
                   We think this looks like &ldquo;{item.readAnswer}&rdquo;. Was {item.kid.name}
-                  &rsquo;s final answer <strong>{item.correctAnswer}</strong>?
+                  &rsquo;s answer correct?
                 </>
               ) : (
                 <>
-                  We couldn&rsquo;t read this answer at all. Was {item.kid.name}&rsquo;s final
-                  answer <strong>{item.correctAnswer}</strong>?
+                  We couldn&rsquo;t read this answer at all. Was {item.kid.name}&rsquo;s answer
+                  correct?
                 </>
               )}
             </p>
@@ -196,7 +190,7 @@ function CompletionCard({
   );
 
   return (
-    <div className={`${CARD} text-center`}>
+    <div className={`${CARD} ${CARD_PAD} text-center`}>
       <div className="mb-1.5 mt-2.5 text-[38px] leading-none text-tang">✓</div>
       <h3 className={`${H3} mb-1`}>All checked — nice work</h3>
       {sheetIds.map((sheetId) => {

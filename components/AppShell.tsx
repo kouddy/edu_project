@@ -18,6 +18,7 @@ import HelpScreen from "./HelpScreen";
 import CheckScreen from "./CheckScreen";
 import PacketScreen from "./PacketScreen";
 import ProfileScreen from "./ProfileScreen";
+import JoinScreen from "./JoinScreen";
 import SignInScreen from "./SignInScreen";
 import { IconHome, IconScan, IconUser } from "./ui";
 
@@ -351,29 +352,22 @@ export default function AppShell() {
 
   if (getActiveMode() === "live" && snap.kids.length === 0) {
     return (
-      <div className="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col bg-paper px-[18px] pb-[26px] pt-[52px]">
-        <h1 className="mb-1.5 font-display text-[23px] font-extrabold leading-[1.15] text-ink">
-          You&rsquo;re signed in
-        </h1>
-        <p className="mb-3.5 text-[13.5px] leading-[1.45] text-mid">
-          No children are on your account yet. Children are added by our team
-          when you pick up your first packet — once that&rsquo;s done, they&rsquo;ll
-          appear here.
-        </p>
-        <button
-          type="button"
-          onClick={() => {
-            void getSupabase()?.auth.signOut();
-            signOut();
-            activateMode("demo");
-            refresh();
-            setScreen({ name: "signin" });
-          }}
-          className="block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]"
-        >
-          Sign out
-        </button>
-      </div>
+      <JoinScreen
+        parentId={snap.parent.id}
+        parentName={snap.parent.name}
+        email={getAuthState().email}
+        onCheckAgain={async () => {
+          await syncLiveAccount().catch(() => false);
+          refresh();
+        }}
+        onSignOut={() => {
+          void getSupabase()?.auth.signOut();
+          signOut();
+          activateMode("demo");
+          refresh();
+          setScreen({ name: "signin" });
+        }}
+      />
     );
   }
 

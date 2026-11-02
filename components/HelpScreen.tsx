@@ -1,7 +1,7 @@
 "use client";
 
 import { promptForDisplay, sheetLabel, type SheetState } from "@/lib/derive";
-import { BackButton, ScreenHeader } from "./ui";
+import { BackButton, BTN_SECONDARY, ScreenHeader } from "./ui";
 import GuidanceAnimation from "./GuidanceAnimation";
 
 /* The help page for one wrong answer, reached from the Results
@@ -17,8 +17,6 @@ import GuidanceAnimation from "./GuidanceAnimation";
    the ones carrying content: the tinted explanation and the
    animation's own layout. */
 
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const TEXT_BOX =
   "mt-3 whitespace-pre-line rounded-[9px] bg-[#fdebd0] px-2.5 py-2 text-[13px] leading-[1.45] text-ink";
 

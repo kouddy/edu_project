@@ -2,11 +2,8 @@
 
 import { useRef, useState } from "react";
 import { getSupabase } from "@/lib/supabase-client";
+import { BTN, BTN_SECONDARY } from "./ui";
 
-const BTN =
-  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 
 interface Props {
   /** Enter demo mode: the seeded test account (Amy and Bob). */

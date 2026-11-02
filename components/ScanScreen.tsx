@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { BTN, BTN_SECONDARY } from "./ui";
 
 export interface StagedPhoto {
   key: string;
@@ -24,10 +25,6 @@ interface Props {
    tile + orange shutter, cream .scan-grade bar, .preview-overlay).
    The wireframe's static camera mock is intentionally not carried
    over — this screen drives the real camera. */
-const BTN =
-  "block w-full rounded-[12px] border-[1.5px] border-tangdeep bg-[linear-gradient(165deg,#f07d12,#e8710a)] px-[14px] py-[13px] text-center text-[15.5px] font-bold text-[#fff8ec] shadow-[0_3px_8px_rgba(199,91,0,0.28)]";
-const BTN_SECONDARY =
-  "block w-full rounded-[12px] border-[1.5px] border-line bg-card px-[14px] py-[13px] text-center text-[15.5px] font-bold text-tangdeep shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]";
 const CAMCLOSE =
   "flex h-[42px] w-[42px] items-center justify-center rounded-full border border-white/[0.38] bg-[rgba(20,12,6,0.58)] pb-0.5 text-[26px] leading-none text-white backdrop-blur-[6px]";
 
@@ -463,7 +460,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, gr
           <div className="grain-surface -mx-4 -mb-4 mt-1.5 self-stretch border-t-[1.5px] border-linesoft bg-[#fff9ef] px-[18px] pb-[14px] pt-3 shadow-[0_-6px_16px_rgba(0,0,0,0.22)]">
             <div
               className="tray-scroll mb-1 flex w-full items-start gap-3 overflow-x-auto px-0.5 pb-2 pt-2"
-              aria-label="Photos ready to grade"
+              aria-label="Photos ready to mark"
             >
               {staged.map((p, i) => (
                 <div key={p.key} className="relative shrink-0">
@@ -497,7 +494,7 @@ export default function ScanScreen({ staged, onAddBlobs, onRemoveAt, onGrade, gr
                 </>
               ) : (
                 <>
-                  Grade {staged.length} sheet{staged.length === 1 ? "" : "s"}
+                  Mark {staged.length} sheet{staged.length === 1 ? "" : "s"}
                 </>
               )}
             </button>
