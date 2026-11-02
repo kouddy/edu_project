@@ -139,13 +139,30 @@ interface ResponsesResult {
   }[];
 }
 
+/* Poster log lines take the guidance runs' shape — [poster
+ * CODE#Q +T] with T the seconds since the run was queued — so a
+ * poster reads the same way in the server log as the lesson that
+ * seeded it. The label is the seed question; the topic rides in
+ * the message text. */
+interface PosterRun {
+  label: string;
+  t0: number;
+}
+
+function posterLog(run: PosterRun, message: string): void {
+  const elapsed = ((Date.now() - run.t0) / 1000).toFixed(1);
+  console.log(`[poster ${run.label} +${elapsed}s] ${message}`);
+}
+
 async function callResponses(
   config: PiConfig,
   providerId: string,
   body: Record<string, unknown>,
   stage: string,
   timeoutMs: number,
+  log?: (message: string) => void,
 ): Promise<ResponsesResult> {
+  const say = log ?? ((message: string) => console.log(`[poster] ${message}`));
   const def = providerDef(config, providerId);
   if (!def) throw new Error(`No provider "${providerId}" is configured for poster images.`);
   const key = resolveProviderApiKey(config, providerId);
@@ -171,14 +188,14 @@ async function callResponses(
         throw new Error(`Provider "${providerId}" answered HTTP ${res.status} during ${stage}.`);
       }
       const json = (await res.json()) as ResponsesResult;
-      console.log(`[poster] ${stage} answered in ${Math.round((Date.now() - t0) / 1000)}s`);
+      say(`${stage} answered in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
       return json;
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
       const timedOut =
         e instanceof DOMException && (e.name === "TimeoutError" || e.name === "AbortError");
       if (timedOut && attempt === 0) {
-        console.log(`[poster] ${stage} timed out after ${Math.round(timeoutMs / 1000)}s; retrying once`);
+        say(`${stage} timed out after ${Math.round(timeoutMs / 1000)}s; retrying once`);
         continue;
       }
       if (timedOut) {
@@ -261,30 +278,31 @@ async function runPoster(
   anchorPrompt: string,
   anchorAnswer: string,
   guidanceHtml: string,
-  questionNumber: number,
+  run: PosterRun,
 ): Promise<void> {
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
   const model = imageModelId(config);
   const prompt = buildPosterPrompt(entry, topicTitle, anchorPrompt, anchorAnswer, guidanceHtml);
-  const t0 = Date.now();
-  const total = () => `${Math.round((Date.now() - t0) / 1000)}s`;
-  console.log(
-    `[poster] ${key}: generating — anchor ${entry.printedCode}#${questionNumber} "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars`,
+  const log = (message: string) => posterLog(run, message);
+  log(
+    `poster generation started — "${anchorPrompt}", model ${model} via ${providerId}, lesson ${guidanceHtml.length} chars, prompt ${prompt.length} chars`,
   );
   try {
     // One request, and that is the whole pipeline: the lesson it
     // feeds on was verified before it finished, and the poster
     // simply renders that lesson as a printable picture.
-    const made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
+    const made = imageOf(
+      await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000, log),
+    );
     if (!made) throw new Error("The image provider returned no image.");
     writeDisk(key, made.dataUrl);
     states.set(key, { state: "ready", dataUrl: made.dataUrl });
-    console.log(`[poster] ${key}: ready (total ${total()}, image ${Math.round(made.dataUrl.length / 1024)} KB)`);
+    log(`poster generation finished — image ${Math.round(made.dataUrl.length / 1024)} KB`);
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
     states.set(key, { state: "failed", error: message });
-    console.log(`[poster] ${key}: failed (${message}); total ${total()}`);
+    log(`poster generation failed — ${message}`);
   }
 }
 
@@ -310,15 +328,16 @@ export function startPosterForQuestion(
   const topicTitle = question.topic || entry.topic;
   const key = posterKeyFor(entry, topicTitle);
   if (states.has(key)) return;
+  const run: PosterRun = { label: `${printedCode}#${questionNumber}`, t0: Date.now() };
   const disk = readDisk(key);
   if (disk) {
     states.set(key, { state: "ready", dataUrl: disk });
-    console.log(`[poster] ${key}: ready from the disk cache`);
+    posterLog(run, `poster ready — disk cache, topic "${topicTitle}"`);
     return;
   }
   states.set(key, { state: "working" });
-  console.log(`[poster] ${key}: queued from ${source} — ${printedCode}#${questionNumber}, topic "${topicTitle}"`);
-  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml, questionNumber);
+  posterLog(run, `poster queued — from ${source}, topic "${topicTitle}"`);
+  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml, run);
 }
 
 /**
@@ -353,7 +372,10 @@ export async function getPoster(
     const disk = readDisk(key);
     if (disk) {
       states.set(key, { state: "ready", dataUrl: disk });
-      console.log(`[poster] ${key}: ready from the disk cache`);
+      posterLog(
+        { label: `${printedCode}#${questionNumber}`, t0: Date.now() },
+        `poster ready — disk cache, topic "${topicTitle}"`,
+      );
     } else {
       // The poster waits for the question's lesson: it is drawn
       // from that HTML, so until the lesson is ready there is

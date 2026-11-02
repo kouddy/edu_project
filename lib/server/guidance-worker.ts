@@ -80,7 +80,7 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
       try {
         startPosterForQuestion(task.printedCode, task.questionNumber, html);
       } catch (err) {
-        console.log(`[poster] start failed for ${label}: ${err instanceof Error ? err.message : err}`);
+        console.log(`[poster ${label} +0.0s] poster start failed — ${err instanceof Error ? err.message : err}`);
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Guidance generation failed.";
