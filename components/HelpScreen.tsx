@@ -75,7 +75,7 @@ export default function HelpScreen({ st, questionNumber, onNext, onBack }: HelpP
         guidanceText={null}
       />
 
-      {/* The printable guidance image for this question's topic,
+      {/* The printable guidance image for this question,
           under the animation: it is the take-away form of the same
           help — print it, and the lesson steps are the keepsake. */}
       <GuidanceImage printedCode={sheet.printedCode} questionNumber={q.number} topic={q.topic ?? sheet.topic} />

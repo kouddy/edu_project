@@ -5,15 +5,14 @@ import { getAccessToken } from "@/lib/supabase-client";
 import { BTN_SECONDARY } from "./ui";
 
 /* The guidance-image slot under the Help page's animation: a
-   printable guidance image for the question's topic (the lesson's
-   method laid out as 4 to 6 steps), drawn on the server from the
-   question's finished lesson. The
-   slot renders nothing until the first poll answers, shows a
-   quiet waiting line while the image is drawn, and stays empty
-   when generation failed — the page already carries the text and
-   the animation either way. The image itself is never displayed:
-   it is a printout, so a ready image offers only a Download
-   button. */
+   printable guidance image for the question (the lesson's method
+   laid out as 4 to 6 steps), drawn on the server from the
+   question's finished lesson. The slot renders nothing until the
+   first poll answers, shows a quiet waiting line while the image
+   is drawn, and stays empty when generation failed — the page
+   already carries the text and the animation either way. The
+   image itself is never displayed: it is a printout, so a ready
+   image offers only a Download button. */
 
 interface GuidanceImageProps {
   printedCode: string;

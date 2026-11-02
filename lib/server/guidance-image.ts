@@ -1,5 +1,5 @@
 /**
- * lib/server/guidance-image.ts — the guidance image for a topic.
+ * lib/server/guidance-image.ts — the guidance image for a question.
  *
  * Beside the animated lesson, a wrong answer can offer a printable
  * guidance image for the question's topic: the lesson's method laid
@@ -186,7 +186,7 @@ interface ResponsesResult {
 /* Guidance image log lines take the guidance runs' shape — [guidance-image
  * CODE#Q +T] with T the seconds since the run was queued — so a
  * guidance image reads the same way in the server log as the lesson that
- * seeded it. The label is the seed question; the topic rides in
+ * seeded it. The label is the question; the topic rides in
  * the message text. */
 interface GuidanceImageRun {
   label: string;
@@ -432,7 +432,7 @@ async function dbSaveImage(
       .update(fields)
       .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion });
     if (error) log(`guidance image database save failed — ${error.message}`);
-    // No matching row is silent: the seed row went away between
+    // No matching row is silent: its row went away between
     // the lesson finishing and this save; the disk cache still
     // holds the image for this server. Saves only happen at all
     // for lessons that live in the database — a demo lesson's
@@ -469,7 +469,7 @@ function sweepEligible(row: SweepRow, now: number): boolean {
 /**
  * Re-run the guidance images a crash left unfinished — the image
  * half of the guidance worker's durability. The lesson rows are
- * the queue: a ready lesson whose seed row has no image, a stale
+ * the queue: a ready lesson whose own row has no image, a stale
  * generating image, or a failed image past its backoff is claimed
  * by compare-and-swap on the row (the expected status and timestamp
  * ride in the update's match, so two workers cannot take the same
@@ -654,8 +654,8 @@ export function startGuidanceImageForQuestion(
     states.set(key, { state: "ready", dataUrl: disk });
     guidanceImageLog(run, `guidance image ready — disk cache, topic "${topicTitle}"`);
     if (source === "worker sweep" && persist) {
-      // The sweep claimed this seed row because the database has
-      // no finished image for the topic; a disk hit heals the row
+      // The sweep claimed this row because the database has no
+      // finished image for the question; a disk hit heals the row
       // instead of leaving the claim to go stale.
       void dbSaveImage(printedCode, questionNumber, entry.keyVersion, "ready", disk, null, (m) =>
         guidanceImageLog(run, m),
@@ -667,7 +667,7 @@ export function startGuidanceImageForQuestion(
   guidanceImageLog(run, `guidance image queued — from ${source}, topic "${topicTitle}"`);
   void (async () => {
     try {
-      // The database may already hold this topic's image — drawn on
+      // The database may already hold this question's image — drawn on
       // another host, or before a restart the disk cache did not
       // survive. Adopt it instead of drawing a second one. Only a
       // database lesson's image looks: a demo start skips the
@@ -699,7 +699,7 @@ export function startGuidanceImageForQuestion(
     } catch (e) {
       // runGuidanceImage settles its own API failures; this catch is
       // for a throw before that try — config or prompt building —
-      // which must still settle the topic instead of leaving it
+      // which must still settle the question instead of leaving it
       // working forever in this process.
       const message = e instanceof Error ? e.message : String(e);
       states.set(key, { state: "failed", error: message });
@@ -762,7 +762,7 @@ export async function getGuidanceImage(
         persist &&
         (await settleFromDatabase(key, printedCode, questionNumber, entry.keyVersion, topicTitle)) === "settled"
       ) {
-        // The topic's state came from the database; fall through to
+        // The question's state came from the database; fall through to
         // the state read below.
       } else {
         // The guidance image waits for the question's lesson: it is drawn
