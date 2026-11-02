@@ -23,9 +23,10 @@ The contract every animation must satisfy:
 The practice questions submitted with the lesson:
 
 - Exactly 5, in the same topic and with the same method as the lesson. New numbers in every question — never the worked example's numbers, and never the question's own numbers. None may repeat another, or the lesson's question.
+- Ask the lesson's question again — the same task in the same shape, with new numbers. If the lesson asks "What time is it?", every practice question asks "What time is it?" about a new clock; do not slide into a neighbouring task, such as asking how many minutes past the hour. Each answer is the same kind of value as the lesson's answer: a clock time for a clock time, a money amount for a money amount, the same unit for a measurement.
 - Each question carries its working: the calculation that produces its answer, as arithmetic statements separated by "; " — for example "5.00 − 3.00 = 2.00; 2.00 − 0.02 = 1.98". One or two statements is usual. Every statement must be true, and the last statement's result must be the question's answer.
 - The answer is the final answer alone, in the same form as the correct answer you were given — same units, same money format.
-- The app checks the child's answers against yours, so a wrong answer of yours would mark a right answer of theirs wrong. The submission is rejected unless every numeric answer is proven by its working — check each one before you submit.
+- The app checks the child's answers against yours, so a wrong answer of yours would mark a right answer of theirs wrong. The submission is rejected unless every numeric answer is proven by its working and every answer matches the lesson answer's kind — check each one before you submit.
 
 How to work:
 

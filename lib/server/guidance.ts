@@ -159,7 +159,7 @@ export async function processGuidanceTask(
   });
   const verdict = await verifyAnimation(html, resolved.correctAnswer);
   if (!verdict.ok) throw new Error(verdict.detail);
-  const practiceVerdict = validatePracticeQuestions(practice, resolved.prompt);
+  const practiceVerdict = validatePracticeQuestions(practice, resolved.prompt, resolved.correctAnswer);
   if (!practiceVerdict.ok) throw new Error(practiceVerdict.detail);
   return { html, practice };
 }

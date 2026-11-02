@@ -140,7 +140,7 @@ export async function generateGuidanceWithHarness(args: {
     name: "submit_animation",
     label: "Submit the animation",
     description:
-      "Submit the finished animation together with its 5 practice questions. Both must pass verification: the animation (self-contained, step control finishes, final answer matches the key, shapes inside the picture) and the practice set (exactly 5 new questions; every numeric answer proven by its working — arithmetic statements separated by \"; \", each one true, the last landing on the answer). A rejection explains what to fix.",
+      "Submit the finished animation together with its 5 practice questions. Both must pass verification: the animation (self-contained, step control finishes, final answer matches the key, shapes inside the picture) and the practice set (exactly 5 new questions asking the lesson's question again — same task, same kind of answer; every numeric answer proven by its working — arithmetic statements separated by \"; \", each one true, the last landing on the answer). A rejection explains what to fix.",
     parameters: Type.Object({
       html: Type.String({ description: "The complete HTML document to submit." }),
       practice: Type.Array(
@@ -171,7 +171,7 @@ export async function generateGuidanceWithHarness(args: {
           details: {},
         };
       }
-      const practiceVerdict = validatePracticeQuestions(params.practice, args.questionPrompt);
+      const practiceVerdict = validatePracticeQuestions(params.practice, args.questionPrompt, args.correctAnswer);
       if (!practiceVerdict.ok) {
         captured.submitFailures += 1;
         return {

@@ -420,20 +420,42 @@ function numericValueOf(text: string): number | null {
 
 const PRACTICE_TOLERANCE = 0.011;
 
+/** The kind of value an answer is. Practice must re-ask the
+ *  lesson's question, and the enforceable shadow of "same question"
+ *  is "same kind of answer": a lesson answered with a clock time
+ *  takes practice answered with clock times — a set that drifts to
+ *  a neighbouring task (minutes past the hour, say) betrays itself
+ *  in its answers first. */
+type AnswerForm = "time" | "fraction" | "money" | "unit" | "number" | "text";
+
+function answerForm(answer: string): { form: AnswerForm; unit?: string } {
+  const a = answer.trim();
+  if (/^\d{1,2}:[0-5]\d$/.test(a)) return { form: "time" };
+  if (/^\d+\s+\d+\/\d+$/.test(a) || /^\d+\/\d+$/.test(a)) return { form: "fraction" };
+  if (/^\$/.test(a)) return { form: "money" };
+  const unit = a.match(/^-?[\d,]+(?:\.\d+)?\s*([a-zA-Z°%]+)$/);
+  if (unit) return { form: "unit", unit: unit[1].toLowerCase() };
+  if (/^-?[\d,]+(?:\.\d+)?$/.test(a)) return { form: "number" };
+  return { form: "text" };
+}
+
 /**
  * The deterministic gate for a lesson's practice questions. The app
  * checks a child's answers against these, so a wrong answer here
  * would mark a right answer wrong: fail-closed, like the lesson
  * gate. Exactly 5 questions, none repeating another or the lesson's
- * own question; every question whose answer is a number must carry
- * a working whose every statement is true and whose last statement
+ * own question; every answer the same kind of value as the lesson's
+ * answer; and every question whose answer is a number must carry a
+ * working whose every statement is true and whose last statement
  * lands exactly on the answer. A question whose answer is not a
- * number cannot be proven this way and is accepted on its face —
- * the generator is steered to computable questions.
+ * provable number (a clock time, a fraction, a word) is accepted
+ * on its face once its form matches — the generator is steered to
+ * the lesson's own question.
  */
 export function validatePracticeQuestions(
   practice: unknown,
   anchorPrompt: string,
+  anchorAnswer: string,
 ): { ok: boolean; detail: string } {
   if (!Array.isArray(practice) || practice.length !== 5) {
     return { ok: false, detail: "Submit exactly 5 practice questions with the lesson." };
@@ -461,6 +483,27 @@ export function validatePracticeQuestions(
       };
     }
     seen.add(normPrompt(prompt));
+    // Same question, enforced as same kind of answer. A bare number
+    // may stand in for a money or unit answer (the child writes it
+    // either way); any other change of kind is a different task.
+    const anchor = answerForm(anchorAnswer);
+    if (anchor.form !== "text") {
+      const mine = answerForm(answer);
+      const sameKind =
+        mine.form === anchor.form
+          ? anchor.form !== "unit" || mine.unit === anchor.unit
+          : mine.form === "number" && (anchor.form === "money" || anchor.form === "unit");
+      if (!sameKind) {
+        return {
+          ok: false,
+          detail: `${label}'s answer "${answer}" is a different kind of answer from the lesson's answer "${anchorAnswer}" — every practice question must ask the lesson's question again, with new numbers: the same task, answered the same way.`,
+        };
+      }
+      // A clock time or a fraction carries no single numeric value
+      // for the working to land on; the form match above is the
+      // check these answers get.
+      if (anchor.form === "time" || anchor.form === "fraction") continue;
+    }
     const answerValue = numericValueOf(answer);
     if (answerValue === null) continue;
     const working = typeof item.working === "string" ? item.working : "";
