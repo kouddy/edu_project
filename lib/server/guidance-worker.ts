@@ -13,9 +13,14 @@
  * When Supabase is configured but the service-role key is missing,
  * live tasks silently fall back to the memory store and are never
  * persisted — the worker warns loudly about that at startup.
+ *
+ * Each poll also sweeps for guidance images a crash left
+ * unfinished (guidance-image.ts: sweepGuidanceImages) — the lesson
+ * rows are the images' queue, on the same backoff terms.
  */
 
 import { processGuidanceTask } from "./guidance";
+import { startGuidanceImageForQuestion, sweepGuidanceImages } from "./guidance-image";
 import {
   dbGuidanceStore,
   memoryGuidanceStore,
@@ -73,6 +78,19 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
       const html = await processor(task);
       await store.complete(task, html);
       console.log(`[guidance] ${label} ready`);
+      // The question's guidance image is drawn from this finished lesson, so
+      // it starts now — never earlier, and never from raw registry
+      // data alone. A guidance image problem must not fail the lesson.
+      // The image persists to the database only when this lesson
+      // lives there — a demo (memory-store) lesson's image stays
+      // out of the database entirely.
+      try {
+        startGuidanceImageForQuestion(task.printedCode, task.questionNumber, html, "lesson finished", {
+          persist: dbGuidanceStore() !== null && store === dbGuidanceStore(),
+        });
+      } catch (err) {
+        console.log(`[guidance-image ${label} +0.0s] guidance image start failed — ${err instanceof Error ? err.message : err}`);
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Guidance generation failed.";
       await store.fail(task, message);
@@ -95,6 +113,9 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
           void runTask(store, task);
         }
       }
+      // Guidance images a crash left unfinished re-run from their
+      // lesson rows; the sweep is inert without the DB backend.
+      await sweepGuidanceImages();
     } catch (err) {
       console.error("[guidance] worker tick failed:", err instanceof Error ? err.message : err);
     } finally {
