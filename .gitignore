@@ -45,3 +45,6 @@ supabase/snippets/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# generated guidance posters (server cache)
+/.poster-cache

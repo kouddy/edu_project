@@ -60,10 +60,17 @@ export interface SubjectManifest {
   maxRetries: number;
 }
 
+/** The image model behind guidance posters (subjects.json "image"). */
+interface ImagePolicy {
+  provider: string;
+  model: string;
+}
+
 export interface PiConfig {
   configDir: string;
   grading: GradingPolicy;
   subjects: Record<string, SubjectManifest>;
+  image: ImagePolicy;
   /** Providers from models.json, keyed by provider id. */
   providers: Record<string, PiProviderDef>;
   /** Absolute path of models.json (the harness hands a copy to Pi's ModelRuntime). */
@@ -78,13 +85,34 @@ export function loadPiConfig(): PiConfig {
   const subjectsDoc = JSON.parse(readFileSync(path.join(configDir, "subjects.json"), "utf8")) as {
     grading: GradingPolicy;
     subjects: Record<string, SubjectManifest>;
+    image?: ImagePolicy;
   };
   const modelsPath = path.join(configDir, "models.json");
   const modelsDoc = JSON.parse(readFileSync(modelsPath, "utf8")) as {
     providers: Record<string, PiProviderDef>;
   };
-  cached = { configDir, grading: subjectsDoc.grading, subjects: subjectsDoc.subjects, providers: modelsDoc.providers, modelsPath };
+  cached = {
+    configDir,
+    grading: subjectsDoc.grading,
+    subjects: subjectsDoc.subjects,
+    image: subjectsDoc.image ?? { provider: "meta", model: "muse-image-1.0" },
+    providers: modelsDoc.providers,
+    modelsPath,
+  };
   return cached;
+}
+
+/**
+ * Which provider/model draws guidance posters: the IMAGE_PROVIDER /
+ * IMAGE_MODEL env vars win, then the subjects.json "image" block —
+ * the same two-place rule as grading and guidance naming.
+ */
+export function imageProviderId(config: PiConfig): string {
+  return process.env.IMAGE_PROVIDER ?? config.image.provider;
+}
+
+export function imageModelId(config: PiConfig): string {
+  return process.env.IMAGE_MODEL ?? config.image.model;
 }
 
 export function subjectManifest(config: PiConfig, agent: AgentId): SubjectManifest {
