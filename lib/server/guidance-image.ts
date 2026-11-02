@@ -2,13 +2,13 @@
  * lib/server/guidance-image.ts — the guidance image for a topic.
  *
  * Beside the animated lesson, a wrong answer can offer a printable
- * guidance image for the question's topic: four panels that explain
- * the concept (what it is, how it works, a correct example, an
- * incorrect example) and five fresh practice questions with blank
- * answer lines on a white section, drawn by the image model. One
- * guidance image per topic serves every kid and every question in
- * it, so guidance images cache by topic — on disk, so a restart
- * keeps them.
+ * guidance image for the question's topic: the lesson's method laid
+ * out as 4 steps in the lesson's own visual form — its numbers,
+ * boxes and short captions, not added prose — and five fresh
+ * practice questions with blank answer lines on a white section,
+ * drawn by the image model. One guidance image per topic serves
+ * every kid and every question in it, so guidance images cache by
+ * topic — on disk, so a restart keeps them.
  *
  * A guidance image is drawn FROM the question's finished animated
  * lesson: the worker starts it the moment a lesson passes its gate,
@@ -153,11 +153,11 @@ function buildGuidanceImagePrompt(
         ? `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, pointing at the lesson. The picture attached to this request is ${teacher.name} exactly as in the workbook: draw the teacher to match that picture — same animal, same colours, same simple flat cartoon style.`
         : `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`
       : `Include a friendly cartoon animal teacher, small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`,
-    `At the top, the title "${topicTitle.toUpperCase()}" — and nothing else above the lesson.`,
-    `Then draw the lesson itself as one still picture, top to bottom:`,
-    `- Keep the lesson's steps in the lesson's order, with the lesson's numbers, boxes, arrows and diagrams drawn the way the lesson draws them.`,
-    `- Use the lesson's own words — its short labels and one-line captions — and no others. Do not add explanations, paragraphs, panels or headings the lesson does not have. Like the lesson, the picture is mostly numbers and boxes, with very few words.`,
-    `- If the lesson shows a wrong step, keep it shown and marked wrong the way the lesson marks it. The lesson's final answer appears at the end, as it does in the lesson.`,
+    `At the top, the title "${topicTitle.toUpperCase()}" — and nothing else above the steps.`,
+    `Then explain the problem in exactly 4 steps: four separate boxes in a 2 by 2 grid, numbered 1, 2, 3, 4 in reading order. The 4 steps are the lesson's method, spread across the boxes in the lesson's order:`,
+    `- Draw each step the way the lesson draws it — the lesson's numbers, boxes, arrows and diagrams, with the lesson's own short labels and one-line captions, and no other words. Do not add explanations or paragraphs. Like the lesson, the steps are mostly numbers and boxes, with very few words.`,
+    `- If the lesson has fewer than 4 beats, split its working at its natural joints; if it has more, group neighbouring beats into one step. The last step ends with the lesson's final answer.`,
+    `- If the lesson shows a wrong step, keep it shown and marked wrong the way the lesson marks it.`,
     `- Leave out the lesson's Next and Play buttons — they belong to the animation only.`,
     `This lesson works the workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}).`,
     `- Below the lesson, a bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the image, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away. Any numbers printed inside a practice question as givens must themselves be right: a starting sequence must follow its own counting rule exactly, or the question cannot be answered.`,
