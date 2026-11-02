@@ -6,9 +6,8 @@ import { BTN_SECONDARY } from "./ui";
 
 /* The guidance-image slot under the Help page's animation: a
    printable guidance image for the question's topic (the lesson's
-   method laid out as 4 steps, plus five fresh practice questions
-   on a white section), drawn on the server from the question's
-   finished lesson. The
+   method laid out as 4 to 6 steps), drawn on the server from the
+   question's finished lesson. The
    slot renders nothing until the first poll answers, shows a
    quiet waiting line while the image is drawn, and stays empty
    when generation failed — the page already carries the text and
@@ -91,7 +90,7 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
       {image ? (
         <>
           <div className="mt-[10px] px-1 text-[13px] text-mid">
-            A printable for this topic is ready — save it and print it for more practice.
+            A printable for this topic is ready — save it and print it.
           </div>
           <a href={image} download={`printable-${slug}.${ext}`} className={`${BTN_SECONDARY} mt-2`}>
             Download the printable

@@ -3,10 +3,9 @@
  *
  * Beside the animated lesson, a wrong answer can offer a printable
  * guidance image for the question's topic: the lesson's method laid
- * out as 4 steps in the lesson's own visual form — its numbers,
- * boxes and short captions, not added prose — and five fresh
- * practice questions with blank answer lines on a white section,
- * drawn by the image model. One guidance image per topic serves
+ * out as 4 to 6 steps in the lesson's own visual form — its numbers,
+ * boxes and short captions, not added prose — drawn by the image
+ * model. One guidance image per topic serves
  * every kid and every question in it, so guidance images cache by
  * topic — on disk, so a restart keeps them, and in the database on
  * the seed question's guidance_animations row when Supabase is
@@ -159,13 +158,12 @@ function buildGuidanceImagePrompt(
         : `Include ${teacher.label} — the topic's teacher from the student's workbook — small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`
       : `Include a friendly cartoon animal teacher, small in a corner of the top section, in a simple flat cartoon style, pointing at the lesson.`,
     `At the top, the title "${topicTitle.toUpperCase()}" — and nothing else above the steps.`,
-    `Then explain the problem in exactly 4 steps: four separate boxes in a 2 by 2 grid, numbered 1, 2, 3, 4 in reading order. The 4 steps are the lesson's method, spread across the boxes in the lesson's order:`,
+    `Then explain the problem in 4 to 6 steps — as many as the lesson's method needs, and no more: separate boxes in a 2-column grid (2 rows for 4 steps, 3 rows for 5 or 6), numbered in reading order. The steps are the lesson's method, spread across the boxes in the lesson's order:`,
     `- Draw each step the way the lesson draws it — the lesson's numbers, boxes, arrows and diagrams, with the lesson's own short labels and one-line captions, and no other words. Do not add explanations or paragraphs. Like the lesson, the steps are mostly numbers and boxes, with very few words.`,
-    `- If the lesson has fewer than 4 beats, split its working at its natural joints; if it has more, group neighbouring beats into one step. The last step ends with the lesson's final answer.`,
+    `- If the lesson has fewer than 4 beats, split its working at its natural joints to reach 4 steps; if it has more than 6 beats, group neighbouring beats until it fits 6. The last step ends with the lesson's final answer.`,
     `- If the lesson shows a wrong step, keep it shown and marked wrong the way the lesson marks it.`,
     `- Leave out the lesson's Next and Play buttons — they belong to the animation only.`,
-    `This lesson works the workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}).`,
-    `- Below the lesson, a bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the image, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away. Any numbers printed inside a practice question as givens must themselves be right: a starting sequence must follow its own counting rule exactly, or the question cannot be answered.`,
+    `This lesson works the workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}). The image is the lesson only — no practice questions, and nothing else below the steps.`,
     `Every number and every calculation on the image must be exactly right — check each one before rendering it. Any picture, grid, array, or diagram must show EXACTLY what the words beside it say: a rectangle labelled length 6 and width 5 is drawn with exactly 6 squares across and 5 rows down — count the rows and columns before finishing, because a picture that disagrees with its numbers teaches the wrong lesson.`,
     `Style: dark brown-black text on a warm cream background (#fff8ec), orange (#e8710a) accents, rounded corners, simple flat illustration, large clear lettering a young student can read.`,
     `Print rule: the image must stay fully legible when printed in black and white — all meaning carried by the dark text and outlines; colour is decoration only. Keep fills pale, and never put light text on a coloured fill.`,
