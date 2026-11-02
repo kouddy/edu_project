@@ -1,31 +1,35 @@
 [
  {
   "code": "ON-MATH-G4-W40-S01",
-  "title": "Making Change & Money Choices \u2014 Practice A",
-  "questions": 7,
+  "title": "Making Change & Money Choices — Practice A",
+  "questions": 6,
   "wrong": {
    "question": 1,
    "written": "$7.35",
    "correct": "$4.35"
   },
-  "expectedScore": "6/7",
-  "pdfPage": 623
+  "expectedScore": "5/6",
+  "pdfPage": 636,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s01-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S02",
-  "title": "Making Change & Money Choices \u2014 Practice B",
-  "questions": 9,
+  "title": "Making Change & Money Choices — Practice B",
+  "questions": 10,
   "wrong": {
    "question": 2,
-   "written": "$4.25",
-   "correct": "$1.25"
+   "written": "$3.35",
+   "correct": "$2.35"
   },
-  "expectedScore": "8/9",
-  "pdfPage": 624
+  "expectedScore": "9/10",
+  "pdfPage": 637,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s02-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S03",
-  "title": "Making Change & Money Choices \u2014 Practice C",
+  "title": "Making Change & Money Choices — Practice C",
   "questions": 3,
   "wrong": {
    "question": 3,
@@ -33,11 +37,13 @@
    "correct": "A"
   },
   "expectedScore": "2/3",
-  "pdfPage": 625
+  "pdfPage": 638,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s03-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S04",
-  "title": "Making Change & Money Choices \u2014 Practice D",
+  "title": "Making Change & Money Choices — Practice D",
   "questions": 6,
   "wrong": {
    "question": 4,
@@ -45,11 +51,13 @@
    "correct": "$5.20"
   },
   "expectedScore": "5/6",
-  "pdfPage": 626
+  "pdfPage": 639,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s04-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S05",
-  "title": "Making Change & Money Choices \u2014 Practice E",
+  "title": "Making Change & Money Choices — Practice E",
   "questions": 7,
   "wrong": {
    "question": 5,
@@ -57,7 +65,9 @@
    "correct": "B"
   },
   "expectedScore": "6/7",
-  "pdfPage": 627
+  "pdfPage": 640,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s05-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S06",
@@ -69,7 +79,9 @@
    "correct": "B"
   },
   "expectedScore": "2/3",
-  "pdfPage": 628
+  "pdfPage": 641,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s06-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S07",
@@ -81,7 +93,9 @@
    "correct": "A"
   },
   "expectedScore": "4/5",
-  "pdfPage": 629
+  "pdfPage": 642,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s07-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S08",
@@ -93,7 +107,9 @@
    "correct": "36"
   },
   "expectedScore": "6/7",
-  "pdfPage": 630
+  "pdfPage": 643,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s08-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S09",
@@ -105,7 +121,9 @@
    "correct": "64"
   },
   "expectedScore": "4/5",
-  "pdfPage": 631
+  "pdfPage": 644,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s09-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S10",
@@ -117,7 +135,9 @@
    "correct": "1191"
   },
   "expectedScore": "4/5",
-  "pdfPage": 632
+  "pdfPage": 645,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s10-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S11",
@@ -129,7 +149,9 @@
    "correct": "B"
   },
   "expectedScore": "4/5",
-  "pdfPage": 633
+  "pdfPage": 646,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s11-pdf.jpg"
  },
  {
   "code": "ON-MATH-G4-W40-S12",
@@ -141,6 +163,8 @@
    "correct": "36"
   },
   "expectedScore": "5/6",
-  "pdfPage": 634
+  "pdfPage": 647,
+  "source": "Real book PDF page, dark sheet code (handwriting overlaid)",
+  "file": "bob-week40-darkcode/test-sheet-on-math-g4-w40-s12-pdf.jpg"
  }
 ]
