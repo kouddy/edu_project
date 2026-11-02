@@ -265,6 +265,16 @@ export default function HomeScreen({
             ))}
           </div>
         </section>
+      ) : showProgress ? (
+        /* The kid has marked sheets, just no finished week yet — the
+           first-run card's claim would be false here. */
+        <div className="mb-3 rounded-[16px] border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]">
+          <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
+          <h3 className={`${H3} mb-1`}>No finished weeks yet</h3>
+          <p className="text-[13.5px] leading-[1.45] text-mid">
+            Weeks {kid.name} finishes will show up here.
+          </p>
+        </div>
       ) : (
         <div className="mb-3 rounded-[16px] border-[1.5px] border-dashed border-line bg-card px-[15px] py-[14px] text-center shadow-[0_2px_7px_rgba(146,90,32,0.12),0_1px_2px_rgba(146,90,32,0.10)]">
           <div className="mb-2.5 mt-2.5 text-[38px] leading-none text-tang">▤</div>
