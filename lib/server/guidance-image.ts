@@ -9,6 +9,12 @@
  * serves every kid and every question in it, so posters cache by
  * topic — on disk, so a restart keeps them.
  *
+ * A poster is drawn FROM the question's finished animated lesson:
+ * the worker starts it the moment a lesson passes its gate, feeding
+ * the lesson's HTML to the image model, so the poster teaches the
+ * same concept with the same verified numbers instead of inventing
+ * its own. No finished lesson, no poster.
+ *
  * An image model draws its numbers as pictures: nothing in a poster
  * can be checked the way the animation gate checks HTML. So a poster
  * reaches a kid only after a vision pass reads it back — every
@@ -32,6 +38,7 @@ import {
   resolveProviderApiKey,
   type PiConfig,
 } from "./pi-config";
+import { dbGuidanceStore, memoryGuidanceStore } from "./guidance-store";
 import { supabaseForToken } from "./supabase";
 
 interface PosterView {
@@ -107,6 +114,7 @@ function buildPosterPrompt(
   topicTitle: string,
   anchorPrompt: string,
   anchorAnswer: string,
+  guidanceHtml: string,
 ): string {
   const teacher = teacherFor(entry, topicTitle);
   return [
@@ -117,12 +125,15 @@ function buildPosterPrompt(
     `Layout, top to bottom:`,
     `- A title "${topicTitle.toUpperCase()}" and one short subtitle line saying what the idea is.`,
     `- Four numbered panels in a 2 by 2 grid: 1 "What is ${topicTitle}?" in one or two plain sentences. 2 "How It Works" — the rule, with two or three short worked lines. 3 "Correct Example" — a fully worked example, every step right, clearly marked correct. 4 "Incorrect Example" — a worked example with one clear mistake, clearly marked wrong, with one line saying what went wrong.`,
-    `- A bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the poster, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away.`,
+    `- A bottom section "5 Sample Questions to Practice" with exactly 5 new practice questions about ${topicTitle}, numbered 1 to 5, each with a blank line for the student to write the answer. This section has a PURE WHITE background so a student can write on the printout. No answers to these 5 questions appear anywhere on the poster, and none of the 5 may reuse the worked examples' numbers — a practice question whose answer already appears in an example gives its answer away. Any numbers printed inside a practice question as givens must themselves be right: a starting sequence must follow its own counting rule exactly, or the question cannot be answered.`,
     `The poster is anchored on this workbook question: "${anchorPrompt}" (correct answer: ${anchorAnswer}). The examples must teach the same idea the same way.`,
     `Every number and every calculation on the poster must be exactly right — check each one before rendering it. Any picture, grid, array, or diagram must show EXACTLY what the words beside it say: a rectangle labelled length 6 and width 5 is drawn with exactly 6 squares across and 5 rows down — count the rows and columns before finishing, because a picture that disagrees with its numbers teaches the wrong lesson.`,
     `Style: dark brown-black text on a warm cream background (#fff8ec), orange (#e8710a) accents, rounded panel corners, simple flat illustration, large clear lettering a young student can read.`,
     `Print rule: the poster must stay fully legible when printed in black and white — all meaning carried by the dark text and outlines; colour is decoration only. Keep fills pale, and never put light text on a coloured fill.`,
     `No buttons, no app controls, no logos, no watermarks. Portrait orientation.`,
+    ``,
+    `Below is the verified animated lesson for this question, as HTML. It has already been checked: its numbers, steps, and examples are right. Teach the SAME concept the SAME way — the "What is" and "How It Works" panels explain what the lesson explains, the Correct Example is the correct working the lesson shows, and the Incorrect Example is the mistake the lesson highlights, with the same numbers throughout. Do not invent different numbers or a different example. The lesson's buttons and controls belong to the animation only — the poster is a still picture and shows none of them.`,
+    guidanceHtml,
   ].join("\n");
 }
 
@@ -323,7 +334,7 @@ async function checkPoster(
   const model = effectiveModel(config, "math", providerId);
   const ask = [
     `You are checking a Grade ${entry.kidGrade} math poster about "${topicTitle}" before a child sees it. Read the poster image carefully and answer with ONLY a JSON object, no other text:`,
-    `{"statements": ["every calculation written on the poster, copied exactly, like \\"300 + 100 = 400\\""], "correctExampleLabelled": true/false (the correct example is clearly marked correct), "incorrectExampleLabelledWrong": true/false (the incorrect example is clearly marked wrong AND its mistake is the one the poster names), "picturesMatchNumbers": true/false (every drawn picture, grid, or diagram shows exactly the quantities the words beside it state — count the squares in any grid: a rectangle labelled length 6, width 5 must be drawn 6 across and 5 down), "practiceCount": the number of practice questions in the bottom section, "practiceAnswersShown": true/false (any of the practice questions has its answer written anywhere, including a practice question that repeats a worked example's numbers), "practiceBackgroundWhite": true/false (the practice section background is white), "problems": ["each wrong calculation, mislabelled example, or unclear item you find, in your own words"]}`,
+    `{"statements": ["every calculation written on the poster, copied exactly, like \\"300 + 100 = 400\\""], "correctExampleLabelled": true/false (the correct example is clearly marked correct), "incorrectExampleLabelledWrong": true/false (the incorrect example is clearly marked wrong AND its mistake is the one the poster names), "picturesMatchNumbers": true/false (every drawn picture, grid, or diagram shows exactly the quantities the words beside it state — count the squares in any grid: a rectangle labelled length 6, width 5 must be drawn 6 across and 5 down), "practiceCount": the number of practice questions in the bottom section, "practiceAnswersShown": true/false (any of the practice questions has its answer written anywhere, including a practice question that repeats a worked example's numbers), "practiceSound": true/false (every practice question is answerable as printed — the numbers given inside it follow the rule the question itself states, so a starting sequence counted by 50s really does go up by 50 each step), "practiceBackgroundWhite": true/false (the practice section background is white), "problems": ["each wrong calculation, mislabelled example, or unclear item you find, in your own words"]}`,
     `Judge the incorrect example by its label: a wrong calculation inside it is intended, but only when the poster marks it wrong and names that same mistake.`,
   ].join("\n");
   const result = await callResponses(
@@ -357,6 +368,7 @@ async function checkPoster(
     picturesMatchNumbers?: boolean;
     practiceCount?: number;
     practiceAnswersShown?: boolean;
+    practiceSound?: boolean;
     practiceBackgroundWhite?: boolean;
     problems?: string[];
   };
@@ -371,6 +383,7 @@ async function checkPoster(
   if (verdict.picturesMatchNumbers !== true) problems.push("a drawn picture does not match the numbers stated beside it — redraw it with exactly the stated quantities");
   if (verdict.practiceCount !== 5) problems.push(`the practice section holds ${verdict.practiceCount ?? 0} questions, not 5`);
   if (verdict.practiceAnswersShown === true) problems.push("a practice question's answer is shown");
+  if (verdict.practiceSound !== true) problems.push("a practice question's given numbers break the rule it states — fix the givens so the question can be answered");
   if (verdict.practiceBackgroundWhite !== true) problems.push("the practice section background is not white");
   return { ok: problems.length === 0, problems, warnings: verdict.problems ?? [] };
 }
@@ -424,11 +437,12 @@ async function runPoster(
   topicTitle: string,
   anchorPrompt: string,
   anchorAnswer: string,
+  guidanceHtml: string,
 ): Promise<void> {
   const config = loadPiConfig();
   const providerId = imageProviderId(config);
   const model = imageModelId(config);
-  const prompt = buildPosterPrompt(entry, topicTitle, anchorPrompt, anchorAnswer);
+  const prompt = buildPosterPrompt(entry, topicTitle, anchorPrompt, anchorAnswer, guidanceHtml);
   try {
     let made = imageOf(await callResponses(config, providerId, { model, input: prompt }, "image generation", 420_000));
     if (!made) throw new Error("The image provider returned no image.");
@@ -478,14 +492,18 @@ async function runPoster(
 
 /**
  * Start the poster for one question's topic, unless it is already
- * running, ready, or failed. Called when a sheet settles at
- * marking time — the same moment the animation queues — so the
- * poster is usually ready before anyone opens the Help page; the
- * read below calls it too, as the fallback for sheets marked
- * before posters existed. Posters are per topic, so several wrong
- * questions in one topic start at most one run.
+ * running, ready, or failed. The caller supplies the question's
+ * finished lesson HTML — the poster is drawn from it — so this is
+ * called by the guidance worker the moment a lesson passes its
+ * gate, and by the read below once the lesson is ready. Posters
+ * are per topic, so several wrong questions in one topic start at
+ * most one run, seeded by whichever lesson finished first.
  */
-export function startPosterForQuestion(printedCode: string, questionNumber: number): void {
+export function startPosterForQuestion(
+  printedCode: string,
+  questionNumber: number,
+  guidanceHtml: string,
+): void {
   const entry = findByPrintedCode(printedCode);
   const question = entry?.questions.find((q) => q.number === questionNumber);
   if (!entry || !question) return;
@@ -499,16 +517,18 @@ export function startPosterForQuestion(printedCode: string, questionNumber: numb
     return;
   }
   states.set(key, { state: "working" });
-  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer);
+  void runPoster(key, entry, topicTitle, question.prompt, question.correctAnswer, guidanceHtml);
 }
 
 /**
- * The poster for one question's topic. The first read starts
- * generation in the background; the client polls while the status
- * is generating. Live callers are served the image only when their
- * account has a submission for the sheet, mirroring the guidance
- * route — the poster is generic, but it belongs to that sheet's
- * help page.
+ * The poster for one question's topic. The worker normally starts
+ * it when the question's lesson finishes; a read starts it too
+ * once that lesson is ready (sheets graded before posters fed on
+ * lessons), and reports generating while the lesson is still
+ * being made. The client polls while the status is generating.
+ * Live callers are served the image only when their account has a
+ * submission for the sheet, mirroring the guidance route — the
+ * poster is generic, but it belongs to that sheet's help page.
  */
 export async function getPoster(
   printedCode: string,
@@ -528,7 +548,31 @@ export async function getPoster(
   // terminally failed guidance task, it is not retried on view.
   const topicTitle = question.topic || entry.topic;
   const key = posterKeyFor(entry, topicTitle);
-  startPosterForQuestion(printedCode, questionNumber);
+  if (!states.has(key)) {
+    const disk = readDisk(key);
+    if (disk) {
+      states.set(key, { state: "ready", dataUrl: disk });
+    } else {
+      // The poster waits for the question's lesson: it is drawn
+      // from that HTML, so until the lesson is ready there is
+      // nothing to draw from, and if the lesson failed there
+      // never will be.
+      const store =
+        auth !== null ? (dbGuidanceStore() ?? memoryGuidanceStore()) : memoryGuidanceStore();
+      const lesson = await store.get(printedCode, questionNumber, entry.keyVersion);
+      if (lesson?.status === "ready" && lesson.html) {
+        startPosterForQuestion(printedCode, questionNumber, lesson.html);
+      } else if (lesson?.status === "failed") {
+        return {
+          kind: "ok",
+          view: {
+            status: "failed",
+            error: "The lesson for this question could not be made, so no poster was drawn.",
+          },
+        };
+      }
+    }
+  }
   const current = states.get(key) ?? { state: "working" as const };
 
   const view: PosterView =
