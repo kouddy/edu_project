@@ -5,9 +5,10 @@ import { getAccessToken } from "@/lib/supabase-client";
 import { BTN_SECONDARY } from "./ui";
 
 /* The guidance-image slot under the Help page's animation: a
-   printable guidance image for the question's topic (four concept
-   panels and five fresh practice questions on a white section),
-   drawn on the server from the question's finished lesson. The
+   printable guidance image for the question's topic (the lesson's
+   method laid out as 4 steps, plus five fresh practice questions
+   on a white section), drawn on the server from the question's
+   finished lesson. The
    slot renders nothing until the first poll answers, shows a
    quiet waiting line while the image is drawn, and stays empty
    when generation failed — the page already carries the text and
@@ -57,8 +58,8 @@ export default function GuidanceImage({ printedCode, questionNumber, topic }: Gu
           setPending(false);
           return;
         }
-        // Drawing plus the vision check can take a while; keep
-        // waiting up to ~5 minutes like the animation slot.
+        // Drawing the image can take a while; keep waiting up to
+        // ~5 minutes like the animation slot.
         if (++polls <= 100) timer = setTimeout(poll, 3000);
         else setPending(false);
       } catch {

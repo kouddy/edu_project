@@ -179,12 +179,7 @@ function buildGuidanceImagePrompt(
 /* ----- the image API (Meta Responses shape) ----- */
 
 interface ResponsesResult {
-  id?: string;
-  output?: {
-    type: string;
-    result?: string;
-    content?: { type: string; text?: string }[];
-  }[];
+  output?: { type: string; result?: string }[];
 }
 
 /* Guidance image log lines take the guidance runs' shape — [guidance-image
@@ -262,11 +257,11 @@ function mimeOf(bytes: Buffer): string {
   return "image/webp";
 }
 
-function imageOf(result: ResponsesResult): { dataUrl: string; responseId?: string } | null {
+function imageOf(result: ResponsesResult): { dataUrl: string } | null {
   const item = (result.output ?? []).find((o) => o.type === "image_generation_call" && o.result);
   if (!item?.result) return null;
   const bytes = Buffer.from(item.result, "base64");
-  return { dataUrl: `data:${mimeOf(bytes)};base64,${item.result}`, responseId: result.id };
+  return { dataUrl: `data:${mimeOf(bytes)};base64,${item.result}` };
 }
 
 /* ----- storage: memory in flight, disk and database when ready ----- */
@@ -653,32 +648,45 @@ export function startGuidanceImageForQuestion(
   states.set(key, { state: "working" });
   guidanceImageLog(run, `guidance image queued — from ${source}, topic "${topicTitle}"`);
   void (async () => {
-    // The database may already hold this topic's image — drawn on
-    // another host, or before a restart the disk cache did not
-    // survive. Adopt it instead of drawing a second one.
-    const db = await dbLoadImage(key);
-    if (db?.state === "ready") {
-      writeDisk(key, db.dataUrl);
-      states.set(key, { state: "ready", dataUrl: db.dataUrl });
-      guidanceImageLog(run, `guidance image ready — database, topic "${topicTitle}"`);
-      return;
+    try {
+      // The database may already hold this topic's image — drawn on
+      // another host, or before a restart the disk cache did not
+      // survive. Adopt it instead of drawing a second one.
+      const db = await dbLoadImage(key);
+      if (db?.state === "ready") {
+        writeDisk(key, db.dataUrl);
+        states.set(key, { state: "ready", dataUrl: db.dataUrl });
+        guidanceImageLog(run, `guidance image ready — database, topic "${topicTitle}"`);
+        return;
+      }
+      if (db?.state === "failed") {
+        states.set(key, { state: "failed", error: db.error });
+        guidanceImageLog(run, `guidance image failed — database, topic "${topicTitle}"`);
+        return;
+      }
+      await runGuidanceImage(
+        key,
+        entry,
+        topicTitle,
+        question.prompt,
+        question.correctAnswer,
+        guidanceHtml,
+        run,
+        printedCode,
+        questionNumber,
+      );
+    } catch (e) {
+      // runGuidanceImage settles its own API failures; this catch is
+      // for a throw before that try — config or prompt building —
+      // which must still settle the topic instead of leaving it
+      // working forever in this process.
+      const message = e instanceof Error ? e.message : String(e);
+      states.set(key, { state: "failed", error: message });
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "failed", null, message, (m) =>
+        guidanceImageLog(run, m),
+      );
+      guidanceImageLog(run, `guidance image generation failed — ${message}`);
     }
-    if (db?.state === "failed") {
-      states.set(key, { state: "failed", error: db.error });
-      guidanceImageLog(run, `guidance image failed — database, topic "${topicTitle}"`);
-      return;
-    }
-    await runGuidanceImage(
-      key,
-      entry,
-      topicTitle,
-      question.prompt,
-      question.correctAnswer,
-      guidanceHtml,
-      run,
-      printedCode,
-      questionNumber,
-    );
   })();
 }
 
@@ -707,8 +715,8 @@ export async function getGuidanceImage(
 
   // The question's own topic, not the sheet's: a review sheet mixes
   // topics, and its questions still belong to one topic each.
-  // A failed guidance image stays failed for this server run — like a
-  // terminally failed guidance task, it is not retried on view.
+  // A failed guidance image is not retried on view; the worker's
+  // sweep owns retries, on the lessons' backoff terms.
   const topicTitle = question.topic || entry.topic;
   const key = guidanceImageKeyFor(entry, topicTitle);
   if (!states.has(key)) {
