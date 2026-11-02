@@ -10,7 +10,10 @@
  * every kid and every question in it, so guidance images cache by
  * topic — on disk, so a restart keeps them, and in the database on
  * the seed question's guidance_animations row when Supabase is
- * configured, so a new host keeps them too.
+ * configured, so a new host keeps them too. The guidance worker's
+ * poll sweeps those rows for images a crash left unfinished and
+ * re-runs them on the lessons' backoff terms, so the generation
+ * is as durable as the storage.
  *
  * A guidance image is drawn FROM the question's finished animated
  * lesson: the worker starts it the moment a lesson passes its gate,
@@ -319,6 +322,15 @@ function writeDisk(key: string, dataUrl: string): void {
 
 type DbGuidanceImage = { state: "ready"; dataUrl: string } | { state: "failed"; error: string };
 
+/* The sweep's terms, mirroring the lessons': a generation left at
+ * generating longer than the longest possible request (two
+ * attempts at the 420s timeout) belongs to a server that died
+ * mid-draw, and a failed image retries after 5 minutes, then 30,
+ * and stays failed at 3 attempts. */
+const IMAGE_STALE_MS = 20 * 60_000;
+const IMAGE_BACKOFF_MS = [5 * 60_000, 30 * 60_000];
+const IMAGE_MAX_ATTEMPTS = 3;
+
 let dbImageWarned = false;
 
 async function dbLoadImage(topicKey: string): Promise<DbGuidanceImage | null> {
@@ -396,15 +408,27 @@ async function dbSaveImage(
   const admin = supabaseAdmin();
   if (!admin) return;
   try {
+    const fields: Record<string, unknown> = {
+      image_topic_key: topicKey,
+      image_status: status,
+      image_data_url: dataUrl,
+      image_error: errorText,
+      image_updated_at: new Date().toISOString(),
+    };
+    if (status === "failed") {
+      // A failure consumes an attempt, as with the lessons; the
+      // sweep's backoff and bound read the count back off the row.
+      const { data } = await admin
+        .from("guidance_animations")
+        .select("image_attempts")
+        .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion })
+        .maybeSingle();
+      const attempts = (data as { image_attempts?: number } | null)?.image_attempts;
+      if (typeof attempts === "number") fields.image_attempts = attempts + 1;
+    }
     const { error } = await admin
       .from("guidance_animations")
-      .update({
-        image_topic_key: topicKey,
-        image_status: status,
-        image_data_url: dataUrl,
-        image_error: errorText,
-        image_updated_at: new Date().toISOString(),
-      })
+      .update(fields)
       .match({ printed_code: printedCode, question_number: questionNumber, key_version: keyVersion });
     if (error) log(`guidance image database save failed — ${error.message}`);
     // No matching row is silent: the seed lesson lived in the
@@ -412,6 +436,108 @@ async function dbSaveImage(
     // only persistent home, as designed.
   } catch (e) {
     log(`guidance image database save failed — ${e instanceof Error ? e.message : String(e)}`);
+  }
+}
+
+interface SweepRow {
+  id: string;
+  printed_code: string;
+  question_number: number;
+  html: string;
+  image_topic_key: string | null;
+  image_status: string | null;
+  image_attempts: number | null;
+  image_updated_at: string | null;
+}
+
+function sweepEligible(row: SweepRow, now: number): boolean {
+  if (row.image_status === null) return true; // the lesson finished; the image never started
+  const updated = row.image_updated_at ? Date.parse(row.image_updated_at) : 0;
+  if (row.image_status === "generating") return now - updated > IMAGE_STALE_MS;
+  if (row.image_status === "failed") {
+    const attempts = row.image_attempts ?? 0;
+    if (attempts >= IMAGE_MAX_ATTEMPTS) return false;
+    const wait = IMAGE_BACKOFF_MS[Math.min(Math.max(attempts - 1, 0), IMAGE_BACKOFF_MS.length - 1)];
+    return now - updated > wait;
+  }
+  return false; // ready is terminal
+}
+
+/**
+ * Re-run the guidance images a crash left unfinished — the image
+ * half of the guidance worker's durability. The lesson rows are
+ * the queue: a ready lesson whose seed row has no image, a stale
+ * generating image, or a failed image past its backoff is claimed
+ * by compare-and-swap on the row (the expected status and timestamp
+ * ride in the update's match, so two workers cannot take the same
+ * row) and started again from the lesson's stored HTML. Bounded
+ * per call so a backlog drains over successive polls instead of
+ * bursting. Returns how many runs it started.
+ */
+export async function sweepGuidanceImages(limit = 2): Promise<number> {
+  const admin = supabaseAdmin();
+  if (!admin) return 0;
+  try {
+    const { data, error } = await admin
+      .from("guidance_animations")
+      .select(
+        "id, printed_code, question_number, html, image_topic_key, image_status, image_attempts, image_updated_at",
+      )
+      .eq("status", "ready")
+      .not("html", "is", null)
+      .order("image_updated_at", { ascending: true, nullsFirst: true })
+      .limit(100);
+    if (error || !data) return 0;
+    const now = Date.now();
+    // One candidate per topic: the first eligible seed row wins,
+    // and the start it triggers settles the whole topic.
+    const candidates = new Map<string, { row: SweepRow; topicTitle: string }>();
+    for (const row of data as SweepRow[]) {
+      if (!sweepEligible(row, now)) continue;
+      const entry = findByPrintedCode(row.printed_code);
+      const question = entry?.questions.find((q) => q.number === row.question_number);
+      if (!entry || !question) continue;
+      const topicTitle = question.topic || entry.topic;
+      const key = row.image_topic_key ?? guidanceImageKeyFor(entry, topicTitle);
+      if (!candidates.has(key)) candidates.set(key, { row, topicTitle });
+    }
+    let started = 0;
+    for (const [key, { row, topicTitle }] of candidates) {
+      if (started >= limit) break;
+      const current = states.get(key);
+      if (current?.state === "working" || current?.state === "ready") continue;
+      // A topic another row already finished needs no run — the
+      // start below would only adopt it — so leave its rows alone.
+      if ((await dbLoadImage(key))?.state === "ready") continue;
+      let claim = admin
+        .from("guidance_animations")
+        .update({
+          image_topic_key: key,
+          image_status: "generating",
+          image_updated_at: new Date().toISOString(),
+        })
+        .eq("id", row.id);
+      claim =
+        row.image_status === null
+          ? claim.is("image_status", null)
+          : claim.eq("image_status", row.image_status);
+      claim =
+        row.image_updated_at === null
+          ? claim.is("image_updated_at", null)
+          : claim.eq("image_updated_at", row.image_updated_at);
+      const { data: claimed, error: claimError } = await claim.select("id");
+      if (claimError || !claimed || claimed.length === 0) continue;
+      if (current?.state === "failed") states.delete(key);
+      guidanceImageLog(
+        { label: `${row.printed_code}#${row.question_number}`, t0: Date.now() },
+        `guidance image sweep — re-running topic "${topicTitle}" (was ${row.image_status ?? "never started"})`,
+      );
+      startGuidanceImageForQuestion(row.printed_code, row.question_number, row.html, "worker sweep");
+      started++;
+    }
+    return started;
+  } catch {
+    return 0;
   }
 }
 
@@ -500,7 +626,7 @@ export function startGuidanceImageForQuestion(
   printedCode: string,
   questionNumber: number,
   guidanceHtml: string,
-  source: "lesson finished" | "help read" = "lesson finished",
+  source: "lesson finished" | "help read" | "worker sweep" = "lesson finished",
 ): void {
   const entry = findByPrintedCode(printedCode);
   const question = entry?.questions.find((q) => q.number === questionNumber);
@@ -514,6 +640,14 @@ export function startGuidanceImageForQuestion(
   if (disk) {
     states.set(key, { state: "ready", dataUrl: disk });
     guidanceImageLog(run, `guidance image ready — disk cache, topic "${topicTitle}"`);
+    if (source === "worker sweep") {
+      // The sweep claimed this seed row because the database has
+      // no finished image for the topic; a disk hit heals the row
+      // instead of leaving the claim to go stale.
+      void dbSaveImage(printedCode, questionNumber, entry.keyVersion, key, "ready", disk, null, (m) =>
+        guidanceImageLog(run, m),
+      );
+    }
     return;
   }
   states.set(key, { state: "working" });

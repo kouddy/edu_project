@@ -13,10 +13,14 @@
  * When Supabase is configured but the service-role key is missing,
  * live tasks silently fall back to the memory store and are never
  * persisted — the worker warns loudly about that at startup.
+ *
+ * Each poll also sweeps for guidance images a crash left
+ * unfinished (guidance-image.ts: sweepGuidanceImages) — the lesson
+ * rows are the images' queue, on the same backoff terms.
  */
 
 import { processGuidanceTask } from "./guidance";
-import { startGuidanceImageForQuestion } from "./guidance-image";
+import { startGuidanceImageForQuestion, sweepGuidanceImages } from "./guidance-image";
 import {
   dbGuidanceStore,
   memoryGuidanceStore,
@@ -104,6 +108,9 @@ export function startGuidanceWorker(opts: GuidanceWorkerOptions = {}): void {
           void runTask(store, task);
         }
       }
+      // Guidance images a crash left unfinished re-run from their
+      // lesson rows; the sweep is inert without the DB backend.
+      await sweepGuidanceImages();
     } catch (err) {
       console.error("[guidance] worker tick failed:", err instanceof Error ? err.message : err);
     } finally {
