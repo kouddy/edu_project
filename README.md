@@ -7,32 +7,9 @@ wrong answer. Built with Next.js (App Router) + TypeScript; the parent UI
 uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
 `docs/wireframe/`.
 
-## Product rules
-
-- **Grading never guesses.** If an answer can't be read confidently (below
-  the confidence threshold), that question comes back `unsure` and the
-  parent settles it in Parent check — it is never graded on a guess.
-- **Copy rule:** nothing a parent sees ever mentions AI (or "model",
-  "vision", "scan detection"). Parent-facing copy is plain first-person
-  service language: "We marked the sheet", "We couldn't read this answer".
-- **Answer keys stay server-side.** The client sends photos only; the
-  printed code on the sheet is read from the photo and looked up in the
-  server registry. Parents never type a sheet code or pick which child a
-  sheet belongs to.
-- **Children's photos are private.** In demo mode they stay on
-  the parent's device (IndexedDB). In live mode they are stored in the
-  account's own server database and are served only to the parent who
-  owns them.
-- **Enrollment is admin-only.** Hub staff add kids; the parent app has no
-  add-child flow. The parent's Profile QR doubles as their member/pickup ID.
-- **MVP scope:** no payments, no delivery/logistics features yet.
-
 ## Run it locally
 
-You need Node 20+ and npm. Live mode (real accounts) also needs Docker
-Desktop running.
-
-### Demo mode (no account setup)
+You need Node 20+, npm, and Docker Desktop running. Copy `.env.example` to `.env.local` and fill in Meta API keys.
 
 ```bash
 npm install
@@ -41,14 +18,84 @@ npm run build   # production build
 npm start       # serve the production build
 ```
 
+- Visit http://localhost:3000
 - The **Demo** button on the sign-in screen enters a seeded test
   account (Amy, Grade 3, and Bob, Grade 4) that opens the way a real
   account looks mid-term: both kids are on Week 40, Weeks 38 and 39 are
   marked in History, one of Amy's Week 40 sheets is marked, and one
   answer is waiting for a parent check. Everything stays on-device; no
   server account is involved.
-- Grading still needs a provider in every mode: set `META_API_KEY` in
-  `.env.local` (see [Grading provider](#grading-provider)).
+- **Demo** Mode still uses LLM models for grading, providing guidance, and generating guidance images. Set `META_API_KEY` in `.env.local` (see [Grading provider](#grading-provider)). 
+
+### Live mode (real accounts on a local Supabase stack)
+
+Live mode adds real parent accounts: magic-link sign-in, with kids,
+results and photos persisted server-side. It runs on the Supabase local
+stack in Docker. To run the same mode against
+the hosted project instead, skip to [Live mode on the hosted Supabase project](#live-mode-on-the-hosted-supabase-project).
+
+1. Start Docker Desktop.
+2. Start the stack. The first run downloads its images and takes a few
+   minutes:
+
+   ```bash
+   npm run supabase:start
+   npm run supabase:status   # prints the API URL and keys; run it anytime
+   ```
+
+3. Visit http://127.0.0.1:54323/ -> Project Settings -> API Keys -> Find Publishable key and Secret key.
+
+4. In Authentication -> URL Configuration -> Redirect URLs, add http://localhost:3000 and http://127.0.0.1:3000
+
+5. In `.env.local` set:
+
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
+   SUPABASE_SERVICE_ROLE_KEY=<Secret key>
+   ```
+
+6. Start (or restart) the app with `npm run dev` and open
+   http://127.0.0.1:3000 or localhost:3000.
+7. Enter your email and choose **Email me a sign-in link**. Open the local  mail catcher at http://127.0.0.1:54324 and click the link there. First sign-in shows "No children are on your account yet". The parent row is created automatically; kids are enrolled by staff.
+8. Enroll a test kid in Supabase Studio (http://127.0.0.1:54323), SQL
+   editor:
+
+   ```sql
+   with new_kid as (
+     insert into public.kids (parent_id, name, grade)
+     select id, 'Amy', 3 from public.parents
+     where email = 'you@example.com'
+     returning id
+   )
+   insert into public.enrollments (kid_id, subject, current_week)
+   select id, 'Math', 40 from new_kid;
+   ```
+
+   One enrollment per subject track — a kid can take several subjects (although we only have math currently),
+   each on its own current week (weeks 1–40 are the weekly packets;
+   week 41 is the finals week).
+
+   Reload the app: the kid appears with a packet for each enrollment's
+   grade, subject and current week. Grade as usual — results and photos persist server-side
+   (check the `submissions`, `grade_results`, `photo_blobs` and
+   `check_resolutions` tables in Studio). Signing in from a second
+   browser shows the same account, photos included.
+
+Shut down and reset:
+
+```bash
+npm run supabase:stop    # stop the local stack
+npm run supabase:reset   # wipe the database; reapplies migrations + seed
+```
+
+Leave the Supabase variables unset and live mode turns off: the
+sign-in screen offers the demo account only. `GET /api/config`
+reports `accounts: true/false`, so you can
+confirm which way the server booted. If repeated test sign-ins hit an
+email rate limit, raise `email_sent` under `[auth.rate_limit]` in
+`supabase/config.toml` and restart the stack.
+
 
 ### Testing on a phone (camera needs HTTPS)
 
@@ -78,87 +125,6 @@ the phone; the camera works there. Notes:
   opens the phone's native camera through the file picker.
 - Hosted deployments are HTTPS, so real users never hit this.
 
-### Live mode (real accounts on a local Supabase stack)
-
-Live mode adds real parent accounts: magic-link sign-in, with kids,
-results and photos persisted server-side. It runs on the Supabase local
-stack — the same Postgres, Auth and row-level-security policies as the
-hosted product, in Docker. (Not SQLite: it has no RLS and different
-types, so it cannot stand in for this.) To run the same mode against
-the hosted project instead, skip to
-[Live mode on the hosted Supabase project](#live-mode-on-the-hosted-supabase-project).
-
-1. Start Docker Desktop.
-2. Start the stack. The first run downloads its images and takes a few
-   minutes:
-
-   ```bash
-   npm run supabase:start
-   npm run supabase:status   # prints the API URL and keys; run it anytime
-   ```
-
-3. Create `.env.local` in the repo root (see `.env.example`) with the
-   values the status output prints:
-
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
-   ```
-
-   The current CLI labels this key **Publishable** (`sb_publishable_…`);
-   older output calls it the *anon* key. It is the only Supabase key
-   the app needs: the server verifies the parent's sign-in token and
-   then reads and writes as that parent, with row-level security
-   scoping every query to their own family — the Secret
-   (service_role) key is not used. Add your grading key too
-   (`META_API_KEY`).
-
-4. Start (or restart) the app with `npm run dev` and open
-   http://127.0.0.1:3000 — localhost:3000 works too; both are
-   allow-listed redirect URLs in `supabase/config.toml`.
-5. Enter your email and choose **Email me a sign-in link**. Local mail
-   is not really sent: open the mail catcher at
-   http://127.0.0.1:54324 and click the link there. You land in live
-   mode. A first sign-in shows "No children are on your account yet" —
-   the parent row is created automatically; kids are enrolled by staff
-   (next step).
-6. Enroll a test kid in Supabase Studio (http://127.0.0.1:54323), SQL
-   editor:
-
-   ```sql
-   with new_kid as (
-     insert into public.kids (parent_id, name, grade)
-     select id, 'Amy', 3 from public.parents
-     where email = 'you@example.com'
-     returning id
-   )
-   insert into public.enrollments (kid_id, subject, current_week)
-   select id, 'Math', 40 from new_kid;
-   ```
-
-   One enrollment per subject track — a kid can take several subjects,
-   each on its own current week (weeks 1–40 are the weekly packets;
-   week 41 is the finals week).
-
-   Reload the app: the kid appears with a packet for each enrollment's
-   grade, subject and current week. Grade as usual — results and photos persist server-side
-   (check the `submissions`, `grade_results`, `photo_blobs` and
-   `check_resolutions` tables in Studio). Signing in from a second
-   browser shows the same account, photos included.
-
-Shut down and reset:
-
-```bash
-npm run supabase:stop    # stop the local stack
-npm run supabase:reset   # wipe the database; reapplies migrations + seed
-```
-
-Leave the Supabase variables unset and live mode turns off: the
-sign-in screen offers the demo account only. `GET /api/config`
-reports `accounts: true/false`, so you can
-confirm which way the server booted. If repeated test sign-ins hit an
-email rate limit, raise `email_sent` under `[auth.rate_limit]` in
-`supabase/config.toml` and restart the stack.
 
 ### Live mode on the hosted Supabase project
 
