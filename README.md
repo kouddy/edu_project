@@ -89,21 +89,10 @@ npm run supabase:stop    # stop the local stack
 npm run supabase:reset   # wipe the database; reapplies migrations + seed
 ```
 
-Leave the Supabase variables unset and live mode turns off: the
-sign-in screen offers the demo account only. `GET /api/config`
-reports `accounts: true/false`, so you can
-confirm which way the server booted. If repeated test sign-ins hit an
-email rate limit, raise `email_sent` under `[auth.rate_limit]` in
-`supabase/config.toml` and restart the stack.
 
+### Testing on a phone
 
-### Testing on a phone (camera needs HTTPS)
-
-Browsers only allow the camera in a secure context — HTTPS, or HTTP
-on `localhost`. Opening the dev server from a phone over the LAN
-(`http://192.168…:3000`) is neither, so the scan screen falls back to
-its placeholder and no camera starts. Give the dev server a public
-HTTPS address with a Cloudflare quick tunnel instead:
+Browsers only allow the camera in a secure context — HTTPS. Give the dev server a public HTTPS address with a Cloudflare quick tunnel instead:
 
 ```bash
 brew install cloudflared   # once, macOS
@@ -112,19 +101,15 @@ npm run dev                                   # terminal 1: the app, on port 300
 cloudflared tunnel --url http://127.0.0.1:3000   # terminal 2
 ```
 
-Open the `https://…trycloudflare.com` address the tunnel prints on
-the phone; the camera works there. Notes:
+Open the `https://<random string>.trycloudflare.com` address the tunnel prints on the phone; the camera works there.
 
+Notes:
 - A **502 Bad Gateway** from the tunnel means the dev server is not
   running (or is on a different port — check its `Local:` line); the
   tunnel itself is fine.
 - The address changes every run, and while the tunnel is up anyone
   with the address can reach your dev server — stop it (Ctrl-C) when
   the session is over.
-- The scan screen's **Upload Photo** button needs none of this: it
-  opens the phone's native camera through the file picker.
-- Hosted deployments are HTTPS, so real users never hit this.
-
 
 ### Live mode on the hosted Supabase project
 
@@ -155,16 +140,14 @@ your machine; only Supabase moves. One-time setup:
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
    NEXT_PUBLIC_SUPABASE_ANON_KEY=<Publishable key>
+   SUPABASE_SERVICE_ROLE_KEY=<Secret key>
    ```
-
-   As locally, the Secret key is not used.
 
 Then run the app exactly as in the local flow (`npm run dev`, enter
 your email, **Email me a sign-in link**) with two differences: the
-magic link arrives as a real email — there is no mail catcher — and
-enrollment happens in the dashboard's SQL Editor, with the same
-kid + enrollment statements as the local step 6. Persisted rows are visible in the dashboard's Table
-Editor (`submissions`, `grade_results`, `photo_blobs`,
+magic link arrives as a real email and
+enrollment happens in the Supabase dashboard's SQL Editor, with the same
+kid + enrollment SQL statements. Persisted rows are visible in the dashboard's Table Editor (`submissions`, `grade_results`, `photo_blobs`,
 `check_resolutions`).
 
 ### Advancing a kid's week
@@ -207,21 +190,6 @@ Day to day:
   `.env.local`, restart the app (and the local stack), and you're on
   Docker again. The two databases are independent; nothing syncs
   between them.
-
-### Grading provider
-
-Grading needs a model API key. Create `.env.local` in the repo root (see
-`.env.example`):
-
-```
-META_API_KEY=LLM_...
-```
-
-Restart the server after changing it. Sanity check: `GET /api/config`
-should report the provider as available. Without a key, grading fails
-honestly — the parent keeps their staged photos and sees "We couldn't mark
-the sheet just now — please try again in a moment." There is no scripted
-or fallback provider: every grade is a real model call, in every mode.
 
 ## How it works
 
