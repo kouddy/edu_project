@@ -1,11 +1,84 @@
 # Practice Sheets
 
-Printed practice sheets for kids in grades 1–6. A parent photographs a
-finished sheet; the app marks it against the sheet's stored answer key and
-returns per-question results, with a plain-language explanation for each
-wrong answer. Built with Next.js (App Router) + TypeScript; the parent UI
-uses HeroUI v3 + Tailwind v4 and mirrors the design reference in
-`docs/wireframe/`.
+Daily practice for kids in grades 1–6 — printed on paper, marked by AI.
+
+**Live demo:** https://edu-project-tv02.onrender.com — choose **Demo** on
+the sign-in screen to try the seeded account (Amy, Grade 3, and Bob,
+Grade 4; no sign-up needed).
+<!-- Demo video link goes here once the full 3-minute cut is finished. -->
+
+## The problem
+
+Every parent knows daily practice works. But the proven route — a
+learning centre — costs hundreds of dollars a month, plus the driving,
+twice a week, every week. For most families, that's where it ends.
+
+So we kept the practice, and removed the centre.
+
+## The idea
+
+Kids get printed practice sheets — real paper, no screens — in weekly
+packets picked up from a local hub. Every sheet carries a printed code.
+When a sheet is done, the parent takes a photo of it in the app.
+Everything after that is automatic: the sheet is marked, wrong answers
+come back with explanations and a short animated lesson, and the lesson
+can be saved as a printable poster for the fridge.
+
+## What a parent experiences
+
+1. **Photo in.** The parent photographs finished sheets; photos stage in
+   a tray and marking starts on one tap.
+2. **Marking.** Each sheet is identified by its printed code and marked
+   against its stored answer key — per-question results, with a short
+   plain-language explanation for every question.
+3. **A check, only when it matters.** If an answer couldn't be read
+   confidently, it is never guessed: it comes to the parent as a
+   one-tap check — "Was Amy's answer correct?"
+4. **Help that teaches.** Every wrong answer carries a **Help me** link
+   to a short animated lesson that teaches the method step by step,
+   with the question's own numbers.
+5. **A printable.** The same lesson is also drawn as a one-page poster
+   (the method in pictures, with the book's animal teacher on it) that
+   the parent can download and print.
+6. **Progress at a glance.** Home shows this week's packet, what's
+   done, a streak, and review retention; finished weeks are kept in
+   History.
+
+## The AI
+
+3 workflows uses AI:
+- **Grading agent.** A vision agent session runs per photo: it reads
+  the printed sheet code (the server looks up the answer key — the
+  client never sends one), reads the child's handwriting, and submits
+  structured verdicts through schema-typed tools. Verdicts under the
+  0.8 confidence threshold are coerced to `unsure` server-side and go
+  to the parent check instead of being guessed. For wrong answers it
+  also writes the short explanation the parent sees. 
+  Meta muse-spark-1.3 is used with its vision capability.
+- **Guidance agent.** After marking, each wrong, confidently-read question queues a background job. 
+  The agent builds a self-contained
+  animated HTML lesson that animates the *same method* the grading
+  guidance described. 
+  Before any child can see a lesson, a verifier renders it headlessly, steps
+  it to the end, and asserts the final answer equals the key; on
+  failure the lesson regenerates (bounded) or stays text-only.
+  Meta muse-spark-1.3 is used to generate HTML lesson.
+- **Image generation.** HTML lesson is fed into image model, muse-image-1.0, to turn
+  HTML lesson into a still, printable version — the method in 4–6 pictured
+  steps.
+- **The harness.** All agents run on a Pi-based harness
+  (`lib/server/pi-harness.ts`): short-lived in-memory sessions,
+  built-in tools disabled, only schema-typed submit tools, per-agent
+  provider/model/thinking settings in `lib/server/pi/subjects.json`
+  (defaults: Meta `muse-spark-1.3-contributor`; images:
+  `muse-image-1.0`), provider keys referenced from the environment in
+  `lib/server/pi/models.json`, and per-agent environment overrides
+  (`GRADING_PROVIDER`, `GUIDANCE_PROVIDER`, `IMAGE_PROVIDER` …). A background worker
+  (15-second poll, bounded concurrency, leases and backoff) runs the
+  guidance queue; a sweep restarts generations that were interrupted.
+
+
+Built with Next.js (App Router) + TypeScript + HeroUI.
 
 ## Run it locally
 
