@@ -1,0 +1,57 @@
+# Practice Sheets — the app in a container, for local development.
+#
+#   supabase start            # on the host; the app assumes it is up
+#   docker compose up --build
+#
+#   App        http://localhost:3000
+#   Supabase   http://localhost:54321   (the CLI stack, on the host)
+#
+# Supabase is a dependency run by its own CLI — it is not part of this
+# file. The app container reaches it through the host's published
+# 54321 port (extra_hosts below), because http://localhost:54321 is
+# also what the browser uses and the app reads a single Supabase URL.
+#
+# The two API keys inlined below are the CLI stack's standard local
+# demo keys — public constants, valid only against a local stack.
+
+name: practice-sheets
+
+services:
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: http://localhost:54321
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=http://localhost:54321
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE
+      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJzZXJ2aWNlX3JvbGUiLAogICAgImlzcyI6ICJzdXBhYmFzZS1kZW1vIiwKICAgICJpYXQiOiAxNjQxNzY5MjAwLAogICAgImV4cCI6IDE3OTk1MzU2MDAKfQ.DaYlNEoUrrEn2Ig7tqibS-PHK5vgusbcbo7X36XVt4Q
+      # Passed through from .env when set there; unset stays unset.
+      - META_API_KEY
+      - BASETEN_API_KEY
+      - MODAL_API_KEY
+      - GEMINI_API_KEY
+      - ADMIN_API_KEY
+      - GRADING_PROVIDER
+      - GRADING_MODEL
+      - GUIDANCE_PROVIDER
+      - GUIDANCE_MODEL
+      - IMAGE_MODEL
+    extra_hosts:
+      - "localhost:host-gateway"
+    volumes:
+      - guidance-cache:/app/.guidance-image-cache
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/config').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  guidance-cache:
