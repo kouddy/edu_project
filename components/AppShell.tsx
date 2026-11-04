@@ -20,7 +20,7 @@ import PacketScreen from "./PacketScreen";
 import ProfileScreen from "./ProfileScreen";
 import JoinScreen from "./JoinScreen";
 import SignInScreen from "./SignInScreen";
-import { IconHome, IconScan, IconUser } from "./ui";
+import { IconCheck, IconHome, IconScan, IconUser } from "./ui";
 
 const NO_OPEN_TOPICS: ReadonlySet<string> = new Set();
 
@@ -68,7 +68,7 @@ export default function AppShell() {
   const [dispatching, setDispatching] = useState(false);
   const [runningJobs, setRunningJobs] = useState<GradeJobStatus[]>([]);
   const [settledLines, setSettledLines] = useState<string[] | null>(null);
-  const [toast, setToast] = useState<{ id: number; msg: string } | null>(null);
+  const [toast, setToast] = useState<{ id: number; msg: string; sticky?: boolean } | null>(null);
   const [scrollSection, setScrollSection] = useState<"homework" | "history" | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -125,10 +125,19 @@ export default function AppShell() {
     };
   }, [refresh]);
 
-  const showToast = useCallback((msg: string) => {
+  const showToast = useCallback((msg: string, opts?: { sticky?: boolean }) => {
     if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast({ id: Date.now(), msg });
-    toastTimer.current = setTimeout(() => setToast(null), 2800);
+    setToast({ id: Date.now(), msg, sticky: opts?.sticky });
+    // A sticky toast carries a check-mark button and stays until the
+    // parent taps it; every other toast fades on its own as before.
+    if (!opts?.sticky) {
+      toastTimer.current = setTimeout(() => setToast(null), 2800);
+    }
+  }, []);
+
+  const dismissToast = useCallback(() => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast(null);
   }, []);
 
   /* ------------------------------------------------------------ navigation */
@@ -266,7 +275,7 @@ export default function AppShell() {
             .catch(() => {});
         }
         if (marked > 0) {
-          showToast(marked === 1 ? "1 sheet marked" : `${marked} sheets marked`);
+          showToast(marked === 1 ? "1 sheet marked" : `${marked} sheets marked`, { sticky: true });
         }
       }
     } finally {
@@ -625,9 +634,19 @@ export default function AppShell() {
                 tabVisible ? "bottom-24" : "bottom-8"
               }`}
             >
-              <p className="max-w-full truncate rounded-full bg-ink px-4 py-2.5 text-[13.5px] font-semibold text-cream shadow-[0_6px_18px_rgba(61,43,31,0.35)]">
-                {toast.msg}
-              </p>
+              <div className="pointer-events-auto flex max-w-full items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-cream shadow-[0_6px_18px_rgba(61,43,31,0.35)]">
+                <p className="truncate text-[13.5px] font-semibold">{toast.msg}</p>
+                {toast.sticky && (
+                  <button
+                    type="button"
+                    aria-label="Dismiss"
+                    onClick={dismissToast}
+                    className="-mr-2 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-cream/20 text-cream"
+                  >
+                    <IconCheck size={17} />
+                  </button>
+                )}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
