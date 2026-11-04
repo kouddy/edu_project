@@ -7,9 +7,7 @@ Daily practice for kids in grades 1–6 — printed on paper, marked by AI.
 | Pillar / Criterion | Details |
 | --- | --- |
 | **Track** | Indie |
-| **Working Live App** | https://edu-project-tv02.onrender.com/ (live deployment — choose **Demo** on
-the sign-in screen to try the seeded account (Amy, Grade 3, and Bob,
-Grade 4; no sign-up needed). |
+| **Working Live App** | https://edu-project-tv02.onrender.com/ (live deployment — choose **Demo** on the sign-in screen to try the seeded account (Amy, Grade 3, and Bob, Grade 4; no sign-up needed). |
 | **3-Minute Demo Video** | <!-- David: paste the YouTube URL here --> _YouTube link to come_ · In-repo: [demo-full-captioned.mp4](docs/demo_video/demo-full-captioned.mp4) (2:59, captioned, with music) · [demo-full.mp4](docs/demo_video/demo-full.mp4) (clean cut, no captions) |
 | **Meta AI Models & Partners** | • **Muse Spark 1.3** (`api.meta.ai`): vision grading — reads the sheet photo and the child's handwriting, marks every answer against the answer key, and flags unsure answers instead of guessing • **Muse Spark 1.3** (`api.meta.ai`): guidance agent — builds a self-contained animated HTML lesson for each wrong answer, verified end to end before any child sees it • **Muse Image 1.0** (`api.meta.ai`): takes the verified HTML lesson as input and draws it as a one-page printable • **Muse Spark Open** (`meta-models/muse-spark-open-1026`) via **Baseten**: alternate inference route used in development |
 
