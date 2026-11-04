@@ -1,0 +1,9 @@
+node_modules
+.next
+.git
+.env*
+!.env.example
+.guidance-image-cache
+docs/demo_video
+*.tsbuildinfo
+npm-debug.log*
