@@ -1,47 +1,22 @@
-# Practice Sheets — local development only.
+# Practice Sheets — the app in a container, for local development.
 #
+#   supabase start            # on the host; the app assumes it is up
 #   docker compose up --build
 #
 #   App        http://localhost:3000
-#   Supabase   http://localhost:54321   Studio :54323   Mailpit :54324
+#   Supabase   http://localhost:54321   (the CLI stack, on the host)
 #
-# Supabase is a dependency here, not something this project hosts: the
-# `supabase` service runs the Supabase CLI, which starts its standard
-# local stack (the repo's supabase/config.toml drives it) as sibling
-# containers through the host's Docker socket. The app container is the
-# only image this project builds for itself.
-#
-# Teardown: `docker compose down` stops the app and the bootstrap, but
-# the CLI's containers belong to the CLI — stop them with
-# `supabase stop` (or from Docker Desktop). If the stack is already
-# running because you started it yourself, the bootstrap just reports
-# that and the app uses it as is.
+# Supabase is a dependency run by its own CLI — it is not part of this
+# file. The app container reaches it through the host's published
+# 54321 port (extra_hosts below), because http://localhost:54321 is
+# also what the browser uses and the app reads a single Supabase URL.
 #
 # The two API keys inlined below are the CLI stack's standard local
 # demo keys — public constants, valid only against a local stack.
-# The app reaches the stack for server-side calls through the host's
-# published 54321 port (extra_hosts), because http://localhost:54321
-# is also what the browser uses and the app reads a single Supabase URL.
 
 name: practice-sheets
 
 services:
-
-  supabase:
-    build:
-      context: .
-      dockerfile: Dockerfile.cli
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./supabase:/project/supabase
-    working_dir: /project
-    # Services the app never calls are excluded to keep the stack
-    # light. A name the CLI doesn't know shows up as an error in this
-    # service's log; the stack then simply doesn't start.
-    command:
-      - sh
-      - -c
-      - supabase start -x realtime,storage-api,imgproxy,edge-runtime,logflare,vector,supavisor; tail -f /dev/null
 
   app:
     build:
@@ -71,8 +46,6 @@ services:
       - "localhost:host-gateway"
     volumes:
       - guidance-cache:/app/.guidance-image-cache
-    depends_on:
-      - supabase
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/config').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
       interval: 10s
