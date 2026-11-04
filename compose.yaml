@@ -35,7 +35,6 @@ services:
       - META_API_KEY
       - BASETEN_API_KEY
       - MODAL_API_KEY
-      - GEMINI_API_KEY
       - ADMIN_API_KEY
       - GRADING_PROVIDER
       - GRADING_MODEL
