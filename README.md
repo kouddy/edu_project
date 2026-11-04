@@ -8,12 +8,13 @@ Grade 4; no sign-up needed).
 <!-- Demo video link goes here once the full 3-minute cut is finished. -->
 
 ## The problem
+Every parent knows daily practice works. 
 
-Every parent knows daily practice works. But the proven route — a
-learning centre — costs hundreds of dollars a month, plus the driving,
-twice a week, every week. For most families, that's where it ends.
+But the proven route — a learning centre — costs hundreds of dollars a month, plus the driving, twice a week, every week. For most families, that’s where it ends. 
 
-So we kept the practice, and removed the centre.
+And doing it yourself is no better — buy the workbooks, and every night it’s the parent marking page after page, and trying to explain the mistakes. 
+
+So we kept the practice, and removed the centre, the driving, and the marking.
 
 ## The idea
 
