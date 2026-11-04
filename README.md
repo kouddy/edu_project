@@ -2,10 +2,6 @@
 
 Daily practice for kids in grades 1–6 — printed on paper, marked by AI.
 
-**Live demo:** https://edu-project-tv02.onrender.com — choose **Demo** on
-the sign-in screen to try the seeded account (Amy, Grade 3, and Bob,
-Grade 4; no sign-up needed).
-
 ## 🏛️ Meta Global AI Developer Hackathon 2026: Submission Overview
 
 | Pillar / Criterion | Details |
